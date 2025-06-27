@@ -11,8 +11,8 @@
   right: 0;
   bottom: 0;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
   padding: 2vmin;
 
   font-size: 16px;
@@ -34,6 +34,8 @@
 }
 
 .main {
+  flex-grow: 1;
+  min-width: 0; /* Prevent content from overflowing the container */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -55,6 +57,7 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  text-align: center;
 }
 
 .copyright {
@@ -218,4 +221,8 @@
 
 .hidden {
   visibility: hidden;
+}
+
+.notion.index-page :global(.notion-header) {
+  display: none;
 }

@@ -28,6 +28,7 @@ import {
   posthogId
 } from '@/lib/config'
 import type { PageProps } from '@/lib/types'
+import { SideNav } from '@/components/SideNav'
 
 if (!isServer) {
   bootstrap()
@@ -65,52 +66,15 @@ export default function App({ Component, pageProps }: AppProps<PageProps>) {
   // Extract siteMap from pageProps. The rest of the props are passed to the page.
   const { siteMap, ...restPageProps } = pageProps
 
+  // DEBUG: Let's see what we're getting
+  console.log('DEBUG _app.tsx - pageProps:', pageProps)
+  console.log('DEBUG _app.tsx - siteMap exists:', !!siteMap)
+  console.log('DEBUG _app.tsx - siteMap:', siteMap)
+
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-      {/* 
-        This is where our new SideNav will go. 
-        It will receive the siteMap to build the navigation tree.
-        We check if siteMap exists, because some pages like 404 might not have it.
-      */}
-      {siteMap && (
-        <aside
-          style={{
-            width: '280px',
-            padding: '2rem 1rem',
-            height: '100vh',
-            position: 'sticky',
-            top: 0,
-            overflowY: 'auto',
-            flexShrink: 0,
-            borderRight: '1px solid #efefef'
-          }}
-        >
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Navigation</h2>
-          <p style={{ color: '#555', fontSize: '0.9rem' }}>
-            The category tree will be rendered here.
-          </p>
-
-          {/* 
-            This is a temporary debug view to confirm that the siteMap data 
-            is being passed correctly. We will replace this with the actual 
-            SideNav component later.
-          */}
-          <pre
-            style={{
-              fontSize: 10,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-all',
-              maxHeight: '400px',
-              overflow: 'auto',
-              background: '#f7f7f7',
-              padding: '8px',
-              borderRadius: '4px'
-            }}
-          >
-            {JSON.stringify(siteMap.navigationTree, null, 2)}
-          </pre>
-        </aside>
-      )}
+      {/* Render our SideNav component when siteMap is available */}
+      {siteMap && <SideNav siteMap={siteMap} />}
 
       <main style={{ flex: 1, minWidth: 0 }}>
         <Component {...restPageProps} />

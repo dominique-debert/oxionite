@@ -4,6 +4,9 @@ export default siteConfig({
   // the site's root Notion page (required)
   rootNotionPageId: '21df2d475c31807db829ddf5ea90f903',
 
+  // The database id for the blog (required)
+  rootNotionDatabaseId: '21df2d475c31812dae49d1b1735e02b4',
+
   // if you want to restrict pages to a single notion workspace (optional)
   // (this should be a Notion ID; see the docs for how to extract this)
   rootNotionSpaceId: null,

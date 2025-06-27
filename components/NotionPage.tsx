@@ -133,7 +133,8 @@ const Modal = dynamic(
 
 function Tweet({ id }: { id: string }) {
   const { recordMap } = useNotionContext()
-  const tweet = (recordMap as types.ExtendedTweetRecordMap)?.tweets?.[id]
+  const tweet = (recordMap as types.ExtendedRecordMap & { tweets?: any })
+    ?.tweets?.[id]
 
   return (
     <React.Suspense fallback={<TweetSkeleton />}>
@@ -187,7 +188,8 @@ export function NotionPage({
   site,
   recordMap,
   error,
-  pageId
+  pageId,
+  siteMap
 }: types.PageProps) {
   const router = useRouter()
   const lite = useSearchParam('lite')
@@ -244,6 +246,8 @@ export function NotionPage({
     ),
     [block, recordMap, isBlogPost]
   )
+
+  // SideNav is now handled by _app.tsx, so we don't need it here
 
   const footer = React.useMemo(() => <Footer />, [])
 
@@ -302,30 +306,17 @@ export function NotionPage({
       {isLiteMode && <BodyClassName className='notion-lite' />}
       {isDarkMode && <BodyClassName className='dark-mode' />}
 
-      <NotionRenderer
-        bodyClassName={cs(
-          styles.notion,
-          pageId === site.rootNotionPageId && 'index-page'
-        )}
-        darkMode={isDarkMode}
-        components={components}
-        recordMap={recordMap}
-        rootPageId={site.rootNotionPageId}
-        rootDomain={site.domain}
-        fullPage={!isLiteMode}
-        previewImages={!!recordMap.preview_images}
-        showCollectionViewDropdown={false}
-        showTableOfContents={showTableOfContents}
-        minTableOfContentsItems={minTableOfContentsItems}
-        defaultPageIcon={config.defaultPageIcon}
-        defaultPageCover={config.defaultPageCover}
-        defaultPageCoverPosition={config.defaultPageCoverPosition}
-        mapPageUrl={siteMapPageUrl}
-        mapImageUrl={mapImageUrl}
-        searchNotion={config.isSearchEnabled ? searchNotion : undefined}
-        pageAside={pageAside}
-        footer={footer}
-      />
+      <div className={cs('notion', isDarkMode ? 'dark-mode' : 'light-mode')}>
+        <div className={cs('notion-app', isLiteMode && 'notion-app-lite')}>
+          <div className={styles.main}>
+            <div className='notion-viewport'>
+              <div className='notion-frame'>
+                {footer}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <GitHubShareButton />
     </>
