@@ -202,13 +202,22 @@ export const NotionPage: React.FC<types.PageProps> = ({
 
   const title = getBlockTitle(block, recordMap) || site.name
 
+  // Check if this is a blog post (collection item)
+  const isBlogPost = block?.type === 'page' && block?.parent_table === 'collection'
+
+  // Table of contents settings
+  const showTableOfContents = !!isBlogPost
+  const minTableOfContentsItems = 3
+
   console.log('NotionPage debug:', {
     pageId,
     rootNotionPageId: site.rootNotionPageId,
     recordMapKeys: Object.keys(recordMap?.block || {}),
     hasRecordMap: !!recordMap,
     blockId: block?.id,
-    blockType: block?.type
+    blockType: block?.type,
+    isBlogPost,
+    showTableOfContents
   })
 
   return (
@@ -228,6 +237,8 @@ export const NotionPage: React.FC<types.PageProps> = ({
               fullPage={true}
               previewImages={!!recordMap.preview_images}
               showCollectionViewDropdown={false}
+              showTableOfContents={showTableOfContents}
+              minTableOfContentsItems={minTableOfContentsItems}
               components={{
                 nextImage: Image,
                 nextLink: Link,
