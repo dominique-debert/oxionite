@@ -1,117 +1,119 @@
-import cs from 'classnames'
+import React from 'react'
 import dynamic from 'next/dynamic'
-import Image from 'next/legacy/image'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { type PageBlock } from 'notion-types'
-import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
-import * as React from 'react'
-import BodyClassName from 'react-body-classname'
+
+import {
+  formatDate,
+  getBlockTitle,
+  getPageProperty,
+  normalizeTitle
+} from 'notion-utils'
+import { getTextContent } from 'notion-utils'
 import {
   type NotionComponents,
   NotionRenderer,
+  Search,
   useNotionContext
 } from 'react-notion-x'
-import { EmbeddedTweet, TweetNotFound, TweetSkeleton } from 'react-tweet'
-import { useSearchParam } from 'react-use'
 
-import type * as types from '@/lib/types'
+import { Loading } from './Loading'
+import { NotionPageHeader } from './NotionPageHeader'
+import { PageActions } from './PageActions'
+import { PageAside } from './PageAside'
+import { PageHead } from './PageHead'
+import { CategoryTree } from './CategoryTree'
+import { Page404 } from './Page404'
+import styles from './styles.module.css'
+
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
-import { useDarkMode } from '@/lib/use-dark-mode'
-
-import { Footer } from './Footer'
-import { GitHubShareButton } from './GitHubShareButton'
-import { Loading } from './Loading'
-import { NotionPageHeader } from './NotionPageHeader'
-import { Page404 } from './Page404'
-import { PageAside } from './PageAside'
-import { PageHead } from './PageHead'
-import styles from './styles.module.css'
+import * as types from '@/lib/types'
 
 // -----------------------------------------------------------------------------
 // dynamic imports for optional components
 // -----------------------------------------------------------------------------
 
-const Code = dynamic(() =>
+const Code2 = dynamic(() =>
   import('react-notion-x/build/third-party/code').then(async (m) => {
-    // add / remove any prism syntaxes here
-    await Promise.allSettled([
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-markup-templating.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-markup.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-bash.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-c.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-cpp.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-csharp.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-docker.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-java.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-js-templates.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-coffeescript.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-diff.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-git.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-go.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-graphql.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-handlebars.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-less.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-makefile.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-markdown.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-objectivec.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-ocaml.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-python.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-reason.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-rust.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-sass.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-scss.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-solidity.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-sql.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-stylus.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-swift.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-wasm.js'),
-      // @ts-expect-error Ignore prisma types
-      import('prismjs/components/prism-yaml.js')
+    // additional prism syntaxes
+    await Promise.all([
+      // @ts-ignore
+      import('prismjs/components/prism-markup-templating'),
+      // @ts-ignore
+      import('prismjs/components/prism-markup'),
+      // @ts-ignore
+      import('prismjs/components/prism-bash'),
+      // @ts-ignore
+      import('prismjs/components/prism-c'),
+      // @ts-ignore
+      import('prismjs/components/prism-cpp'),
+      // @ts-ignore
+      import('prismjs/components/prism-csharp'),
+      // @ts-ignore
+      import('prismjs/components/prism-docker'),
+      // @ts-ignore
+      import('prismjs/components/prism-java'),
+      // @ts-ignore
+      import('prismjs/components/prism-js-templates'),
+      // @ts-ignore
+      import('prismjs/components/prism-coffeescript'),
+      // @ts-ignore
+      import('prismjs/components/prism-diff'),
+      // @ts-ignore
+      import('prismjs/components/prism-git'),
+      // @ts-ignore
+      import('prismjs/components/prism-go'),
+      // @ts-ignore
+      import('prismjs/components/prism-graphql'),
+      // @ts-ignore
+      import('prismjs/components/prism-handlebars'),
+      // @ts-ignore
+      import('prismjs/components/prism-less'),
+      // @ts-ignore
+      import('prismjs/components/prism-makefile'),
+      // @ts-ignore
+      import('prismjs/components/prism-markdown'),
+      // @ts-ignore
+      import('prismjs/components/prism-objectivec'),
+      // @ts-ignore
+      import('prismjs/components/prism-ocaml'),
+      // @ts-ignore
+      import('prismjs/components/prism-python'),
+      // @ts-ignore
+      import('prismjs/components/prism-reason'),
+      // @ts-ignore
+      import('prismjs/components/prism-rust'),
+      // @ts-ignore
+      import('prismjs/components/prism-sass'),
+      // @ts-ignore
+      import('prismjs/components/prism-scss'),
+      // @ts-ignore
+      import('prismjs/components/prism-solidity'),
+      // @ts-ignore
+      import('prismjs/components/prism-sql'),
+      // @ts-ignore
+      import('prismjs/components/prism-stylus'),
+      // @ts-ignore
+      import('prismjs/components/prism-swift'),
+      // @ts-ignore
+      import('prismjs/components/prism-wasm'),
+      // @ts-ignore
+      import('prismjs/components/prism-yaml')
     ])
     return m.Code
   })
 )
 
-const Collection = dynamic(() =>
+const Collection2 = dynamic(() =>
   import('react-notion-x/build/third-party/collection').then(
     (m) => m.Collection
   )
 )
-const Equation = dynamic(() =>
+const Equation2 = dynamic(() =>
   import('react-notion-x/build/third-party/equation').then((m) => m.Equation)
 )
 const Pdf = dynamic(
@@ -120,7 +122,7 @@ const Pdf = dynamic(
     ssr: false
   }
 )
-const Modal = dynamic(
+const Modal2 = dynamic(
   () =>
     import('react-notion-x/build/third-party/modal').then((m) => {
       m.Modal.setAppElement('.notion-viewport')
@@ -131,17 +133,7 @@ const Modal = dynamic(
   }
 )
 
-function Tweet({ id }: { id: string }) {
-  const { recordMap } = useNotionContext()
-  const tweet = (recordMap as types.ExtendedRecordMap & { tweets?: any })
-    ?.tweets?.[id]
-
-  return (
-    <React.Suspense fallback={<TweetSkeleton />}>
-      {tweet ? <EmbeddedTweet tweet={tweet} /> : <TweetNotFound />}
-    </React.Suspense>
-  )
-}
+const Tweet = dynamic(() => import('react-tweet').then((m) => m.Tweet))
 
 const propertyLastEditedTimeValue = (
   { block, pageHeader }: any,
@@ -184,113 +176,40 @@ const propertyTextValue = (
   return defaultFn()
 }
 
-export function NotionPage({
+export const NotionPage: React.FC<types.PageProps> = ({
   site,
   recordMap,
   error,
   pageId,
   siteMap
-}: types.PageProps) {
+}) => {
   const router = useRouter()
-  const lite = useSearchParam('lite')
-
-  const components = React.useMemo<Partial<NotionComponents>>(
-    () => ({
-      nextLegacyImage: Image,
-      nextLink: Link,
-      Code,
-      Collection,
-      Equation,
-      Pdf,
-      Modal,
-      Tweet,
-      Header: NotionPageHeader,
-      propertyLastEditedTimeValue,
-      propertyTextValue,
-      propertyDateValue
-    }),
-    []
-  )
-
-  // lite mode is for oembed
-  const isLiteMode = lite === 'true'
-
-  const { isDarkMode } = useDarkMode()
-
-  const siteMapPageUrl = React.useMemo(() => {
-    const params: any = {}
-    if (lite) params.lite = lite
-
-    const searchParams = new URLSearchParams(params)
-    return site ? mapPageUrl(site, recordMap!, searchParams) : undefined
-  }, [site, recordMap, lite])
-
-  const keys = Object.keys(recordMap?.block || {})
-  const block = recordMap?.block?.[keys[0]!]?.value
-
-  // const isRootPage =
-  //   parsePageId(block?.id) === parsePageId(site?.rootNotionPageId)
-  const isBlogPost =
-    block?.type === 'page' && block?.parent_table === 'collection'
-
-  const showTableOfContents = !!isBlogPost
-  const minTableOfContentsItems = 3
-
-  const pageAside = React.useMemo(
-    () => (
-      <PageAside
-        block={block!}
-        recordMap={recordMap!}
-        isBlogPost={isBlogPost}
-      />
-    ),
-    [block, recordMap, isBlogPost]
-  )
-
-  // SideNav is now handled by _app.tsx, so we don't need it here
-
-  const footer = React.useMemo(() => <Footer />, [])
 
   if (router.isFallback) {
     return <Loading />
   }
 
-  if (error || !site || !block) {
-    return <Page404 site={site} pageId={pageId} error={error} />
+  if (error || !site || !pageId || !recordMap) {
+    return <Page404 />
+  }
+
+  const keys = Object.keys(recordMap?.block || {})
+  const block = keys[0] ? recordMap?.block?.[keys[0]]?.value : undefined
+
+  if (!block) {
+    return <Page404 />
   }
 
   const title = getBlockTitle(block, recordMap) || site.name
 
-  console.log('notion page', {
-    isDev: config.isDev,
-    title,
+  console.log('NotionPage debug:', {
     pageId,
     rootNotionPageId: site.rootNotionPageId,
-    recordMap
+    recordMapKeys: Object.keys(recordMap?.block || {}),
+    hasRecordMap: !!recordMap,
+    blockId: block?.id,
+    blockType: block?.type
   })
-
-  if (!config.isServer) {
-    // add important objects to the window global for easy debugging
-    const g = window as any
-    g.pageId = pageId
-    g.recordMap = recordMap
-    g.block = block
-  }
-
-  const canonicalPageUrl = config.isDev
-    ? undefined
-    : getCanonicalPageUrl(site, recordMap)(pageId)
-
-  const socialImage = mapImageUrl(
-    getPageProperty<string>('Social Image', block, recordMap) ||
-      (block as PageBlock).format?.page_cover ||
-      config.defaultPageCover,
-    block
-  )
-
-  const socialDescription =
-    getPageProperty<string>('Description', block, recordMap) ||
-    config.description
 
   return (
     <>
@@ -298,27 +217,21 @@ export function NotionPage({
         pageId={pageId}
         site={site}
         title={title}
-        description={socialDescription}
-        image={socialImage}
-        url={canonicalPageUrl}
       />
 
-      {isLiteMode && <BodyClassName className='notion-lite' />}
-      {isDarkMode && <BodyClassName className='dark-mode' />}
-
-      <div className={cs('notion', isDarkMode ? 'dark-mode' : 'light-mode')}>
-        <div className={cs('notion-app', isLiteMode && 'notion-app-lite')}>
-          <div className={styles.main}>
-            <div className='notion-viewport'>
-              <div className='notion-frame'>
-                {footer}
-              </div>
-            </div>
+      <div className="notion-page">
+        <div className='notion-viewport'>
+          <div className='notion-frame'>
+      <NotionRenderer
+        recordMap={recordMap}
+              rootPageId={pageId}
+              fullPage={true}
+        previewImages={!!recordMap.preview_images}
+        showCollectionViewDropdown={false}
+            />
           </div>
         </div>
       </div>
-
-      <GitHubShareButton />
     </>
   )
 }

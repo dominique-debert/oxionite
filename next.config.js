@@ -10,6 +10,10 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 export default withBundleAnalyzer({
   staticPageGenerationTimeout: 300,
+  i18n: {
+    locales: ['ko', 'en'],
+    defaultLocale: 'ko'
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'www.notion.so' },
