@@ -21,6 +21,16 @@
   line-height: 1.65;
 }
 
+.notion-page-content-has-aside {
+  width: calc(var(--notion-max-width) + 240px);
+  display: flex;
+  flex-direction: row;
+}
+
+.notion-aside {
+  align-items: end;
+}
+
 .index-page {
   --notion-max-width: 900px;
 }
