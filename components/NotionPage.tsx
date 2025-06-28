@@ -222,12 +222,26 @@ export const NotionPage: React.FC<types.PageProps> = ({
       <div className="notion-page">
         <div className='notion-viewport'>
           <div className='notion-frame'>
-      <NotionRenderer
-        recordMap={recordMap}
+            <NotionRenderer
+              recordMap={recordMap}
               rootPageId={pageId}
               fullPage={true}
-        previewImages={!!recordMap.preview_images}
-        showCollectionViewDropdown={false}
+              previewImages={!!recordMap.preview_images}
+              showCollectionViewDropdown={false}
+              components={{
+                nextImage: Image,
+                nextLink: Link,
+                Code: Code2,
+                Collection: Collection2,
+                Equation: Equation2,
+                Pdf,
+                Modal: Modal2,
+                Tweet,
+                Header: NotionPageHeader,
+                propertyLastEditedTimeValue,
+                propertyDateValue,
+                propertyTextValue
+              }}
             />
           </div>
         </div>

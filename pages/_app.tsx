@@ -66,14 +66,19 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   // Extract siteMap and recordMap for the SideNav component
   const { siteMap, recordMap } = pageProps
 
+  // Extract block from recordMap for search functionality
+  const keys = Object.keys(recordMap?.block || {})
+  const block = keys[0] ? recordMap?.block?.[keys[0]]?.value : undefined
+
   // DEBUG: Let's see what we're getting
   console.log('DEBUG _app.tsx - pageProps:', pageProps)
   console.log('DEBUG _app.tsx - siteMap exists:', !!siteMap)
+  console.log('DEBUG _app.tsx - block exists:', !!block)
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start' }}>
       {/* Render our SideNav component when siteMap is available */}
-      {siteMap && <SideNav siteMap={siteMap} />}
+      {siteMap && <SideNav siteMap={siteMap} block={block} />}
 
       <main style={{ flex: 1, minWidth: 0 }}>
         <Component {...pageProps} />

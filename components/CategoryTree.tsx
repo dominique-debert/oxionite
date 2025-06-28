@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { Search } from 'react-notion-x'
 import type { PageInfo } from '@/lib/types'
 import { isSearchEnabled } from '@/lib/config'
+import siteConfig from '../site.config'
 
 interface CategoryTreeProps {
   items: PageInfo[]
@@ -16,6 +16,290 @@ interface CategoryTreeProps {
 interface CategoryItemProps {
   item: PageInfo
   level: number
+}
+
+interface SearchResult {
+  id: string
+  title: string
+  url: string
+  snippet?: string
+}
+
+// Custom Search Component
+const CustomSearch: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  const openModal = useCallback(() => {
+    setIsOpen(true)
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 100)
+  }, [])
+
+  const closeModal = useCallback(() => {
+    setIsOpen(false)
+    setQuery('')
+    setResults([])
+  }, [])
+
+  const handleSearch = useCallback(async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setResults([])
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/search-notion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+          ancestorId: siteConfig.rootNotionPageId,
+          filters: {
+            isDeletedOnly: false,
+            excludeTemplates: true,
+            isNavigableOnly: false,
+            requireEditPermissions: false
+          },
+          limit: 20
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json() as any
+        console.log('Search results raw data:', data)
+        console.log('Search results array:', data.results)
+        
+        // Let's check what each result looks like
+        if (data.results && data.results.length > 0) {
+          console.log('First result structure:', data.results[0])
+          console.log('RecordMap blocks:', data.recordMap?.block)
+        }
+        
+        // Transform results to our format using recordMap data
+        const transformedResults: SearchResult[] = data.results?.map((result: any) => {
+          const blockId = result.id
+          const block = data.recordMap?.block?.[blockId]?.value
+          
+          console.log(`Block ${blockId}:`, block)
+          
+          // Get title from block properties or use highlight text
+          let title = 'Untitled'
+          if (block?.properties?.title?.[0]?.[0]) {
+            title = block.properties.title[0][0]
+          } else if (result.highlight?.text) {
+            title = result.highlight.text
+          }
+          
+          // Generate proper URL based on block type and ID
+          let url = `/${blockId.replace(/-/g, '')}`
+          
+          return {
+            id: blockId,
+            title: title,
+            url: url,
+            snippet: result.highlight?.text || ''
+          }
+        }) || []
+        
+        console.log('Transformed results:', transformedResults)
+        setResults(transformedResults)
+      }
+    } catch (error) {
+      console.error('Search error:', error)
+      setResults([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setQuery(value)
+    handleSearch(value)
+  }, [handleSearch])
+
+  const handleResultClick = useCallback((url: string) => {
+    closeModal()
+    router.push(url)
+  }, [closeModal, router])
+
+  // Close modal on escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, closeModal])
+
+  return (
+    <>
+      {/* Search Button - styled like react-notion-x Search */}
+      <div 
+        className="breadcrumb button"
+        onClick={openModal}
+        style={{
+          cursor: 'pointer',
+          padding: '8px 12px',
+          border: '1px solid var(--fg-color-1)',
+          borderRadius: '6px',
+          backgroundColor: 'var(--bg-color)',
+          display: 'flex',
+          alignItems: 'center',
+          fontSize: '14px',
+          color: 'var(--fg-color)',
+          marginBottom: '16px',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--bg-color)'
+        }}
+      >
+        <svg
+          style={{ marginRight: '8px', opacity: 0.7 }}
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        Search
+      </div>
+
+      {/* Search Modal */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            paddingTop: '10vh'
+          }}
+          onClick={closeModal}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--bg-color)',
+              borderRadius: '12px',
+              width: '90%',
+              maxWidth: '600px',
+              maxHeight: '70vh',
+              overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
+              border: '1px solid var(--fg-color-1)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Search Input */}
+            <div style={{ padding: '20px 20px 16px 20px', borderBottom: '1px solid var(--fg-color-1)' }}>
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={handleInputChange}
+                placeholder="Search..."
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: '1px solid var(--fg-color-1)',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--bg-color)',
+                  color: 'var(--fg-color)',
+                  outline: 'none'
+                }}
+              />
+            </div>
+
+            {/* Search Results */}
+            <div
+              style={{
+                maxHeight: '400px',
+                overflowY: 'auto',
+                padding: '8px 0'
+              }}
+            >
+              {isLoading && (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
+                  Searching...
+                </div>
+              )}
+
+              {!isLoading && query && results.length === 0 && (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
+                  No results found
+                </div>
+              )}
+
+              {!isLoading && results.map((result) => (
+                <div
+                  key={result.id}
+                  style={{
+                    padding: '12px 20px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid var(--fg-color-0)',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onClick={() => handleResultClick(result.url)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  <div style={{ fontWeight: '500', color: 'var(--fg-color)', marginBottom: '4px' }}>
+                    {result.title}
+                  </div>
+                  {result.snippet && (
+                    <div style={{ fontSize: '14px', color: 'var(--fg-color-2)', lineHeight: '1.4' }}>
+                      {result.snippet}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {!query && (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
+                  Type to search...
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
@@ -30,68 +314,67 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
   // Generate URL: /locale/slug
   const pageUrl = `/${locale}/${item.slug}`
 
-  const toggleExpanded = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const toggleExpanded = () => {
     if (hasChildren) {
       setIsExpanded(!isExpanded)
     }
   }
 
-  const itemStyle = {
-    paddingLeft: `${level * 16}px`,
-    display: 'flex',
-    alignItems: 'center',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    marginBottom: '2px'
-  }
-
   return (
     <div>
-      <div className="nav-item" style={itemStyle}>
-        {/* Toggle icon for categories with children */}
+      <div
+        style={{
+          paddingLeft: `${level * 16}px`,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '4px 0',
+          cursor: hasChildren ? 'pointer' : 'default'
+        }}
+        onClick={toggleExpanded}
+      >
         {hasChildren && (
-          <span 
-            className="toggle-icon"
-            onClick={toggleExpanded}
-            style={{ cursor: 'pointer', marginRight: '4px' }}
-          >
+          <span style={{ marginRight: '8px', fontSize: '12px' }}>
             {isExpanded ? '▼' : '▶'}
           </span>
         )}
         
-        {/* Category/Post icon */}
-        <span className="item-icon" style={{ marginRight: '4px' }}>
-          {isCategory ? '📁' : '📄'}
-        </span>
-
-        {/* Title - always clickable to navigate to the page */}
-        <Link href={pageUrl} className="item-link">
-          {item.title}
-        </Link>
+        {isCategory ? (
+          <span 
+            style={{ 
+              color: '#666',
+              fontWeight: hasChildren ? 'bold' : 'normal'
+            }}
+          >
+            {item.title}
+          </span>
+        ) : (
+          <Link href={pageUrl} style={{ textDecoration: 'none', color: '#333' }}>
+            {item.title}
+          </Link>
+        )}
       </div>
 
-      {/* Render children if expanded */}
-      {hasChildren && isExpanded && (
-        <CategoryTree items={item.children} level={level + 1} />
+      {isExpanded && hasChildren && (
+        <CategoryTree items={item.children} level={(level || 0) + 1} />
       )}
     </div>
   )
 }
 
-export const CategoryTree: React.FC<CategoryTreeProps> = ({ items, level = 0, block }) => {
+export const CategoryTree: React.FC<CategoryTreeProps> = ({ 
+  items, 
+  level = 0, 
+  block 
+}) => {
   return (
-    <div className="category-tree">
-      {/* Show search button only at the top level */}
-      {level === 0 && isSearchEnabled && block && (
-        <div style={{ marginBottom: '16px' }}>
-          <Search block={block} title={null} />
-        </div>
+    <div>
+      {/* Custom Search - only show at top level */}
+      {level === 0 && isSearchEnabled && (
+        <CustomSearch />
       )}
-      
-      {items.map((item) => (
+
+      {/* Category Items */}
+      {items?.map((item) => (
         <CategoryItem key={item.pageId} item={item} level={level} />
       ))}
     </div>
