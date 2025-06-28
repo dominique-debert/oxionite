@@ -29,9 +29,77 @@ import {
 } from '@/lib/config'
 import * as types from '@/lib/types'
 import { SideNav } from '@/components/SideNav'
+import { NotionPageHeader } from '@/components/NotionPageHeader'
 
 if (typeof window !== 'undefined') {
   bootstrap()
+}
+
+// Simple custom header component with breadcrumbs
+function CustomPageHeader({ pageProps, block }: { pageProps: types.PageProps, block: any }) {
+  const { siteMap } = pageProps
+  
+  // Build breadcrumbs from siteMap if available
+  const breadcrumbs = React.useMemo(() => {
+    if (!siteMap || !pageProps.pageId) return []
+    
+    const findPagePath = (pageId: string): string[] => {
+      // Find the page in siteMap
+      const findInMap = (items: any[], path: string[] = []): string[] | null => {
+        for (const item of items) {
+          if (item.pageId === pageId) {
+            return [...path, item.title || item.name || 'Untitled']
+          }
+          if (item.children) {
+            const result = findInMap(item.children, [...path, item.title || item.name || 'Untitled'])
+            if (result) return result
+          }
+        }
+        return null
+      }
+      
+      return findInMap(siteMap.navigationTree || []) || []
+    }
+    
+    return findPagePath(pageProps.pageId)
+  }, [siteMap, pageProps.pageId])
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '1rem 0',
+      minHeight: '60px'
+    }}>
+      {/* Breadcrumbs */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        fontSize: '14px',
+        color: 'var(--text-color, #666)'
+      }}>
+        <span>🏠</span>
+        {breadcrumbs.map((crumb, index) => (
+          <React.Fragment key={index}>
+            {index > 0 && <span style={{ margin: '0 0.5rem' }}>›</span>}
+            <span style={{ 
+              fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
+              color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)'
+            }}>
+              {crumb}
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+      
+      {/* Right side - can add search, theme toggle etc later */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {/* Placeholder for future features */}
+      </div>
+    </div>
+  )
 }
 
 export default function App({ Component, pageProps }: AppProps<types.PageProps>) {
@@ -76,12 +144,50 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   console.log('DEBUG _app.tsx - block exists:', !!block)
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+    <div style={{ 
+      display: 'flex', 
+      height: '100vh',
+      overflow: 'hidden'
+    }}>
       {/* Render our SideNav component when siteMap is available */}
-      {siteMap && <SideNav siteMap={siteMap} block={block} />}
+      {siteMap && (
+        <div style={{ 
+          flexShrink: 0,
+          width: '280px',
+          height: '100vh',
+          overflowY: 'auto'
+        }}>
+          <SideNav siteMap={siteMap} block={block} />
+        </div>
+      )}
 
-      <main style={{ flex: 1, minWidth: 0 }}>
-        <Component {...pageProps} />
+      <main style={{ 
+        flex: 1, 
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden'
+      }}>
+        {/* Custom header with breadcrumbs - only for main content area */}
+        {siteMap && pageProps.pageId && (
+          <div style={{ 
+            flexShrink: 0,
+            borderBottom: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
+            padding: '0 2rem',
+            backgroundColor: 'var(--bg-color, #ffffff)',
+            backdropFilter: 'blur(8px)',
+            transition: 'background-color 0.2s ease'
+          }}>
+            <CustomPageHeader pageProps={pageProps} block={block} />
+          </div>
+        )}
+        
+        <div style={{ 
+          flex: 1,
+          overflow: 'auto'
+        }}>
+          <Component {...pageProps} />
+        </div>
       </main>
     </div>
   )

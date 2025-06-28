@@ -135,6 +135,9 @@ const Modal2 = dynamic(
 
 const Tweet = dynamic(() => import('react-tweet').then((m) => m.Tweet))
 
+// Empty header component to hide the default notion header
+const EmptyHeader = () => null
+
 const propertyLastEditedTimeValue = (
   { block, pageHeader }: any,
   defaultFn: () => React.ReactNode
@@ -248,7 +251,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
                 Pdf,
                 Modal: Modal2,
                 Tweet,
-                Header: NotionPageHeader,
+                Header: EmptyHeader,
                 propertyLastEditedTimeValue,
                 propertyDateValue,
                 propertyTextValue
