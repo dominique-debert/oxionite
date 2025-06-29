@@ -181,13 +181,12 @@ const propertyTextValue = (
   return defaultFn()
 }
 
-export const NotionPage: React.FC<types.PageProps & { onTOCChange?: (show: boolean) => void }> = ({
+export const NotionPage: React.FC<types.PageProps> = ({
   site,
   recordMap,
   error,
   pageId,
-  siteMap,
-  onTOCChange
+  siteMap
 }) => {
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
@@ -252,15 +251,8 @@ export const NotionPage: React.FC<types.PageProps & { onTOCChange?: (show: boole
     showTableOfContents
   })
 
-  // Notify parent about TOC display status
-  React.useEffect(() => {
-    console.log('DEBUG NotionPage - showTableOfContents:', showTableOfContents)
-    console.log('DEBUG NotionPage - onTOCChange exists:', !!onTOCChange)
-    if (onTOCChange) {
-      console.log('DEBUG NotionPage - calling onTOCChange with:', showTableOfContents)
-      onTOCChange(showTableOfContents)
-    }
-  }, [showTableOfContents, onTOCChange])
+  // Debug TOC calculation
+  console.log('DEBUG NotionPage - showTableOfContents:', showTableOfContents)
 
   return (
     <>

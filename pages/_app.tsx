@@ -39,7 +39,6 @@ if (typeof window !== 'undefined') {
 
 export default function App({ Component, pageProps }: AppProps<types.PageProps>) {
   const router = useRouter()
-  const [showTOC, setShowTOC] = React.useState(false)
 
   React.useEffect(() => {
     function onRouteChangeComplete() {
@@ -67,17 +66,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     }
   }, [router.events])
 
-  // Reset TOC state on route change
-  React.useEffect(() => {
-    console.log('DEBUG _app.tsx - Route changed, resetting showTOC to false')
-    setShowTOC(false)
-  }, [router.asPath])
-
-  // Track showTOC state changes
-  React.useEffect(() => {
-    console.log('DEBUG _app.tsx - showTOC state changed to:', showTOC)
-  }, [showTOC])
-
   // Extract siteMap and recordMap for the SideNav component
   const { siteMap, recordMap, pageId } = pageProps
 
@@ -89,12 +77,41 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
   const isCategory = pageInfo?.type === 'Category'
 
+  // Calculate TOC display in real-time instead of using state
+  const showTOC = React.useMemo(() => {
+    if (!block || !recordMap?.block) return false
+    
+    const isBlogPost = block?.type === 'page' && block?.parent_table === 'collection'
+    if (!isBlogPost) return false
+    
+    // Count headers
+    let headerCount = 0
+    Object.values(recordMap.block).forEach((blockWrapper: any) => {
+      const blockData = blockWrapper?.value
+      if (blockData?.type === 'header' || blockData?.type === 'sub_header' || blockData?.type === 'sub_sub_header') {
+        headerCount++
+      }
+    })
+    
+    const minTableOfContentsItems = 3
+    const result = headerCount >= minTableOfContentsItems
+    
+    console.log('DEBUG _app.tsx - Real-time TOC calculation:', {
+      isBlogPost,
+      headerCount,
+      minTableOfContentsItems,
+      showTOC: result
+    })
+    
+    return result
+  }, [block, recordMap])
+
   // DEBUG: Let's see what we're getting
   console.log('DEBUG _app.tsx - pageProps:', pageProps)
   console.log('DEBUG _app.tsx - siteMap exists:', !!siteMap)
   console.log('DEBUG _app.tsx - block exists:', !!block)
   console.log('DEBUG _app.tsx - isCategory:', isCategory)
-  console.log('DEBUG _app.tsx - showTOC state:', showTOC)
+  console.log('DEBUG _app.tsx - showTOC calculated:', showTOC)
   
   const paddingRight = showTOC ? '30rem' : '0'
   console.log('DEBUG _app.tsx - paddingRight will be:', paddingRight)
@@ -145,7 +162,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           display: isCategory ? 'flex' : 'block',
           justifyContent: isCategory ? 'center' : 'flex-start'
         }}>
-          <Component {...pageProps} onTOCChange={setShowTOC} />
+          <Component {...pageProps} />
         </div>
       </main>
     </div>
