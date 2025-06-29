@@ -25,6 +25,7 @@ import { PageAside } from './PageAside'
 import { PageHead } from './PageHead'
 import { CategoryTree } from './CategoryTree'
 import { Page404 } from './Page404'
+import TruncatedTOC from './TruncatedTOC'
 import styles from './styles.module.css'
 
 import * as config from '@/lib/config'
@@ -257,6 +258,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
                 propertyTextValue
               }}
             />
+            {showTableOfContents && <TruncatedTOC />}
           </div>
         </div>
       </div>

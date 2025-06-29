@@ -22,13 +22,44 @@
 }
 
 .notion-page-content-has-aside {
-  width: calc(var(--notion-max-width) + 300px); /* Margin between the main content and the table of contents */
+  width: calc(var(--notion-max-width) + 360px); /* Margin between the main content and the table of contents */
   display: flex;
   flex-direction: row;
 }
 
 .notion-aside {
   align-items: end;
+  max-height: 70vh; /* Maximum height: 70% of viewport height */
+  overflow-y: auto; /* Enable vertical scrolling when content exceeds max-height */
+  padding-right: 8px; /* Add padding to prevent scrollbar from overlapping content */
+  font-size: 14px;
+}
+
+/* Custom scrollbar for Table of Contents */
+.notion-aside::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notion-aside::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notion-aside::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.notion-aside::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Dark mode scrollbar */
+.dark-mode .notion-aside::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .notion-aside::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .index-page {
@@ -413,3 +444,92 @@
 .notion-equation.notion-equation-block{
   align-items: center;
 }
+
+/* Table of Contents hierarchical indentation based on heading levels */
+
+/* Base TOC link styling */
+.notion-aside a {
+  display: block;
+  padding: 2px 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 3px;
+  transition: all 150ms ease-out;
+}
+
+.notion-aside a:hover {
+  background-color: rgba(55, 53, 47, 0.08);
+  padding-left: 4px;
+}
+
+.dark-mode .notion-aside a:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Heading level indentation - react-notion-x uses these classes */
+.notion-table-of-contents-item {
+  line-height: 1.4;
+  margin: 1px 0;
+}
+
+/* H1 - no indentation */
+.notion-table-of-contents-item[data-level="1"],
+.notion-table-of-contents-item.notion-table-of-contents-item-h1 {
+  margin-left: 0;
+  font-weight: 500;
+}
+
+/* H2 - level 2 indentation */
+.notion-table-of-contents-item[data-level="2"],
+.notion-table-of-contents-item.notion-table-of-contents-item-h2 {
+  margin-left: 1.5em;
+  font-size: 13px;
+}
+
+/* H3 - level 3 indentation */
+.notion-table-of-contents-item[data-level="3"],
+.notion-table-of-contents-item.notion-table-of-contents-item-h3 {
+  margin-left: 3em;
+  font-size: 12px;
+}
+
+/* H4 - level 4 indentation */
+.notion-table-of-contents-item[data-level="4"],
+.notion-table-of-contents-item.notion-table-of-contents-item-h4 {
+  margin-left: 4.5em;
+  font-size: 12px;
+}
+
+/* H5 - level 5 indentation */
+.notion-table-of-contents-item[data-level="5"],
+.notion-table-of-contents-item.notion-table-of-contents-item-h5 {
+  margin-left: 6em;
+  font-size: 11px;
+}
+
+/* H6 - level 6 indentation */
+.notion-table-of-contents-item[data-level="6"],
+.notion-table-of-contents-item.notion-table-of-contents-item-h6 {
+  margin-left: 7.5em;
+  font-size: 11px;
+}
+
+/* Alternative fallback using li nesting if classes aren't available */
+.notion-aside ul li {
+  margin-left: 0;
+}
+
+.notion-aside ul ul li {
+  margin-left: 1.5em;
+}
+
+.notion-aside ul ul ul li {
+  margin-left: 3em;
+}
+
+.notion-aside ul ul ul ul li {
+  margin-left: 4.5em;
+}
+
+
+
