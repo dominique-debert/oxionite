@@ -8,12 +8,14 @@ interface PostHeaderProps {
   block: any
   recordMap: any
   isBlogPost: boolean
+  isMobile?: boolean
 }
 
 export const PostHeader: React.FC<PostHeaderProps> = ({ 
   block, 
   recordMap, 
-  isBlogPost 
+  isBlogPost,
+  isMobile = false
 }) => {
   if (!isBlogPost || !block || block.parent_table !== 'collection') {
     return null
@@ -153,7 +155,9 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
         <div style={{
           position: 'relative',
           width: '100%',
-          height: '400px',
+          height: isMobile ? '0' : '400px',
+          aspectRatio: isMobile ? '16 / 9' : 'auto',
+          paddingBottom: isMobile ? '56.25%' : '0', // 16:9 ratio = 9/16 = 0.5625 = 56.25%
           borderRadius: '12px',
           overflow: 'hidden',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
@@ -168,6 +172,7 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
               objectPosition: `center ${(1 - coverPosition) * 100}%`
             }}
             priority
+            sizes="(max-width: 1024px) 100vw, 800px"
           />
         </div>
       )}

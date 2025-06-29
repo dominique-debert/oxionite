@@ -186,7 +186,8 @@ export const NotionPage: React.FC<types.PageProps> = ({
   recordMap,
   error,
   pageId,
-  siteMap
+  siteMap,
+  isMobile = false
 }) => {
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
@@ -230,7 +231,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
     return count
   }, [isBlogPost, recordMap])
   
-  const showTableOfContents = isBlogPost && headerCount >= minTableOfContentsItems
+  const showTableOfContents = isBlogPost && headerCount >= minTableOfContentsItems && !isMobile
 
   // Create page URL mapper for proper navigation
   const siteMapPageUrl = React.useMemo(() => {
@@ -270,6 +271,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
               block={block}
               recordMap={recordMap}
               isBlogPost={isBlogPost}
+              isMobile={isMobile}
             />
             
             <NotionRenderer

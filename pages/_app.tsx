@@ -185,7 +185,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           height: '100vh',
           overflow: 'hidden'
         }}>
-          <Component {...pageProps} />
+          <Component {...pageProps} isMobile={isMobile} />
         </main>
       </div>
     )
@@ -262,7 +262,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           display: isCategory ? 'flex' : 'block',
           justifyContent: isCategory ? 'center' : 'flex-start'
         }}>
-          <Component {...pageProps} />
+          <Component {...pageProps} isMobile={isMobile} />
         </div>
       </main>
     </div>

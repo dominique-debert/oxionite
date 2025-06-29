@@ -229,10 +229,26 @@
   }
 }
 
+@media only screen and (max-width: 1024px) {
+  /* Mobile/tablet breakpoint - apply 720px mechanism to all mobile sizes */
+  .notion-page {
+    padding-left: 2vw;
+    padding-right: 2vw;
+  }
+  
+  .notion {
+    --notion-max-width: calc(100vw - 2rem);
+  }
+}
+
 @media only screen and (max-width: 720px) {
   .notion-page {
     padding-left: 2vw;
     padding-right: 2vw;
+  }
+  
+  .notion {
+    --notion-max-width: calc(100vw - 2rem);
   }
 }
 

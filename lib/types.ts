@@ -18,6 +18,7 @@ export interface PageProps {
   error?: PageError
   // From here, we are adding custom props that will be available on all pages
   siteMap?: SiteMap
+  isMobile?: boolean
 }
 
 export interface Params extends ParsedUrlQuery {
