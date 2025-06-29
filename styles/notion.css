@@ -22,7 +22,7 @@
 }
 
 .notion-page-content-has-aside {
-  width: calc(var(--notion-max-width) + 360px); /* Margin between the main content and the table of contents */
+  width: calc(var(--notion-max-width) + 400px); /* Width of TOC */
   display: flex;
   flex-direction: row;
 }
@@ -34,6 +34,7 @@
   overflow-x: hidden; /* Hide horizontal scrolling to prevent layout shift */
   padding-right: 8px; /* Add padding to prevent scrollbar from overlapping content */
   font-size: 14px;
+  margin-left: 20px;
 }
 
 /* Custom scrollbar for Table of Contents */
@@ -457,9 +458,11 @@
   border-radius: 3px;
   border-left: 3px solid transparent;
   transition: all 150ms ease-out;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.4;
   max-width: 100%;
 }
 

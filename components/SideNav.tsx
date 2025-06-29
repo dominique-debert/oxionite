@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useRouter } from 'next/router'
 
 import type * as types from '@/lib/types'
 import { CategoryTree } from './CategoryTree'
@@ -13,15 +14,50 @@ export const SideNav = ({
   siteMap: types.SiteMap
   block?: any // For search functionality
 }) => {
+  const router = useRouter()
+  const { locale } = router
+
+  // Filter navigation tree by current locale
+  const filterByLocale = React.useCallback((items: types.PageInfo[], currentLocale: string): types.PageInfo[] => {
+    if (!items || !Array.isArray(items)) return []
+    
+    return items
+      .filter((item: types.PageInfo) => {
+        // Check if item has language property and matches current locale
+        // If no language property, include it (for backward compatibility)
+        if (!item.language) return true
+        return item.language.toLowerCase() === currentLocale?.toLowerCase()
+      })
+      .map((item: types.PageInfo) => {
+        // Recursively filter children
+        if (item.children && Array.isArray(item.children)) {
+          return {
+            ...item,
+            children: filterByLocale(item.children, currentLocale)
+          }
+        }
+        return item
+      })
+  }, [])
+
+  // Get filtered navigation tree for current locale
+  const filteredNavigationTree = React.useMemo(() => {
+    if (!siteMap?.navigationTree || !locale) {
+      return siteMap?.navigationTree || []
+    }
+    
+    return filterByLocale(siteMap.navigationTree, locale)
+  }, [siteMap?.navigationTree, locale, filterByLocale])
+
   // Use the pre-computed navigation tree from getSiteMap
-  if (!siteMap?.navigationTree) {
+  if (!siteMap?.navigationTree || filteredNavigationTree.length === 0) {
     return null
   }
 
   return (
     <aside className={styles.sideNav}>
       <div className={styles.title}>Navigation</div>
-      <CategoryTree items={siteMap.navigationTree} block={block} />
+      <CategoryTree items={filteredNavigationTree} block={block} />
     </aside>
   )
 } 

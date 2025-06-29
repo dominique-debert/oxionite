@@ -21,7 +21,7 @@ import {
 import { Loading } from './Loading'
 import { PageHead } from './PageHead'
 import { Page404 } from './Page404'
-import TruncatedTOC from './TruncatedTOC'
+
 import styles from './styles.module.css'
 
 import * as config from '@/lib/config'
@@ -276,8 +276,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
               }}
             />
             
-            {/* Enhanced TruncatedTOC with scroll spy functionality */}
-            {showTableOfContents && <TruncatedTOC />}
+            
           </div>
         </div>
       </div>

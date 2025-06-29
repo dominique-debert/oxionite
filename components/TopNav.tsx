@@ -1,4 +1,5 @@
 import * as React from 'react'
+import Link from 'next/link'
 import { IoMoonSharp } from '@react-icons/all-files/io5/IoMoonSharp'
 import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
 
@@ -50,6 +51,11 @@ function ToggleThemeButton() {
   )
 }
 
+interface BreadcrumbItem {
+  title: string
+  pageInfo?: types.PageInfo
+}
+
 interface TopNavProps {
   pageProps: types.PageProps
   block?: any
@@ -59,18 +65,23 @@ export function TopNav({ pageProps, block }: TopNavProps) {
   const { siteMap } = pageProps
   
   // Build breadcrumbs from siteMap if available
-  const breadcrumbs = React.useMemo(() => {
+  const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     if (!siteMap || !pageProps.pageId) return []
     
-    const findPagePath = (pageId: string): string[] => {
+    const findPagePath = (pageId: string): BreadcrumbItem[] => {
       // Find the page in siteMap
-      const findInMap = (items: any[], path: string[] = []): string[] | null => {
+      const findInMap = (items: types.PageInfo[], path: BreadcrumbItem[] = []): BreadcrumbItem[] | null => {
         for (const item of items) {
+          const currentBreadcrumb: BreadcrumbItem = {
+            title: item.title || 'Untitled',
+            pageInfo: item
+          }
+          
           if (item.pageId === pageId) {
-            return [...path, item.title || item.name || 'Untitled']
+            return [...path, currentBreadcrumb]
           }
           if (item.children) {
-            const result = findInMap(item.children, [...path, item.title || item.name || 'Untitled'])
+            const result = findInMap(item.children, [...path, currentBreadcrumb])
             if (result) return result
           }
         }
@@ -99,16 +110,60 @@ export function TopNav({ pageProps, block }: TopNavProps) {
         fontSize: '14px',
         color: 'var(--text-color, #666)'
       }}>
-        <span>🏠</span>
+        <Link 
+          href="/"
+          style={{
+            textDecoration: 'none',
+            color: 'var(--text-color, #666)',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '4px 6px',
+            borderRadius: '4px',
+            transition: 'background-color 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent'
+          }}
+        >
+          🏠
+        </Link>
         {breadcrumbs.map((crumb, index) => (
           <React.Fragment key={index}>
-            {index > 0 && <span style={{ margin: '0 0.5rem' }}>›</span>}
-            <span style={{ 
-              fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
-              color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)'
-            }}>
-              {crumb}
-            </span>
+            <span style={{ margin: '0 0.5rem' }}>›</span>
+            {crumb.pageInfo && crumb.pageInfo.language && crumb.pageInfo.slug ? (
+              <Link
+                href={`/${crumb.pageInfo.language}/${crumb.pageInfo.slug}`}
+                style={{
+                  textDecoration: 'none',
+                  fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
+                  color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)',
+                  padding: '4px 6px',
+                  borderRadius: '4px',
+                  transition: 'background-color 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (index !== breadcrumbs.length - 1) {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                }}
+              >
+                {crumb.title}
+              </Link>
+            ) : (
+              <span style={{ 
+                fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
+                color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)',
+                padding: '4px 6px'
+              }}>
+                {crumb.title}
+              </span>
+            )}
           </React.Fragment>
         ))}
       </div>

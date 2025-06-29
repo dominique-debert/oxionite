@@ -3,6 +3,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
+import { IoChevronForward } from '@react-icons/all-files/io5/IoChevronForward'
 import type { PageInfo } from '@/lib/types'
 import { isSearchEnabled } from '@/lib/config'
 import siteConfig from '../site.config'
@@ -303,10 +305,19 @@ const CustomSearch: React.FC = () => {
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false) // Start collapsed to avoid hydration mismatch
+  const [hasMounted, setHasMounted] = useState(false)
   const hasChildren = item.children && item.children.length > 0
   const isCategory = item.type === 'Category'
   const router = useRouter()
+  
+  // Expand all categories after component mounts to avoid hydration issues
+  useEffect(() => {
+    setHasMounted(true)
+    if (hasChildren) {
+      setIsExpanded(true)
+    }
+  }, [hasChildren])
   
   // Get current locale or default to 'en'
   const locale = router.locale || 'en'
@@ -324,31 +335,69 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
     <div>
       <div
         style={{
-          paddingLeft: `${level * 16}px`,
           display: 'flex',
           alignItems: 'center',
-          padding: '4px 0',
-          cursor: hasChildren ? 'pointer' : 'default'
+          paddingTop: '6px',
+          paddingBottom: '6px',
+          paddingRight: '8px',
+          paddingLeft: `${level * 20 + 8}px`, // Level-based indentation + base padding
+          cursor: hasChildren ? 'pointer' : 'default',
+          borderRadius: '4px',
+          transition: 'background-color 0.2s ease'
         }}
         onClick={toggleExpanded}
+        onMouseEnter={(e) => {
+          if (hasChildren) {
+            e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent'
+        }}
       >
         {hasChildren && (
-          <span style={{ marginRight: '8px', fontSize: '12px' }}>
-            {isExpanded ? '▼' : '▶'}
+          <span 
+            style={{ 
+              marginRight: '8px', 
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              color: 'var(--fg-color-icon)',
+              transition: 'transform 0.2s ease'
+            }}
+          >
+                         {isExpanded ? <IoChevronDown /> : <IoChevronForward />}
           </span>
         )}
         
         {isCategory ? (
           <span 
             style={{ 
-              color: '#666',
-              fontWeight: hasChildren ? 'bold' : 'normal'
+              color: 'var(--fg-color)',
+              fontWeight: hasChildren ? '600' : '500',
+              fontSize: '14px',
+              lineHeight: '1.4'
             }}
           >
             {item.title}
           </span>
         ) : (
-          <Link href={pageUrl} style={{ textDecoration: 'none', color: '#333' }}>
+          <Link 
+            href={pageUrl} 
+            style={{ 
+              textDecoration: 'none', 
+              color: 'var(--fg-color-2)',
+              fontSize: '14px',
+              lineHeight: '1.4',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--fg-color)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--fg-color-2)'
+            }}
+          >
             {item.title}
           </Link>
         )}
