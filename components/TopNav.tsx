@@ -7,6 +7,7 @@ import * as types from '@/lib/types'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import { PageSocial } from './PageSocial'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import siteConfig from '../site.config'
 
 // Dark mode toggle button component
 function ToggleThemeButton() {
@@ -119,7 +120,9 @@ export function TopNav({ pageProps, block }: TopNavProps) {
             alignItems: 'center',
             padding: '4px 6px',
             borderRadius: '4px',
-            transition: 'background-color 0.2s ease'
+            transition: 'background-color 0.2s ease',
+            fontWeight: '500',
+            fontSize: '14px'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
@@ -128,7 +131,7 @@ export function TopNav({ pageProps, block }: TopNavProps) {
             e.currentTarget.style.backgroundColor = 'transparent'
           }}
         >
-          🏠
+          {siteConfig.name}
         </Link>
         {breadcrumbs.map((crumb, index) => (
           <React.Fragment key={index}>

@@ -1,10 +1,11 @@
 import pMemoize from 'p-memoize'
 import { getPageProperty, idToUuid } from 'notion-utils'
-import type { ExtendedRecordMap } from 'notion-types'
+import type { ExtendedRecordMap, PageBlock } from 'notion-types'
 
 import type * as types from './types'
 import * as config from './config'
 import { notion } from './notion-api'
+import { mapImageUrl } from './map-image-url'
 
 /**
  * The main function to fetch all data from Notion and build the site map.
@@ -180,6 +181,10 @@ async function getAllPagesFromDatabase(
         continue
       }
 
+      // Extract cover image from Notion page format
+      const coverImageUrl = (block as PageBlock).format?.page_cover
+      const processedCoverImage = coverImageUrl ? mapImageUrl(coverImageUrl, block) : null
+
       pageInfoMap[pageId] = {
         title,
         pageId,
@@ -193,6 +198,7 @@ async function getAllPagesFromDatabase(
         description: getPageProperty<string>('Description', block, collectionRecordMap) || null,
         published: getPageProperty<number>('Published', block, collectionRecordMap) ? new Date(getPageProperty<number>('Published', block, collectionRecordMap)!).toISOString() : null,
         lastUpdated: getPageProperty<number>('Last Updated', block, collectionRecordMap) ? new Date(getPageProperty<number>('Last Updated', block, collectionRecordMap)!).toISOString() : null,
+        coverImage: processedCoverImage,
         children: [],
         translations: []
       }

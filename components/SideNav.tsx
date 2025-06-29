@@ -60,7 +60,6 @@ export const SideNav = ({
 
   return (
     <aside className={styles.sideNav}>
-      <div className={styles.title}>{t.navigation}</div>
       <CategoryTree items={filteredNavigationTree} block={block} />
     </aside>
   )
