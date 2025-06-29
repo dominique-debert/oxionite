@@ -39,6 +39,7 @@ if (typeof window !== 'undefined') {
 
 export default function App({ Component, pageProps }: AppProps<types.PageProps>) {
   const router = useRouter()
+  const [showTOC, setShowTOC] = React.useState(false)
 
   React.useEffect(() => {
     function onRouteChangeComplete() {
@@ -66,6 +67,17 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     }
   }, [router.events])
 
+  // Reset TOC state on route change
+  React.useEffect(() => {
+    console.log('DEBUG _app.tsx - Route changed, resetting showTOC to false')
+    setShowTOC(false)
+  }, [router.asPath])
+
+  // Track showTOC state changes
+  React.useEffect(() => {
+    console.log('DEBUG _app.tsx - showTOC state changed to:', showTOC)
+  }, [showTOC])
+
   // Extract siteMap and recordMap for the SideNav component
   const { siteMap, recordMap, pageId } = pageProps
 
@@ -82,6 +94,10 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   console.log('DEBUG _app.tsx - siteMap exists:', !!siteMap)
   console.log('DEBUG _app.tsx - block exists:', !!block)
   console.log('DEBUG _app.tsx - isCategory:', isCategory)
+  console.log('DEBUG _app.tsx - showTOC state:', showTOC)
+  
+  const paddingRight = showTOC ? '30rem' : '0'
+  console.log('DEBUG _app.tsx - paddingRight will be:', paddingRight)
 
   return (
     <div style={{ 
@@ -125,11 +141,11 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         <div style={{ 
           flex: 1,
           overflow: 'auto',
-          paddingRight: isCategory ? '0' : '30rem', // Center category pages, offset notion pages
+          paddingRight: paddingRight,
           display: isCategory ? 'flex' : 'block',
           justifyContent: isCategory ? 'center' : 'flex-start'
         }}>
-          <Component {...pageProps} />
+          <Component {...pageProps} onTOCChange={setShowTOC} />
         </div>
       </main>
     </div>

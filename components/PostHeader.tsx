@@ -28,19 +28,24 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
   const tagsRaw = getPageProperty('Tags', block, recordMap)
   console.log('Tags raw data:', tagsRaw, typeof tagsRaw)
   
-  // Handle different tag formats
+  // Handle different tag formats and filter out empty/invalid tags
   let tags: string[] = []
   if (Array.isArray(tagsRaw)) {
-    tags = tagsRaw.filter(tag => typeof tag === 'string')
-  } else if (typeof tagsRaw === 'string') {
-    tags = [tagsRaw]
+    tags = tagsRaw
+      .filter((tag: any) => typeof tag === 'string' && tag.trim().length > 0)
+      .map((tag: any) => tag.trim())
+  } else if (typeof tagsRaw === 'string' && tagsRaw.trim().length > 0) {
+    tags = [tagsRaw.trim()]
   } else if (tagsRaw && typeof tagsRaw === 'object') {
     // Tags might be stored as multi_select with different structure
     const tagObj = tagsRaw as any
     if (tagObj.multi_select) {
-      tags = tagObj.multi_select.map((tag: any) => tag.name || tag).filter((tag: any) => typeof tag === 'string')
-    } else if (tagObj.name) {
-      tags = [tagObj.name]
+      tags = tagObj.multi_select
+        .map((tag: any) => tag.name || tag)
+        .filter((tag: any) => typeof tag === 'string' && tag.trim().length > 0)
+        .map((tag: any) => tag.trim())
+    } else if (tagObj.name && typeof tagObj.name === 'string' && tagObj.name.trim().length > 0) {
+      tags = [tagObj.name.trim()]
     }
   }
   

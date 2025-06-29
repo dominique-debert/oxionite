@@ -10,6 +10,8 @@
 
 # testing
 /coverage
+/tmp
+/original_code
 
 # next.js
 /.next/

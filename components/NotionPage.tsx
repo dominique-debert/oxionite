@@ -181,12 +181,13 @@ const propertyTextValue = (
   return defaultFn()
 }
 
-export const NotionPage: React.FC<types.PageProps> = ({
+export const NotionPage: React.FC<types.PageProps & { onTOCChange?: (show: boolean) => void }> = ({
   site,
   recordMap,
   error,
   pageId,
-  siteMap
+  siteMap,
+  onTOCChange
 }) => {
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
@@ -211,9 +212,26 @@ export const NotionPage: React.FC<types.PageProps> = ({
   // Check if this is a blog post (collection item)
   const isBlogPost = block?.type === 'page' && block?.parent_table === 'collection'
 
-  // Table of contents settings
-  const showTableOfContents = !!isBlogPost
+  // Table of contents settings - count actual headers
   const minTableOfContentsItems = 3
+  
+  // Count header blocks in recordMap
+  const headerCount = React.useMemo(() => {
+    if (!isBlogPost || !recordMap?.block) return 0
+    
+    let count = 0
+    Object.values(recordMap.block).forEach((blockWrapper: any) => {
+      const block = blockWrapper?.value
+      if (block?.type === 'header' || block?.type === 'sub_header' || block?.type === 'sub_sub_header') {
+        count++
+      }
+    })
+    
+    console.log('DEBUG NotionPage - Header count:', count)
+    return count
+  }, [isBlogPost, recordMap])
+  
+  const showTableOfContents = isBlogPost && headerCount >= minTableOfContentsItems
 
   // Create page URL mapper for proper navigation
   const siteMapPageUrl = React.useMemo(() => {
@@ -229,8 +247,20 @@ export const NotionPage: React.FC<types.PageProps> = ({
     blockId: block?.id,
     blockType: block?.type,
     isBlogPost,
+    headerCount,
+    minTableOfContentsItems,
     showTableOfContents
   })
+
+  // Notify parent about TOC display status
+  React.useEffect(() => {
+    console.log('DEBUG NotionPage - showTableOfContents:', showTableOfContents)
+    console.log('DEBUG NotionPage - onTOCChange exists:', !!onTOCChange)
+    if (onTOCChange) {
+      console.log('DEBUG NotionPage - calling onTOCChange with:', showTableOfContents)
+      onTOCChange(showTableOfContents)
+    }
+  }, [showTableOfContents, onTOCChange])
 
   return (
     <>
