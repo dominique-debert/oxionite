@@ -65,7 +65,9 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
   return (
     <div style={{
       maxWidth: 'var(--notion-max-width, 800px)',
-      marginTop: '4rem',
+      paddingLeft: '2.5rem',
+      paddingRight: '1rem',
+      paddingTop: '2rem',
       width: '100%'
     }}>
       {/* Title */}

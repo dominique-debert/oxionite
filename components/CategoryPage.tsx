@@ -57,7 +57,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
 
 
 export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
-  const { siteMap, pageId } = pageProps
+  const { siteMap, pageId, isMobile = false } = pageProps
   const router = useRouter()
   const [currentPage, setCurrentPage] = React.useState(1)
   
@@ -202,13 +202,14 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
           >
             <article style={{
               display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
               borderRadius: '12px',
               border: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
               transition: 'all 0.2s ease',
               cursor: 'pointer',
-              width: 'clamp(600px, 90vw, 800px)', // 화면 너비의 90%, 최소 600px, 최대 800px
-              minHeight: '140px', // 카드 최소 높이를 다시 늘림
-              overflow: 'hidden' // borderRadius가 제대로 적용되도록
+              width: 'clamp(360px, 80vw, 800px)',
+              minHeight: isMobile ? 'auto' : '140px',
+              overflow: 'hidden'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)'
@@ -221,13 +222,30 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
               e.currentTarget.style.borderColor = 'var(--border-color, rgba(55, 53, 47, 0.16))'
             }}
             >
-              {/* Content - 왼쪽 영역에만 패딩 적용 */}
+              {/* Cover Image - 모바일에서는 위에, 데스크톱에서는 오른쪽 */}
+              {post.coverImage && (
+                <div style={{
+                  width: isMobile ? '100%' : '260px',
+                  height: isMobile ? '200px' : 'auto',
+                  order: isMobile ? 1 : 2,
+                  alignSelf: isMobile ? 'stretch' : 'stretch',
+                  backgroundColor: 'var(--bg-color-1)',
+                  flexShrink: 0,
+                  backgroundImage: `url(${post.coverImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  borderRadius: isMobile ? '12px 12px 0 0' : '0 12px 12px 0'
+                }} />
+              )}
+
+              {/* Content */}
               <div style={{
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                padding: '1.5rem' // 왼쪽 컨텐츠 영역에만 패딩
+                order: isMobile ? 2 : 1,
+                padding: '1.5rem'
               }}>
                 <div>
                   <h2 style={{
@@ -265,23 +283,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
                   </div>
                 )}
               </div>
-              
-              {/* Cover Image - 오른쪽 영역, 고정 너비로 꽉 차게 */}
-              {post.coverImage && (
-                <div style={{
-                  width: '260px', // 고정 너비
-                  alignSelf: 'stretch', // 카드 높이에 맞게 늘어남
-                  backgroundColor: 'var(--bg-color-1)',
-                  flexShrink: 0,
-                  backgroundImage: `url(${post.coverImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  borderTopLeftRadius: '12px',
-                  borderBottomLeftRadius: '12px',
-                  borderTopRightRadius: '11px',
-                  borderBottomRightRadius: '11px'
-                }} />
-              )}
             </article>
           </Link>
         ))}
