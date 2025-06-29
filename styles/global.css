@@ -7,6 +7,14 @@ a {
   text-decoration: none;
 }
 
+body.light-mode {
+  --border-color: #e9ecef;
+}
+
+body.dark-mode {
+  --border-color: #333;
+}
+
 body,
 html {
   padding: 0;
@@ -19,6 +27,7 @@ body {
     'Droid Sans', 'Helvetica Neue', 'Noto Sans', sans-serif;
   font-family: var(--notion-font);
   overflow-x: hidden;
+  background-color: var(--bg-color);
 }
 
 .static-tweet blockquote {

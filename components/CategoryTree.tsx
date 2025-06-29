@@ -9,6 +9,7 @@ import type { PageInfo } from '@/lib/types'
 import { isSearchEnabled } from '@/lib/config'
 import { useI18n } from '@/lib/i18n'
 import siteConfig from '../site.config'
+import styles from './CategoryTree.module.css'
 
 interface CategoryTreeProps {
   items: PageInfo[]
@@ -175,30 +176,11 @@ const CustomSearch: React.FC = () => {
     <>
       {/* Search Button - styled like react-notion-x Search */}
       <div 
-        className="breadcrumb button"
+        className={`breadcrumb button ${styles.searchButton}`}
         onClick={openModal}
-        style={{
-          cursor: 'pointer',
-          padding: '8px 12px',
-          border: '1px solid var(--fg-color-1)',
-          borderRadius: '6px',
-          backgroundColor: 'var(--bg-color)',
-          display: 'flex',
-          alignItems: 'center',
-          fontSize: '14px',
-          color: 'var(--fg-color)',
-          marginBottom: '16px',
-          transition: 'all 0.2s ease'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--bg-color)'
-        }}
       >
         <svg
-          style={{ marginRight: '8px', opacity: 0.7 }}
+          className={styles.searchIcon}
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -217,71 +199,35 @@ const CustomSearch: React.FC = () => {
       {/* Search Modal */}
       {isOpen && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
-            paddingTop: '10vh'
-          }}
+          className={styles.modalOverlay}
           onClick={closeModal}
         >
           <div
-            style={{
-              backgroundColor: 'var(--bg-color)',
-              borderRadius: '12px',
-              width: '90%',
-              maxWidth: '600px',
-              maxHeight: '70vh',
-              overflow: 'hidden',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
-              border: '1px solid var(--fg-color-1)'
-            }}
+            className={styles.modalContent}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Search Input */}
-            <div style={{ padding: '20px 20px 16px 20px', borderBottom: '1px solid var(--fg-color-1)' }}>
+            <div className={styles.searchInputContainer}>
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={handleInputChange}
                 placeholder={t.searchPlaceholder}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '16px',
-                  border: '1px solid var(--fg-color-1)',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--bg-color)',
-                  color: 'var(--fg-color)',
-                  outline: 'none'
-                }}
+                className={styles.searchInput}
               />
             </div>
 
             {/* Search Results */}
-            <div
-              style={{
-                maxHeight: '400px',
-                overflowY: 'auto',
-                padding: '8px 0'
-              }}
-            >
+            <div className={styles.searchResults}>
               {isLoading && (
-                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
+                <div className={styles.searchStatus}>
                   {t.searching}
                 </div>
               )}
 
               {!isLoading && query && results.length === 0 && (
-                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
+                <div className={styles.searchStatus}>
                   {t.noResults}
                 </div>
               )}
@@ -289,25 +235,14 @@ const CustomSearch: React.FC = () => {
               {!isLoading && results.map((result) => (
                 <div
                   key={result.id}
-                  style={{
-                    padding: '12px 20px',
-                    cursor: 'pointer',
-                    borderBottom: '1px solid var(--fg-color-0)',
-                    transition: 'background-color 0.2s ease'
-                  }}
+                  className={styles.searchResultItem}
                   onClick={() => handleResultClick(result.url)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent'
-                  }}
                 >
-                  <div style={{ fontWeight: '500', color: 'var(--fg-color)', marginBottom: '4px' }}>
+                  <div className={styles.searchResultTitle}>
                     {result.title}
                   </div>
                   {result.snippet && (
-                    <div style={{ fontSize: '14px', color: 'var(--fg-color-2)', lineHeight: '1.4' }}>
+                    <div className={styles.searchResultSnippet}>
                       {result.snippet}
                     </div>
                   )}
@@ -315,7 +250,7 @@ const CustomSearch: React.FC = () => {
               ))}
 
               {!query && (
-                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
+                <div className={styles.searchStatus}>
                   {t.typeToSearch}
                 </div>
               )}
@@ -360,38 +295,16 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
   return (
     <div>
       <div
+        className={styles.categoryItemContainer}
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          paddingTop: '6px',
-          paddingBottom: '6px',
-          paddingRight: '8px',
           paddingLeft: `${level * 20 + 8}px`, // Level-based indentation + base padding
-          borderRadius: '4px'
         }}
       >
         {/* Expand/Collapse Arrow Button */}
         {hasChildren && (
           <button
             onClick={toggleExpanded}
-            style={{ 
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer', 
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              color: 'var(--fg-color-icon)',
-              transition: 'transform 0.2s ease, background-color 0.2s ease',
-              padding: '4px',
-              borderRadius: '4px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
+            className={styles.expandButton}
           >
             {isExpanded ? <IoChevronDown /> : <IoChevronForward />}
           </button>
@@ -401,46 +314,15 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
         {isCategory ? (
           <Link 
             href={pageUrl}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              textDecoration: 'none',
-              flex: 1,
-              padding: '4px 8px',
-              borderRadius: '4px',
-              transition: 'background-color 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
+            className={styles.categoryLink}
           >
             <span 
-              style={{ 
-                color: 'var(--fg-color)',
-                fontWeight: hasChildren ? '600' : '500',
-                fontSize: '14px',
-                lineHeight: '1.4'
-              }}
+              className={`${styles.categoryTitle} ${hasChildren ? styles.categoryTitleWithChildren : styles.categoryTitleWithoutChildren}`}
             >
               {item.title}
             </span>
             {postCount > 0 && (
-              <span 
-                style={{ 
-                  color: 'var(--fg-color-2)',
-                  fontSize: '12px',
-                  fontWeight: '400',
-                  backgroundColor: 'var(--bg-color-2)',
-                  padding: '2px 6px',
-                  borderRadius: '10px',
-                  minWidth: '18px',
-                  textAlign: 'center'
-                }}
-              >
+              <span className={styles.postCount}>
                 {postCount}
               </span>
             )}
@@ -448,24 +330,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
         ) : (
           <Link 
             href={pageUrl} 
-            style={{ 
-              textDecoration: 'none', 
-              color: 'var(--fg-color-2)',
-              fontSize: '14px',
-              lineHeight: '1.4',
-              transition: 'color 0.2s ease, background-color 0.2s ease',
-              flex: 1,
-              padding: '4px 8px',
-              borderRadius: '4px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--fg-color)'
-              e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--fg-color-2)'
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
+            className={styles.postLink}
           >
             {item.title}
           </Link>
