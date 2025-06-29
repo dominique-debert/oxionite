@@ -1,26 +1,41 @@
 import React, { useEffect } from 'react'
+import { useRouter } from 'next/router'
 
 // Configuration: Maximum number of characters before truncation
 const MAX_TOC_TEXT_LENGTH = 25
 
 const TruncatedTOC: React.FC = () => {
+  const router = useRouter()
+
   useEffect(() => {
+    // Add CSS to hide TOC initially
+    const styleId = 'toc-hide-style'
+    let styleEl = document.getElementById(styleId)
+    
+    if (!styleEl) {
+      styleEl = document.createElement('style')
+      styleEl.id = styleId
+      styleEl.textContent = `
+        .notion-table-of-contents-item {
+          visibility: hidden !important;
+        }
+        .notion-table-of-contents-item.toc-processed {
+          visibility: visible !important;
+        }
+      `
+      document.head.appendChild(styleEl)
+    }
+
     const processToC = () => {
-      // Find react-notion-x's TOC items
-      const tocItems = document.querySelectorAll('.notion-table-of-contents-item')
+      const tocItems = document.querySelectorAll('.notion-table-of-contents-item:not(.toc-processed)')
       
       if (tocItems.length === 0) {
         return false
       }
 
-      // Process text truncation only
+      // Process all items at once
       tocItems.forEach((item) => {
         const element = item as HTMLElement
-
-        // Skip if already processed
-        if (element.dataset.truncatedProcessed === 'true') {
-          return
-        }
 
         // Try multiple selectors to find the text content
         let textContainer = element.querySelector('.notion-table-of-contents-item-body')
@@ -38,40 +53,62 @@ const TruncatedTOC: React.FC = () => {
             const truncatedText = originalText.slice(0, MAX_TOC_TEXT_LENGTH) + '...'
             textContainer.textContent = truncatedText
           }
-
-          element.dataset.truncatedProcessed = 'true'
         }
+
+        // Mark as processed and make visible
+        element.classList.add('toc-processed')
       })
 
       return true
     }
 
-    // Try to process TOC with retries
-    let attempts = 0
-    const maxAttempts = 10
-
-    const tryProcess = () => {
-      const success = processToC()
-      attempts++
-      
-      if (!success && attempts < maxAttempts) {
-        setTimeout(tryProcess, 300)
+    // Use MutationObserver to watch for TOC being added to DOM
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          for (const node of mutation.addedNodes) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as Element
+              // Check if this node or its children contain TOC items
+              if (element.querySelector?.('.notion-table-of-contents-item') || 
+                  element.classList?.contains('notion-table-of-contents-item')) {
+                processToC()
+                return
+              }
+            }
+          }
+        }
       }
-    }
+    })
 
-    // Start processing after delay to let react-notion-x render
-    setTimeout(tryProcess, 200)
+    // Start observing
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    })
 
-    // Also try when page is fully loaded
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', tryProcess)
-    }
+    // Also try immediately in case TOC is already there
+    requestAnimationFrame(() => {
+      processToC()
+    })
 
     // Cleanup
     return () => {
-      document.removeEventListener('DOMContentLoaded', tryProcess)
+      observer.disconnect()
+      
+      // Remove the style and show all TOC items
+      const style = document.getElementById(styleId)
+      if (style) {
+        style.remove()
+      }
+      
+      // Remove processed classes
+      const processedItems = document.querySelectorAll('.toc-processed')
+      processedItems.forEach(item => {
+        item.classList.remove('toc-processed')
+      })
     }
-  }, [])
+  }, [router.locale]) // Re-run when language changes
 
   return null
 }
