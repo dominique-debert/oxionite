@@ -6,6 +6,15 @@
   color: var(--fg-color);
 }
 
+/* Header variant - horizontal layout */
+.pageSocial.header {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5em;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+}
+
 .action {
   position: relative;
   border-radius: 50%;
@@ -21,6 +30,13 @@
   text-decoration: none !important;
   user-select: none;
   cursor: pointer;
+}
+
+/* Header variant - smaller size and no margin */
+.header .action {
+  width: 2.5em;
+  height: 2.5em;
+  margin: 0;
 }
 
 .action:last-child {

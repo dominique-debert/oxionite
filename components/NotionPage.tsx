@@ -19,11 +19,7 @@ import {
 } from 'react-notion-x'
 
 import { Loading } from './Loading'
-import { NotionPageHeader } from './NotionPageHeader'
-import { PageActions } from './PageActions'
-import { PageAside } from './PageAside'
 import { PageHead } from './PageHead'
-import { CategoryTree } from './CategoryTree'
 import { Page404 } from './Page404'
 import TruncatedTOC from './TruncatedTOC'
 import styles from './styles.module.css'
@@ -251,7 +247,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
               )}
               darkMode={isDarkMode}
               recordMap={recordMap}
-              rootPageId={site.rootNotionPageId}
+              rootPageId={site.rootNotionPageId || undefined}
               fullPage={true}
               previewImages={!!recordMap.preview_images}
               showCollectionViewDropdown={false}

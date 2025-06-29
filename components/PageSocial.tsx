@@ -69,9 +69,13 @@ const socialLinks: SocialLink[] = [
   }
 ].filter(Boolean)
 
-export function PageSocial() {
+interface PageSocialProps {
+  variant?: 'header' | 'footer'
+}
+
+export function PageSocial({ variant = 'footer' }: PageSocialProps) {
   return (
-    <div className={styles.pageSocial}>
+    <div className={cs(styles.pageSocial, styles[variant])}>
       {socialLinks.map((action) => (
         <a
           className={cs(styles.action, styles[action.name])}
