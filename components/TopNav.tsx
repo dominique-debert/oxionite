@@ -5,6 +5,7 @@ import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
 import * as types from '@/lib/types'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import { PageSocial } from './PageSocial'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 // Dark mode toggle button component
 function ToggleThemeButton() {
@@ -112,9 +113,10 @@ export function TopNav({ pageProps, block }: TopNavProps) {
         ))}
       </div>
       
-      {/* Right side - Social buttons and theme toggle */}
+      {/* Right side - Social buttons, language selector, and theme toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <PageSocial variant="header" />
+        <LanguageSwitcher />
         <ToggleThemeButton />
       </div>
     </div>
