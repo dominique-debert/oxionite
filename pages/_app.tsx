@@ -35,10 +35,52 @@ if (typeof window !== 'undefined') {
   bootstrap()
 }
 
-
-
 export default function App({ Component, pageProps }: AppProps<types.PageProps>) {
   const router = useRouter()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+  const [isMobile, setIsMobile] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
+
+  // Detect mobile screen size
+  React.useEffect(() => {
+    const checkIsMobile = () => {
+      const mobile = window.innerWidth < 1024 // 1024px breakpoint
+      console.log('DEBUG: Screen width:', window.innerWidth, 'isMobile:', mobile)
+      setIsMobile(mobile)
+      // If switching to mobile, close the menu
+      if (mobile) {
+        setIsMobileMenuOpen(false)
+        console.log('DEBUG: Switched to mobile, closing menu')
+      }
+    }
+
+    setMounted(true)
+    console.log('DEBUG: Component mounted')
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+
+    return () => {
+      window.removeEventListener('resize', checkIsMobile)
+    }
+  }, [])
+
+  // Close mobile menu when route changes
+  React.useEffect(() => {
+    const handleRouteChange = () => {
+      setIsMobileMenuOpen(false)
+      console.log('DEBUG: Route changed, closing mobile menu')
+    }
+
+    router.events.on('routeChangeStart', handleRouteChange)
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange)
+    }
+  }, [router.events])
+
+  // Debug mobile state changes
+  React.useEffect(() => {
+    console.log('DEBUG: Mobile state changed - isMobile:', isMobile, 'isMobileMenuOpen:', isMobileMenuOpen, 'mounted:', mounted)
+  }, [isMobile, isMobileMenuOpen, mounted])
 
   React.useEffect(() => {
     function onRouteChangeComplete() {
@@ -116,22 +158,74 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const paddingRight = showTOC ? '30rem' : '0'
   console.log('DEBUG _app.tsx - paddingRight will be:', paddingRight)
 
+  const toggleMobileMenu = React.useCallback(() => {
+    console.log('DEBUG: Toggle mobile menu called - current state:', isMobileMenuOpen, '-> new state:', !isMobileMenuOpen)
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }, [isMobileMenuOpen])
+
+  const closeMobileMenu = React.useCallback(() => {
+    console.log('DEBUG: Close mobile menu called')
+    setIsMobileMenuOpen(false)
+  }, [])
+
+  // Don't render until mounted to avoid hydration mismatch
+  if (!mounted) {
+    console.log('DEBUG: Not mounted yet, rendering basic layout')
+    return (
+      <div style={{ 
+        display: 'flex', 
+        height: '100vh',
+        overflow: 'hidden'
+      }}>
+        {/* Render basic layout without side nav during SSR */}
+        <main style={{ 
+          flex: 1, 
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          overflow: 'hidden'
+        }}>
+          <Component {...pageProps} />
+        </main>
+      </div>
+    )
+  }
+
+  console.log('DEBUG: Rendering main layout - isMobile:', isMobile, 'isMobileMenuOpen:', isMobileMenuOpen)
+
   return (
     <div style={{ 
       display: 'flex', 
       height: '100vh',
       overflow: 'hidden'
     }}>
+      {/* Mobile Menu Overlay */}
+      {isMobile && isMobileMenuOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)', // Safari support
+            zIndex: 999,
+            transition: 'all 0.3s ease'
+          }}
+          onClick={closeMobileMenu}
+        />
+      )}
+
       {/* Render our SideNav component when siteMap is available */}
       {siteMap && (
-        <div style={{ 
-          flexShrink: 0,
-          width: '280px',
-          height: '100vh',
-          overflowY: 'auto'
-        }}>
-          <SideNav siteMap={siteMap} block={block} />
-        </div>
+        <SideNav 
+          siteMap={siteMap} 
+          block={block} 
+          isMobile={isMobile}
+          isMobileMenuOpen={isMobileMenuOpen}
+        />
       )}
 
       <main style={{ 
@@ -147,11 +241,17 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
             flexShrink: 0,
             borderBottom: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
             padding: '0 2rem',
+            paddingLeft: isMobile ? '1rem' : '2rem',
             backgroundColor: 'var(--bg-color, #ffffff)',
             backdropFilter: 'blur(8px)',
             transition: 'background-color 0.2s ease'
           }}>
-            <TopNav pageProps={pageProps} block={block} />
+            <TopNav 
+              pageProps={pageProps} 
+              block={block} 
+              isMobile={isMobile}
+              onToggleMobileMenu={toggleMobileMenu}
+            />
           </div>
         )}
         

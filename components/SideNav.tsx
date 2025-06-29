@@ -10,10 +10,14 @@ import styles from './SideNav.module.css'
 
 export const SideNav = ({ 
   siteMap, 
-  block 
+  block,
+  isMobile = false,
+  isMobileMenuOpen = false
 }: { 
   siteMap: types.SiteMap
   block?: any // For search functionality
+  isMobile?: boolean
+  isMobileMenuOpen?: boolean
 }) => {
   const router = useRouter()
   const { locale } = router
@@ -58,8 +62,15 @@ export const SideNav = ({
     return null
   }
 
+  // CSS classes for mobile/desktop behavior
+  const sideNavClasses = [
+    styles.sideNav,
+    isMobile ? styles.mobile : styles.desktop,
+    isMobile && isMobileMenuOpen ? styles.mobileOpen : ''
+  ].filter(Boolean).join(' ')
+
   return (
-    <aside className={styles.sideNav}>
+    <aside className={sideNavClasses}>
       <CategoryTree items={filteredNavigationTree} block={block} />
     </aside>
   )

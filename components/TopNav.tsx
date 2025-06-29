@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { IoMoonSharp } from '@react-icons/all-files/io5/IoMoonSharp'
 import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
 import { IoSearchOutline } from '@react-icons/all-files/io5/IoSearchOutline'
+import { IoMenuOutline } from '@react-icons/all-files/io5/IoMenuOutline'
 
 import * as types from '@/lib/types'
 import { useDarkMode } from '@/lib/use-dark-mode'
@@ -53,6 +54,38 @@ function ToggleThemeButton() {
       }}
     >
       {hasMounted && isDarkMode ? <IoMoonSharp /> : <IoSunnyOutline />}
+    </button>
+  )
+}
+
+// Mobile menu button component
+function MobileMenuButton({ onToggle }: { onToggle: () => void }) {
+  return (
+    <button
+      style={{
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '8px',
+        borderRadius: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'background-color 0.2s ease',
+        fontSize: '20px',
+        color: 'var(--fg-color-icon)',
+        marginRight: '8px'
+      }}
+      onClick={onToggle}
+      title="Toggle menu"
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = 'transparent'
+      }}
+    >
+      <IoMenuOutline />
     </button>
   )
 }
@@ -388,9 +421,11 @@ interface BreadcrumbItem {
 interface TopNavProps {
   pageProps: types.PageProps
   block?: any
+  isMobile?: boolean
+  onToggleMobileMenu?: () => void
 }
 
-export function TopNav({ pageProps, block }: TopNavProps) {
+export function TopNav({ pageProps, block, isMobile = false, onToggleMobileMenu }: TopNavProps) {
   const { siteMap } = pageProps
   
   // Build breadcrumbs from siteMap if available
@@ -431,77 +466,108 @@ export function TopNav({ pageProps, block }: TopNavProps) {
       padding: '1rem 0',
       minHeight: '60px'
     }}>
-      {/* Breadcrumbs */}
+      {/* Left side - Mobile menu button + Breadcrumbs */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
         fontSize: '14px',
-        color: 'var(--text-color, #666)'
+        color: 'var(--text-color, #666)',
+        flex: 1,
+        minWidth: 0 // Allow shrinking
       }}>
-        <Link 
-          href="/"
-          style={{
-            textDecoration: 'none',
-            color: 'var(--text-color, #666)',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '4px 6px',
-            borderRadius: '4px',
-            transition: 'background-color 0.2s ease',
-            fontWeight: '500',
-            fontSize: '14px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent'
-          }}
-        >
-          {siteConfig.name}
-        </Link>
-        {breadcrumbs.map((crumb, index) => (
-          <React.Fragment key={index}>
-            <span style={{ margin: '0 0.5rem' }}>›</span>
-            {crumb.pageInfo && crumb.pageInfo.language && crumb.pageInfo.slug ? (
-              <Link
-                href={`/${crumb.pageInfo.language}/${crumb.pageInfo.slug}`}
-                style={{
-                  textDecoration: 'none',
+        {/* Mobile Menu Button */}
+        {isMobile && onToggleMobileMenu && (
+          <MobileMenuButton onToggle={onToggleMobileMenu} />
+        )}
+        
+        {/* Breadcrumbs */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontSize: '14px',
+          color: 'var(--text-color, #666)',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap'
+        }}>
+          <Link 
+            href="/"
+            style={{
+              textDecoration: 'none',
+              color: 'var(--text-color, #666)',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '4px 6px',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s ease',
+              fontWeight: '500',
+              fontSize: '14px',
+              flexShrink: 0
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
+          >
+            {siteConfig.name}
+          </Link>
+          {/* Show full breadcrumbs only on desktop */}
+          {!isMobile && breadcrumbs.map((crumb, index) => (
+            <React.Fragment key={index}>
+              <span style={{ margin: '0 0.5rem', flexShrink: 0 }}>›</span>
+              {crumb.pageInfo && crumb.pageInfo.language && crumb.pageInfo.slug ? (
+                <Link
+                  href={`/${crumb.pageInfo.language}/${crumb.pageInfo.slug}`}
+                  style={{
+                    textDecoration: 'none',
+                    fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
+                    color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)',
+                    padding: '4px 6px',
+                    borderRadius: '4px',
+                    transition: 'background-color 0.2s ease',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (index !== breadcrumbs.length - 1) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  {crumb.title}
+                </Link>
+              ) : (
+                <span style={{ 
                   fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
                   color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)',
                   padding: '4px 6px',
-                  borderRadius: '4px',
-                  transition: 'background-color 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (index !== breadcrumbs.length - 1) {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                }}
-              >
-                {crumb.title}
-              </Link>
-            ) : (
-              <span style={{ 
-                fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
-                color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)',
-                padding: '4px 6px'
-              }}>
-                {crumb.title}
-              </span>
-            )}
-          </React.Fragment>
-        ))}
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {crumb.title}
+                </span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
       
       {/* Right side - Social buttons, language selector, theme toggle, and search */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <PageSocial variant="header" />
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '0.5rem',
+        flexShrink: 0
+      }}>
+        {!isMobile && <PageSocial variant="header" />}
         <LanguageSwitcher />
         <ToggleThemeButton />
         <SearchButton />
