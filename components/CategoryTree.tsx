@@ -27,6 +27,25 @@ interface SearchResult {
   snippet?: string
 }
 
+// Utility function to count posts recursively
+const countPostsRecursively = (item: PageInfo): number => {
+  let count = 0
+  
+  // If this item is a post, count it
+  if (item.type === 'Post') {
+    count = 1
+  }
+  
+  // Recursively count posts in children
+  if (item.children && item.children.length > 0) {
+    count += item.children.reduce((total, child) => {
+      return total + countPostsRecursively(child)
+    }, 0)
+  }
+  
+  return count
+}
+
 // Custom Search Component
 const CustomSearch: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -325,6 +344,9 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
   // Generate URL: /locale/slug
   const pageUrl = `/${locale}/${item.slug}`
 
+  // Count posts in this category (only for categories)
+  const postCount = isCategory ? countPostsRecursively(item) : 0
+
   const toggleExpanded = () => {
     if (hasChildren) {
       setIsExpanded(!isExpanded)
@@ -371,16 +393,34 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
         )}
         
         {isCategory ? (
-          <span 
-            style={{ 
-              color: 'var(--fg-color)',
-              fontWeight: hasChildren ? '600' : '500',
-              fontSize: '14px',
-              lineHeight: '1.4'
-            }}
-          >
-            {item.title}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span 
+              style={{ 
+                color: 'var(--fg-color)',
+                fontWeight: hasChildren ? '600' : '500',
+                fontSize: '14px',
+                lineHeight: '1.4'
+              }}
+            >
+              {item.title}
+            </span>
+            {postCount > 0 && (
+              <span 
+                style={{ 
+                  color: 'var(--fg-color-2)',
+                  fontSize: '12px',
+                  fontWeight: '400',
+                  backgroundColor: 'var(--bg-color-1)',
+                  padding: '2px 6px',
+                  borderRadius: '10px',
+                  minWidth: '18px',
+                  textAlign: 'center'
+                }}
+              >
+                {postCount}
+              </span>
+            )}
+          </div>
         ) : (
           <Link 
             href={pageUrl} 
