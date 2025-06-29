@@ -21,6 +21,7 @@ import {
 import { Loading } from './Loading'
 import { PageHead } from './PageHead'
 import { Page404 } from './Page404'
+import { PostHeader } from './PostHeader'
 
 import styles from './styles.module.css'
 
@@ -137,6 +138,8 @@ const Tweet = dynamic(() => import('react-tweet').then((m) => m.Tweet))
 // Empty header component to hide the default notion header
 const EmptyHeader = () => null
 
+
+
 const propertyLastEditedTimeValue = (
   { block, pageHeader }: any,
   defaultFn: () => React.ReactNode
@@ -240,6 +243,13 @@ export const NotionPage: React.FC<types.PageProps> = ({
       <div className="notion-page">
         <div className='notion-viewport'>
           <div className={cs(styles.main, styles.hasSideNav)}>
+            {/* Post Header with Title, Author, Published, Tags, and Cover Image */}
+            <PostHeader
+              block={block}
+              recordMap={recordMap}
+              isBlogPost={isBlogPost}
+            />
+            
             <NotionRenderer
               bodyClassName={cs(
                 styles.notion,
