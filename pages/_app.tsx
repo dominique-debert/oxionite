@@ -184,7 +184,8 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         
         <div style={{ 
           flex: 1,
-          overflow: 'auto'
+          overflow: 'auto',
+          paddingRight: '20rem' // Move the NotionRenderer to the left
         }}>
           <Component {...pageProps} />
         </div>
