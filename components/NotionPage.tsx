@@ -253,7 +253,8 @@ export const NotionPage: React.FC<types.PageProps> = ({
             <NotionRenderer
               bodyClassName={cs(
                 styles.notion,
-                pageId === site.rootNotionPageId && 'index-page'
+                pageId === site.rootNotionPageId && 'index-page',
+                'custom-notion-page'
               )}
               darkMode={isDarkMode}
               recordMap={recordMap}

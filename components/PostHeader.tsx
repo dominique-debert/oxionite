@@ -133,7 +133,6 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
                 fontSize: '0.75rem',
                 fontWeight: '500',
                 letterSpacing: '0.025em',
-                textTransform: 'uppercase',
                 border: 'none',
                 transition: 'all 0.2s ease'
               }}

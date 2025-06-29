@@ -236,6 +236,107 @@
   display: none !important;
 }
 
+/* Hide the entire page header section */
+.notion-page-header {
+  display: none !important;
+}
+
+/* Hide page icon if it exists */
+.notion-page-icon-hero {
+  display: none !important;
+}
+
+/* Remove top padding from notion content */
+.notion-page-content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Remove top padding from notion scroller */
+.notion-page-scroller {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* More aggressive hiding for custom notion pages */
+.custom-notion-page .notion-page-content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.custom-notion-page .notion-breadcrumb {
+  display: none !important;
+}
+
+.custom-notion-page .notion-page-breadcrumbs {
+  display: none !important;
+}
+
+.custom-notion-page .notion-page-header {
+  display: none !important;
+}
+
+.custom-notion-page .notion-page-icon-wrapper {
+  display: none !important;
+}
+
+/* Hide any remaining page header elements */
+.custom-notion-page > div:first-child {
+  padding-top: 0 !important;
+}
+
+/* Remove all top spacing from the first elements */
+.custom-notion-page .notion-page > div:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.custom-notion-page .notion-page > .notion-scroller > div:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 매우 강력한 CSS - 모든 notion 요소의 첫 번째 자식들 타겟팅 */
+.custom-notion-page .notion-viewport > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.custom-notion-page .notion-frame > *:first-child {
+  margin-top: 0 !important; 
+  padding-top: 0 !important;
+}
+
+.custom-notion-page .notion-page-content-inner > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 첫 번째 블록 요소의 상단 여백 제거 */
+.custom-notion-page .notion-page-content .notion-block:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 전체 notion-page에서 상단 여백 제거 */
+.custom-notion-page.notion-page {
+  padding-top: 0 !important;
+}
+
+/* 모든 중첩된 첫 번째 div들 */
+.custom-notion-page div:first-child > div:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 특정 notion 클래스들 강제 숨김 */
+.custom-notion-page [class*="notion-page-icon"],
+.custom-notion-page [class*="notion-title"],
+.custom-notion-page [class*="notion-breadcrumb"],
+.custom-notion-page [class*="notion-header"] {
+  display: none !important;
+}
+
 .notion-collection-row {
   padding-bottom: 1em;
 }
