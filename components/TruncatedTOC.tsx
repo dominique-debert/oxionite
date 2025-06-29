@@ -5,8 +5,6 @@ const MAX_TOC_TEXT_LENGTH = 25
 
 const TruncatedTOC: React.FC = () => {
   useEffect(() => {
-    let scrollHandler: (() => void) | null = null
-
     const processToC = () => {
       // Find react-notion-x's TOC items
       const tocItems = document.querySelectorAll('.notion-table-of-contents-item')
@@ -24,10 +22,14 @@ const TruncatedTOC: React.FC = () => {
           return
         }
 
-        // Find text container and truncate if needed
-        const textContainer = element.querySelector('.notion-table-of-contents-item-body') || 
-                            element.querySelector('span') || 
-                            element
+        // Try multiple selectors to find the text content
+        let textContainer = element.querySelector('.notion-table-of-contents-item-body')
+        if (!textContainer) {
+          textContainer = element.querySelector('a')
+        }
+        if (!textContainer) {
+          textContainer = element
+        }
 
         if (textContainer && textContainer.textContent) {
           const originalText = textContainer.textContent.trim()
@@ -41,69 +43,7 @@ const TruncatedTOC: React.FC = () => {
         }
       })
 
-      // Setup simple scroll spy
-      setupSimpleScrollSpy()
       return true
-    }
-
-    const setupSimpleScrollSpy = () => {
-      const tocItems = document.querySelectorAll('.notion-table-of-contents-item')
-      const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
-      
-      if (tocItems.length === 0 || headings.length === 0) {
-        return
-      }
-
-      // Simple scroll handler
-      scrollHandler = () => {
-        const scrollY = window.scrollY
-        const windowHeight = window.innerHeight
-        let activeHeading: Element | null = null
-
-        // Find which heading is currently in view (simple approach)
-        headings.forEach((heading) => {
-          const rect = heading.getBoundingClientRect()
-          // Check if heading is near the top of the viewport
-          if (rect.top <= 200 && rect.bottom >= 0) {
-            activeHeading = heading
-          }
-        })
-
-        // Remove all active classes
-        tocItems.forEach((item) => {
-          item.classList.remove('active')
-        })
-
-        // Add active class to matching TOC item
-        if (activeHeading) {
-          const headingId = (activeHeading as HTMLElement).id
-          if (headingId) {
-            tocItems.forEach((item) => {
-              const tocLink = item.querySelector('a')
-              if (tocLink && tocLink.getAttribute('href') === `#${headingId}`) {
-                item.classList.add('active')
-              }
-            })
-          }
-        }
-      }
-
-      // Add throttled scroll listener
-      let ticking = false
-      const throttledScrollHandler = () => {
-        if (!ticking) {
-          requestAnimationFrame(() => {
-            scrollHandler?.()
-            ticking = false
-          })
-          ticking = true
-        }
-      }
-
-      window.addEventListener('scroll', throttledScrollHandler, { passive: true })
-      
-      // Initial call
-      scrollHandler()
     }
 
     // Try to process TOC with retries
@@ -115,18 +55,21 @@ const TruncatedTOC: React.FC = () => {
       attempts++
       
       if (!success && attempts < maxAttempts) {
-        setTimeout(tryProcess, 200)
+        setTimeout(tryProcess, 300)
       }
     }
 
-    // Start processing
-    setTimeout(tryProcess, 100)
+    // Start processing after delay to let react-notion-x render
+    setTimeout(tryProcess, 200)
+
+    // Also try when page is fully loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', tryProcess)
+    }
 
     // Cleanup
     return () => {
-      if (scrollHandler) {
-        window.removeEventListener('scroll', scrollHandler)
-      }
+      document.removeEventListener('DOMContentLoaded', tryProcess)
     }
   }, [])
 
