@@ -487,7 +487,7 @@ export function TopNav({ pageProps, block, isMobile = false, onToggleMobileMenu 
           alignItems: 'center',
           gap: '0.5rem',
           fontSize: '14px',
-          color: 'var(--text-color, #666)',
+          color: 'var(--fg-color-2)',
           overflow: 'hidden',
           whiteSpace: 'nowrap'
         }}>
@@ -495,7 +495,7 @@ export function TopNav({ pageProps, block, isMobile = false, onToggleMobileMenu 
             href="/"
             style={{
               textDecoration: 'none',
-              color: 'var(--text-color, #666)',
+              color: 'var(--fg-color-2)',
               display: 'flex',
               alignItems: 'center',
               padding: '4px 6px',
@@ -506,7 +506,7 @@ export function TopNav({ pageProps, block, isMobile = false, onToggleMobileMenu 
               flexShrink: 0
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
+              e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent'
@@ -517,14 +517,18 @@ export function TopNav({ pageProps, block, isMobile = false, onToggleMobileMenu 
           {/* Show full breadcrumbs only on desktop */}
           {!isMobile && breadcrumbs.map((crumb, index) => (
             <React.Fragment key={index}>
-              <span style={{ margin: '0 0.5rem', flexShrink: 0 }}>›</span>
+              <span style={{ 
+                margin: '0 0.5rem', 
+                flexShrink: 0,
+                color: 'var(--fg-color-3)'
+              }}>›</span>
               {crumb.pageInfo && crumb.pageInfo.language && crumb.pageInfo.slug ? (
                 <Link
                   href={`/${crumb.pageInfo.language}/${crumb.pageInfo.slug}`}
                   style={{
                     textDecoration: 'none',
                     fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
-                    color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)',
+                    color: index === breadcrumbs.length - 1 ? 'var(--fg-color)' : 'var(--fg-color-2)',
                     padding: '4px 6px',
                     borderRadius: '4px',
                     transition: 'background-color 0.2s ease',
@@ -534,7 +538,7 @@ export function TopNav({ pageProps, block, isMobile = false, onToggleMobileMenu 
                   }}
                   onMouseEnter={(e) => {
                     if (index !== breadcrumbs.length - 1) {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-color-1, #f5f5f5)'
+                      e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -546,7 +550,7 @@ export function TopNav({ pageProps, block, isMobile = false, onToggleMobileMenu 
               ) : (
                 <span style={{ 
                   fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
-                  color: index === breadcrumbs.length - 1 ? 'var(--text-color, #000)' : 'var(--text-color, #666)',
+                  color: index === breadcrumbs.length - 1 ? 'var(--fg-color)' : 'var(--fg-color-2)',
                   padding: '4px 6px',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
