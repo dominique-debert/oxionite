@@ -7,6 +7,7 @@ import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
 import { IoChevronForward } from '@react-icons/all-files/io5/IoChevronForward'
 import type { PageInfo } from '@/lib/types'
 import { isSearchEnabled } from '@/lib/config'
+import { useI18n } from '@/lib/i18n'
 import siteConfig from '../site.config'
 
 interface CategoryTreeProps {
@@ -54,6 +55,9 @@ const CustomSearch: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+  
+  // Get texts for current locale
+  const t = useI18n(router.locale || 'ko')
 
   const openModal = useCallback(() => {
     setIsOpen(true)
@@ -207,7 +211,7 @@ const CustomSearch: React.FC = () => {
           <circle cx="11" cy="11" r="8"></circle>
           <path d="m21 21-4.35-4.35"></path>
         </svg>
-        Search
+        {t.search}
       </div>
 
       {/* Search Modal */}
@@ -248,7 +252,7 @@ const CustomSearch: React.FC = () => {
                 type="text"
                 value={query}
                 onChange={handleInputChange}
-                placeholder="Search..."
+                placeholder={t.searchPlaceholder}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -272,13 +276,13 @@ const CustomSearch: React.FC = () => {
             >
               {isLoading && (
                 <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
-                  Searching...
+                  {t.searching}
                 </div>
               )}
 
               {!isLoading && query && results.length === 0 && (
                 <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
-                  No results found
+                  {t.noResults}
                 </div>
               )}
 
@@ -312,7 +316,7 @@ const CustomSearch: React.FC = () => {
 
               {!query && (
                 <div style={{ padding: '20px', textAlign: 'center', color: 'var(--fg-color-2)' }}>
-                  Type to search...
+                  {t.typeToSearch}
                 </div>
               )}
             </div>
@@ -363,37 +367,57 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
           paddingBottom: '6px',
           paddingRight: '8px',
           paddingLeft: `${level * 20 + 8}px`, // Level-based indentation + base padding
-          cursor: hasChildren ? 'pointer' : 'default',
-          borderRadius: '4px',
-          transition: 'background-color 0.2s ease'
-        }}
-        onClick={toggleExpanded}
-        onMouseEnter={(e) => {
-          if (hasChildren) {
-            e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent'
+          borderRadius: '4px'
         }}
       >
+        {/* Expand/Collapse Arrow Button */}
         {hasChildren && (
-          <span 
+          <button
+            onClick={toggleExpanded}
             style={{ 
-              marginRight: '8px', 
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer', 
               fontSize: '14px',
               display: 'flex',
               alignItems: 'center',
               color: 'var(--fg-color-icon)',
-              transition: 'transform 0.2s ease'
+              transition: 'transform 0.2s ease, background-color 0.2s ease',
+              padding: '4px',
+              borderRadius: '4px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
             }}
           >
-                         {isExpanded ? <IoChevronDown /> : <IoChevronForward />}
-          </span>
+            {isExpanded ? <IoChevronDown /> : <IoChevronForward />}
+          </button>
         )}
         
+        {/* Category/Post Content */}
         {isCategory ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link 
+            href={pageUrl}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              textDecoration: 'none',
+              flex: 1,
+              padding: '4px 8px',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
+          >
             <span 
               style={{ 
                 color: 'var(--fg-color)',
@@ -410,7 +434,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
                   color: 'var(--fg-color-2)',
                   fontSize: '12px',
                   fontWeight: '400',
-                  backgroundColor: 'var(--bg-color-1)',
+                  backgroundColor: 'var(--bg-color-2)',
                   padding: '2px 6px',
                   borderRadius: '10px',
                   minWidth: '18px',
@@ -420,7 +444,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
                 {postCount}
               </span>
             )}
-          </div>
+          </Link>
         ) : (
           <Link 
             href={pageUrl} 
@@ -429,13 +453,18 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
               color: 'var(--fg-color-2)',
               fontSize: '14px',
               lineHeight: '1.4',
-              transition: 'color 0.2s ease'
+              transition: 'color 0.2s ease, background-color 0.2s ease',
+              flex: 1,
+              padding: '4px 8px',
+              borderRadius: '4px'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = 'var(--fg-color)'
+              e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = 'var(--fg-color-2)'
+              e.currentTarget.style.backgroundColor = 'transparent'
             }}
           >
             {item.title}

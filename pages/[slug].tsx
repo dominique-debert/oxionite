@@ -3,6 +3,7 @@ import { type ParsedUrlQuery } from 'querystring'
 import { useRouter } from 'next/router'
 
 import { NotionPage } from '@/components/NotionPage'
+import { CategoryPage } from '@/components/CategoryPage'
 import { getSiteMap } from '@/lib/get-site-map'
 import { getPage } from '@/lib/notion'
 import { type PageProps } from '@/lib/types'
@@ -96,5 +97,15 @@ export const getStaticPaths: GetStaticPaths<SlugParams> = async () => {
 }
 
 export default function SlugPage(props: PageProps) {
+  const { siteMap, pageId } = props
+  
+  // Get page info to determine the type
+  const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
+  
+  // Render CategoryPage for Category type, NotionPage for Post type
+  if (pageInfo?.type === 'Category') {
+    return <CategoryPage pageProps={props} />
+  }
+  
   return <NotionPage {...props} />
 } 

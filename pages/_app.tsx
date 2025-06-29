@@ -67,16 +67,21 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   }, [router.events])
 
   // Extract siteMap and recordMap for the SideNav component
-  const { siteMap, recordMap } = pageProps
+  const { siteMap, recordMap, pageId } = pageProps
 
   // Extract block from recordMap for search functionality
   const keys = Object.keys(recordMap?.block || {})
   const block = keys[0] ? recordMap?.block?.[keys[0]]?.value : undefined
 
+  // Get page info to determine layout style
+  const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
+  const isCategory = pageInfo?.type === 'Category'
+
   // DEBUG: Let's see what we're getting
   console.log('DEBUG _app.tsx - pageProps:', pageProps)
   console.log('DEBUG _app.tsx - siteMap exists:', !!siteMap)
   console.log('DEBUG _app.tsx - block exists:', !!block)
+  console.log('DEBUG _app.tsx - isCategory:', isCategory)
 
   return (
     <div style={{ 
@@ -120,7 +125,9 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         <div style={{ 
           flex: 1,
           overflow: 'auto',
-          paddingRight: '30rem' // Move the NotionRenderer to the left
+          paddingRight: isCategory ? '0' : '30rem', // Center category pages, offset notion pages
+          display: isCategory ? 'flex' : 'block',
+          justifyContent: isCategory ? 'center' : 'flex-start'
         }}>
           <Component {...pageProps} />
         </div>

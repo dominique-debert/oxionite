@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 
 import type * as types from '@/lib/types'
 import { CategoryTree } from './CategoryTree'
+import { useI18n } from '@/lib/i18n'
 import styles from './SideNav.module.css'
 
 export const SideNav = ({ 
@@ -16,6 +17,9 @@ export const SideNav = ({
 }) => {
   const router = useRouter()
   const { locale } = router
+  
+  // Get texts for current locale
+  const t = useI18n(locale || 'ko')
 
   // Filter navigation tree by current locale
   const filterByLocale = React.useCallback((items: types.PageInfo[], currentLocale: string): types.PageInfo[] => {
@@ -56,7 +60,7 @@ export const SideNav = ({
 
   return (
     <aside className={styles.sideNav}>
-      <div className={styles.title}>Navigation</div>
+      <div className={styles.title}>{t.navigation}</div>
       <CategoryTree items={filteredNavigationTree} block={block} />
     </aside>
   )
