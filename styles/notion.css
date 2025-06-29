@@ -463,6 +463,18 @@
   max-width: 100%;
 }
 
+/* Active TOC item styling for scroll spy */
+.notion-aside a.active,
+.notion-table-of-contents-item.active {
+  background-color: rgba(55, 53, 47, 0.08) !important;
+  font-weight: 500 !important;
+}
+
+.dark-mode .notion-aside a.active,
+.dark-mode .notion-table-of-contents-item.active {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
 .notion-aside a:hover {
   background-color: rgba(55, 53, 47, 0.12) !important;
   border-left: 3px solid rgba(55, 53, 47, 0.2) !important;

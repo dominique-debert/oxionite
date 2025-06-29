@@ -32,7 +32,9 @@ import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
+import { useDarkMode } from '@/lib/use-dark-mode'
 import * as types from '@/lib/types'
+import cs from 'classnames'
 
 // -----------------------------------------------------------------------------
 // dynamic imports for optional components
@@ -188,6 +190,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
   siteMap
 }) => {
   const router = useRouter()
+  const { isDarkMode } = useDarkMode()
 
   if (router.isFallback) {
     return <Loading />
@@ -213,6 +216,12 @@ export const NotionPage: React.FC<types.PageProps> = ({
   const showTableOfContents = !!isBlogPost
   const minTableOfContentsItems = 3
 
+  // Create page URL mapper for proper navigation
+  const siteMapPageUrl = React.useMemo(() => {
+    const searchParams = new URLSearchParams()
+    return site ? mapPageUrl(site, recordMap, searchParams) : undefined
+  }, [site, recordMap])
+
   console.log('NotionPage debug:', {
     pageId,
     rootNotionPageId: site.rootNotionPageId,
@@ -234,15 +243,27 @@ export const NotionPage: React.FC<types.PageProps> = ({
 
       <div className="notion-page">
         <div className='notion-viewport'>
-          <div className='notion-frame'>
+          <div className={cs(styles.main, styles.hasSideNav)}>
             <NotionRenderer
+              bodyClassName={cs(
+                styles.notion,
+                pageId === site.rootNotionPageId && 'index-page'
+              )}
+              darkMode={isDarkMode}
               recordMap={recordMap}
-              rootPageId={pageId}
+              rootPageId={site.rootNotionPageId}
               fullPage={true}
               previewImages={!!recordMap.preview_images}
               showCollectionViewDropdown={false}
               showTableOfContents={showTableOfContents}
               minTableOfContentsItems={minTableOfContentsItems}
+              defaultPageIcon={config.defaultPageIcon}
+              defaultPageCover={config.defaultPageCover}
+              defaultPageCoverPosition={config.defaultPageCoverPosition}
+              mapImageUrl={mapImageUrl}
+              searchNotion={config.isSearchEnabled ? searchNotion : undefined}
+              {...(site.domain ? { rootDomain: site.domain || undefined } : {})}
+              {...(siteMapPageUrl && { mapPageUrl: siteMapPageUrl })}
               components={{
                 nextImage: Image,
                 nextLink: Link,
@@ -258,6 +279,8 @@ export const NotionPage: React.FC<types.PageProps> = ({
                 propertyTextValue
               }}
             />
+            
+            {/* Enhanced TruncatedTOC with scroll spy functionality */}
             {showTableOfContents && <TruncatedTOC />}
           </div>
         </div>
