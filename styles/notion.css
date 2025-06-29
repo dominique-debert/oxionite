@@ -31,6 +31,9 @@
   align-items: end;
   max-height: 70vh; /* Maximum height: 70% of viewport height */
   overflow-y: auto; /* Enable vertical scrolling when content exceeds max height */
+  position: sticky;
+  top: 30px; /* PostHeader 하단에서 고정 - 필요에 따라 조정 가능 */
+  margin-top: -450px; /* PostHeader 높이만큼 위로 올려서 sticky 시작점 조정 */
 }
 
 /* Custom scrollbar for Table of Contents */
@@ -58,6 +61,21 @@
 
 .dark-mode .notion-aside::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* TOC 항목들의 줄바꿈 설정 - 클릭 기능 보존 */
+.notion-table-of-contents-item {
+  white-space: normal !important;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+}
+
+.notion-table-of-contents-item a {
+  white-space: normal !important;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* display: block 제거하여 클릭 기능 보존 */
 }
 
 .index-page {
