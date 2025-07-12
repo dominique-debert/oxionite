@@ -11,14 +11,13 @@ export interface PageError {
 }
 
 export interface PageProps {
-  site?: Site
+  site: Site
   recordMap?: ExtendedRecordMap
   pageId?: string
-  pageInfo?: PageInfo
-  error?: PageError
-  // From here, we are adding custom props that will be available on all pages
+  error?: any
   siteMap?: SiteMap
   isMobile?: boolean
+  homeRecordMaps?: { [pageId: string]: ExtendedRecordMap }
 }
 
 export interface Params extends ParsedUrlQuery {
@@ -52,7 +51,7 @@ export interface PageInfo {
   // From Notion DB
   title: string
   pageId: string
-  type: 'Post' | 'Category'
+  type: 'Post' | 'Category' | 'Home' | 'Unknown'
   slug: string
   parentPageId: string | null
   childrenPageIds: string[]

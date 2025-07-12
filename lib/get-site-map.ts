@@ -2,7 +2,7 @@ import pMemoize from 'p-memoize'
 import { getPageProperty, idToUuid } from 'notion-utils'
 import type { ExtendedRecordMap, PageBlock } from 'notion-types'
 
-import type * as types from './types'
+import type { SiteMap, PageInfo, CanonicalPageMap, PageType } from './types'
 import * as config from './config'
 import { notion } from './notion-api'
 import { mapImageUrl } from './map-image-url'
@@ -12,7 +12,7 @@ import { mapImageUrl } from './map-image-url'
  * It's memoized to avoid re-fetching data on every call during a single build.
  */
 export const getSiteMap = pMemoize(
-  async (): Promise<types.SiteMap> => {
+  async (): Promise<SiteMap> => {
     const pageInfoMap = await getAllPagesFromDatabase(
       config.rootNotionDatabaseId
     )
@@ -36,7 +36,7 @@ export const getSiteMap = pMemoize(
  */
 async function getAllPagesFromDatabase(
   databaseId?: string
-): Promise<Record<string, types.PageInfo>> {
+): Promise<Record<string, PageInfo>> {
   if (!databaseId) {
     console.warn(
       'WARN: `rootNotionDatabaseId` is not defined in `site.config.ts`, so no pages will be rendered.'
@@ -99,7 +99,7 @@ async function getAllPagesFromDatabase(
     const pageIds = blockIds
     console.log('DEBUG: Found', pageIds.length, 'pages')
     
-    const pageInfoMap: Record<string, types.PageInfo> = {}
+    const pageInfoMap: Record<string, PageInfo> = {}
     const collectionRecordMap = collectionData.recordMap as ExtendedRecordMap
 
     for (const pageId of pageIds) {
@@ -111,7 +111,7 @@ async function getAllPagesFromDatabase(
 
       const title = getPageProperty<string>('Title', block, collectionRecordMap)
       const slug = getPageProperty<string>('Slug', block, collectionRecordMap)
-      const type = getPageProperty<string>('Type', block, collectionRecordMap)
+      const pageType: PageType = (getPageProperty<string>('Type', block, collectionRecordMap) as PageType) || 'Unknown'
       const isPublic = getPageProperty<boolean>('Public', block, collectionRecordMap)
       // Custom function to parse Notion relation properties
       const parseRelationProperty = (propertyId: string): string[] => {
@@ -167,16 +167,16 @@ async function getAllPagesFromDatabase(
       console.log(`DEBUG: Processing page ${pageId}:`, {
         title,
         slug,
-        type,
+        type: pageType,
         isPublic,
         parentIds,
         childrenIds,
         properties: Object.keys(block.properties || {})
       })
 
-      if (!title || !slug || !type) {
+      if (!title || !slug || !pageType) {
         console.warn(
-          `WARN: Page "${pageId}" (title: "${title}") is missing required properties. Title: ${!!title}, Slug: ${!!slug}, Type: ${!!type}. It will be skipped.`
+          `WARN: Page "${pageId}" (title: "${title}") is missing required properties. Title: ${!!title}, Slug: ${!!slug}, Type: ${!!pageType}. It will be skipped.`
         )
         continue
       }
@@ -189,7 +189,7 @@ async function getAllPagesFromDatabase(
         title,
         pageId,
         slug,
-        type: type as types.PageInfo['type'],
+        type: pageType,
         public: isPublic,
         language: getPageProperty<string>('Language', block, collectionRecordMap) || null,
         parentPageId: parentIds.length > 0 ? (parentIds[0] || null) : null,
@@ -219,9 +219,9 @@ async function getAllPagesFromDatabase(
  * @returns An array of root-level pages, each with its children nested inside.
  */
 function buildNavigationTree(
-  pageInfoMap: Record<string, types.PageInfo>
-): types.PageInfo[] {
-  const navigationTree: types.PageInfo[] = []
+  pageInfoMap: Record<string, PageInfo>
+): PageInfo[] {
+  const navigationTree: PageInfo[] = []
 
   console.log('DEBUG: Building navigation tree...')
   console.log('DEBUG: Available pageIds:', Object.keys(pageInfoMap))
@@ -238,7 +238,7 @@ function buildNavigationTree(
   console.log('DEBUG: Missing parent pages:', missingParents)
 
   // Create a deep copy of pages to avoid circular references
-  const createPageCopy = (pageId: string, visited = new Set<string>()): types.PageInfo => {
+  const createPageCopy = (pageId: string, visited = new Set<string>()): PageInfo => {
     if (visited.has(pageId)) {
       // Prevent infinite recursion by returning a minimal copy
       const page = pageInfoMap[pageId]!
@@ -287,9 +287,9 @@ function buildNavigationTree(
  * @returns A map of slugs to page IDs.
  */
 function buildCanonicalPageMap(
-  pageInfoMap: Record<string, types.PageInfo>
-): types.CanonicalPageMap {
-  const canonicalPageMap: types.CanonicalPageMap = {}
+  pageInfoMap: Record<string, PageInfo>
+): CanonicalPageMap {
+  const canonicalPageMap: CanonicalPageMap = {}
 
   for (const pageId of Object.keys(pageInfoMap)) {
     const pageInfo = pageInfoMap[pageId]!

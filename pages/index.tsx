@@ -1,9 +1,10 @@
 import { type GetStaticProps } from 'next'
 
-import type { PageProps } from '@/lib/types'
-import { Home } from '@/components/Home'
+import type { PageProps, PageInfo, ExtendedRecordMap } from '@/lib/types'
+import { Home } from 'pages/_home/Home'
 import { getSiteMap } from '@/lib/get-site-map'
 import { site } from '@/lib/config'
+import { getPage } from '@/lib/notion'
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   const locale = context.locale || 'ko'
@@ -14,11 +15,32 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     // Get the site map with all pages and navigation tree
     const siteMap = await getSiteMap()
     
+    // Find all pages with type 'Home'
+    const homePages = Object.values(siteMap.pageInfoMap).filter(
+      (page: PageInfo) => page.type === 'Home'
+    )
+
+    // Fetch recordMap for each home page
+    const homeRecordMaps: { [pageId: string]: ExtendedRecordMap } = {}
+    if (homePages.length > 0) {
+      const homePageIds = homePages.map((page) => page.pageId)
+      const recordMapPromises = homePageIds.map((id) => getPage(id))
+      const recordMaps = await Promise.all(recordMapPromises)
+      
+      recordMaps.forEach((recordMap: ExtendedRecordMap, index: number) => {
+        const pageId = homePageIds[index]
+        if (pageId) {
+          homeRecordMaps[pageId] = recordMap
+        }
+      })
+    }
+
     return {
       props: {
         site: site,
         siteMap: siteMap,
-        pageId: 'home' // Add pageId for TopNav to render
+        pageId: 'home', // Add pageId for TopNav to render
+        homeRecordMaps
       },
       revalidate: 10
     }
