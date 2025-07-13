@@ -14,8 +14,8 @@
 
 
 .notion-page-content-inner {
-  margin-left: 2.5rem;
-  margin-right: 1rem;
+  padding: 1rem;
+  margin-top: -80px; /* Margin between PostHeader and the first block  */
 }
 
 .notion-frame {
@@ -23,9 +23,6 @@
   margin: 0;
 }
 
-.notion-page-content-inner {
-  margin-top: -80px; /* Margin between PostHeader and the first block  */
-}
 
 .notion-page {
   padding-bottom: calc(max(5vh, 32px)) !important;

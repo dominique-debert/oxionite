@@ -10,7 +10,12 @@ import Categories from './Categories'
 import { Tags } from './Tags'
 import styles from 'styles/pages/home.module.css'
 
-export const Home: React.FC<PageProps> = ({ site, siteMap, homeRecordMaps }) => {
+export const Home: React.FC<PageProps> = ({
+  site,
+  siteMap,
+  homeRecordMaps,
+  isMobile
+}) => {
   const homePages = useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap).filter(
@@ -43,17 +48,10 @@ export const Home: React.FC<PageProps> = ({ site, siteMap, homeRecordMaps }) => 
     }
   }
 
-  const renderActiveComponent = () => {
-    if (activeNotionPageId && homeRecordMaps?.[activeNotionPageId]) {
-      return (
-        <NotionPage
-          site={site}
-          recordMap={homeRecordMaps[activeNotionPageId]}
-          pageId={activeNotionPageId}
-        />
-      )
-    }
+  const isNotionPageActive =
+    activeNotionPageId && homeRecordMaps?.[activeNotionPageId]
 
+  const renderTabs = () => {
     switch (activeTab) {
       case 'Recent Posts':
         return <RecentPosts siteMap={siteMap} />
@@ -85,10 +83,24 @@ export const Home: React.FC<PageProps> = ({ site, siteMap, homeRecordMaps }) => 
           activeTab={activeTab}
           onNavClick={handleNavClick}
         />
-        <main className={styles.mainContent}>
-          {renderActiveComponent()}
-        </main>
+
+        {/* Render non-Notion tabs inside the main content area */}
+        {!isNotionPageActive && (
+          <main className={styles.mainContent}>{renderTabs()}</main>
+        )}
       </div>
+
+      {/* Render NotionPage outside the main container but with the same padding */}
+      {isNotionPageActive && (
+        <div className={styles.homeContainer}>
+          <NotionPage
+            site={site}
+            recordMap={homeRecordMaps[activeNotionPageId]}
+            pageId={activeNotionPageId}
+            isMobile={isMobile}
+          />
+        </div>
+      )}
     </>
   )
 } 

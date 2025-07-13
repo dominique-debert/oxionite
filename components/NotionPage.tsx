@@ -209,8 +209,12 @@ export const NotionPage: React.FC<types.PageProps> = ({
 
   const title = getBlockTitle(block, recordMap) || site.name
 
-  // Check if this is a blog post (collection item)
-  const isBlogPost = block?.type === 'page' && block?.parent_table === 'collection'
+  const pageInfo = siteMap?.pageInfoMap?.[pageId]
+
+  // Check if this is a blog post (collection item) or a home page
+  const isBlogPost =
+    (block?.type === 'page' && block?.parent_table === 'collection') ||
+    pageInfo?.type === 'Home'
 
   // Table of contents settings - count actual headers
   const minTableOfContentsItems = 3

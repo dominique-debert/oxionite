@@ -157,6 +157,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   console.log('DEBUG _app.tsx - isCategory:', isCategory)
   console.log('DEBUG _app.tsx - showTOC calculated:', showTOC)
   
+  // Adjust position of Notion Page
   const paddingRight = showTOC ? '30rem' : '0'
   console.log('DEBUG _app.tsx - paddingRight will be:', paddingRight)
 

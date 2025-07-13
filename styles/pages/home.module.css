@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  padding: 0 2rem;
+  padding-right: 30rem;
 }
 
 .mainContent {
@@ -171,14 +171,3 @@
   padding: 2rem;
   text-align: center;
 }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .homeContainer {
-    padding: 0 1rem;
-  }
-
-  .heroTitle {
-    font-size: 2rem;
-  }
-} 

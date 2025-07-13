@@ -9,10 +9,12 @@ a {
 
 body.light-mode {
   --border-color: #e9ecef;
+  --bg-color: rgba(255, 255, 255, 0.0); /* Add transparency */
 }
 
 body.dark-mode {
   --border-color: #333;
+  --bg-color: rgba(26, 26, 26, 0.0); /* Add transparency */
 }
 
 body,
