@@ -2,7 +2,7 @@ import pMemoize from 'p-memoize'
 import { getPageProperty, idToUuid } from 'notion-utils'
 import type { ExtendedRecordMap, PageBlock } from 'notion-types'
 
-import type { SiteMap, PageInfo, CanonicalPageMap, PageType } from './types'
+import type { SiteMap, PageInfo, CanonicalPageMap } from './types'
 import * as config from './config'
 import { notion } from './notion-api'
 import { mapImageUrl } from './map-image-url'
@@ -11,23 +11,21 @@ import { mapImageUrl } from './map-image-url'
  * The main function to fetch all data from Notion and build the site map.
  * It's memoized to avoid re-fetching data on every call during a single build.
  */
-export const getSiteMap = pMemoize(
-  async (): Promise<SiteMap> => {
-    const pageInfoMap = await getAllPagesFromDatabase(
-      config.rootNotionDatabaseId
-    )
+export const getSiteMap = async (): Promise<SiteMap> => {
+  const pageInfoMap = await getAllPagesFromDatabase(
+    config.rootNotionDatabaseId
+  )
 
-    const navigationTree = buildNavigationTree(pageInfoMap)
-    const canonicalPageMap = buildCanonicalPageMap(pageInfoMap)
+  const navigationTree = buildNavigationTree(pageInfoMap)
+  const canonicalPageMap = buildCanonicalPageMap(pageInfoMap)
 
-    return {
-      site: config.site,
-      pageInfoMap,
-      navigationTree,
-      canonicalPageMap
-    }
+  return {
+    site: config.site,
+    pageInfoMap,
+    navigationTree,
+    canonicalPageMap
   }
-)
+}
 
 /**
  * Fetches all pages from the root Notion database.
@@ -111,8 +109,17 @@ async function getAllPagesFromDatabase(
 
       const title = getPageProperty<string>('Title', block, collectionRecordMap)
       const slug = getPageProperty<string>('Slug', block, collectionRecordMap)
-      const pageType: PageType = (getPageProperty<string>('Type', block, collectionRecordMap) as PageType) || 'Unknown'
-      const isPublic = getPageProperty<boolean>('Public', block, collectionRecordMap)
+      const pageType: PageInfo['type'] =
+        (getPageProperty<string>(
+          'Type',
+          block,
+          collectionRecordMap
+        ) as PageInfo['type']) || 'Unknown'
+      const isPublic = getPageProperty<boolean>(
+        'Public',
+        block,
+        collectionRecordMap
+      )
       // Custom function to parse Notion relation properties
       const parseRelationProperty = (propertyId: string): string[] => {
         const property = block.properties?.[propertyId]
@@ -221,61 +228,83 @@ async function getAllPagesFromDatabase(
 function buildNavigationTree(
   pageInfoMap: Record<string, PageInfo>
 ): PageInfo[] {
+  const publicPageInfoMap: Record<string, PageInfo> = Object.fromEntries(
+    Object.entries(pageInfoMap).filter(([, pageInfo]) => {
+      // Treat `public: null` or `public: undefined` as public for backwards compatibility.
+      // Only `public: false` is considered private.
+      return pageInfo.public !== false
+    })
+  )
+
   const navigationTree: PageInfo[] = []
 
   console.log('DEBUG: Building navigation tree...')
-  console.log('DEBUG: Available pageIds:', Object.keys(pageInfoMap))
-  
+  console.log('DEBUG: Available public pageIds:', Object.keys(publicPageInfoMap))
+
   // Find all unique parent IDs that are referenced but don't exist in pageInfoMap
   const allParentIds = new Set<string>()
-  for (const pageInfo of Object.values(pageInfoMap)) {
+  for (const pageInfo of Object.values(publicPageInfoMap)) {
     if (pageInfo.parentPageId) {
       allParentIds.add(pageInfo.parentPageId)
     }
   }
-  
-  const missingParents = Array.from(allParentIds).filter(parentId => !pageInfoMap[parentId])
+
+  const missingParents = Array.from(allParentIds).filter(
+    (parentId) => !publicPageInfoMap[parentId]
+  )
   console.log('DEBUG: Missing parent pages:', missingParents)
 
   // Create a deep copy of pages to avoid circular references
-  const createPageCopy = (pageId: string, visited = new Set<string>()): PageInfo => {
+  const createPageCopy = (
+    pageId: string,
+    visited = new Set<string>()
+  ): PageInfo => {
     if (visited.has(pageId)) {
       // Prevent infinite recursion by returning a minimal copy
-      const page = pageInfoMap[pageId]!
+      const page = publicPageInfoMap[pageId]!
       return {
         ...page,
         children: [],
         translations: []
       }
     }
-    
+
     visited.add(pageId)
-    const page = pageInfoMap[pageId]!
-    
+    const page = publicPageInfoMap[pageId]!
+
     return {
       ...page,
       children: page.childrenPageIds
-        .filter(childId => pageInfoMap[childId])
-        .map(childId => createPageCopy(childId, new Set(visited))),
+        .filter((childId) => publicPageInfoMap[childId])
+        .map((childId) => createPageCopy(childId, new Set(visited))),
       translations: page.translationOf
-        .filter(translationId => pageInfoMap[translationId])
-        .map(translationId => createPageCopy(translationId, new Set(visited)))
+        .filter((translationId) => publicPageInfoMap[translationId])
+        .map((translationId) => createPageCopy(translationId, new Set(visited)))
     }
   }
 
   // Find root nodes and build the tree
-  for (const pageId of Object.keys(pageInfoMap)) {
-    const pageInfo = pageInfoMap[pageId]!
-    const isRoot = !pageInfo.parentPageId || !pageInfoMap[pageInfo.parentPageId!]
-    
-    console.log(`DEBUG: Checking page ${pageId} (${pageInfo.title}): parentPageId=${pageInfo.parentPageId}, parentExists=${pageInfo.parentPageId ? !!pageInfoMap[pageInfo.parentPageId] : false}, isRoot=${isRoot}`)
-    
+  for (const pageId of Object.keys(publicPageInfoMap)) {
+    const pageInfo = publicPageInfoMap[pageId]!
+    const isRoot =
+      !pageInfo.parentPageId || !publicPageInfoMap[pageInfo.parentPageId!]
+
+    console.log(
+      `DEBUG: Checking page ${pageId} (${
+        pageInfo.title
+      }): parentPageId=${
+        pageInfo.parentPageId
+      }, parentExists=${
+        pageInfo.parentPageId ? !!publicPageInfoMap[pageInfo.parentPageId] : false
+      }, isRoot=${isRoot}`
+    )
+
     if (isRoot) {
       console.log(`DEBUG: Adding ${pageId} (${pageInfo.title}) as root page`)
       navigationTree.push(createPageCopy(pageId))
     }
   }
-  
+
   console.log('DEBUG: Final navigationTree length:', navigationTree.length)
 
   return navigationTree

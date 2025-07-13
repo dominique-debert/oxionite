@@ -18,6 +18,7 @@ export interface PageProps {
   siteMap?: SiteMap
   isMobile?: boolean
   homeRecordMaps?: { [pageId: string]: ExtendedRecordMap }
+  isPrivate?: boolean
 }
 
 export interface Params extends ParsedUrlQuery {
