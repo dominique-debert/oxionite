@@ -26,11 +26,12 @@ export const SideNav = ({
   const { isDarkMode } = useDarkMode()
   const t = useI18n(locale || 'ko')
 
-  const filterByLocale = React.useCallback((items: types.PageInfo[], currentLocale: string): types.PageInfo[] => {
+  const filterNavigationItems = React.useCallback((items: types.PageInfo[], currentLocale: string): types.PageInfo[] => {
     if (!items || !Array.isArray(items)) return []
     
     return items
       .filter((item: types.PageInfo) => {
+        if (item.type === 'Home') return false
         if (!item.language) return true
         return item.language.toLowerCase() === currentLocale?.toLowerCase()
       })
@@ -38,7 +39,7 @@ export const SideNav = ({
         if (item.children && Array.isArray(item.children)) {
           return {
             ...item,
-            children: filterByLocale(item.children, currentLocale)
+            children: filterNavigationItems(item.children, currentLocale)
           }
         }
         return item
@@ -49,8 +50,8 @@ export const SideNav = ({
     if (!siteMap?.navigationTree || !locale) {
       return siteMap?.navigationTree || []
     }
-    return filterByLocale(siteMap.navigationTree, locale)
-  }, [siteMap?.navigationTree, locale, filterByLocale])
+    return filterNavigationItems(siteMap.navigationTree, locale)
+  }, [siteMap?.navigationTree, locale, filterNavigationItems])
 
   if (!siteMap?.navigationTree || filteredNavigationTree.length === 0) {
     return null
