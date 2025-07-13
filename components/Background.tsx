@@ -130,8 +130,8 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl }) => {
           right: 0,
           bottom: 0,
           backgroundColor: isDarkMode
-            ? 'rgba(0, 0, 0, 0.5)'
-            : 'rgba(255, 255, 255, 0.5)',
+            ? 'rgba(0, 0, 0, 0.4)'
+            : 'rgba(255, 255, 255, 0.4)',
           transition: 'background-color 0.2s ease'
         }}
       />

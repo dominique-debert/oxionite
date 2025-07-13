@@ -12,6 +12,7 @@ import '../styles/global.css'
 import '../styles/notion.css'
 // global style overrides for prism theme (optional)
 import '../styles/prism-theme.css'
+import '../styles/glass-theme.css'
 
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
@@ -235,31 +236,22 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative' /* Set position context for TopNav */
       }}>
-        {/* Custom header with breadcrumbs - only for main content area */}
+        {/* TopNav is now positioned absolutely within this main container */}
         {siteMap && pageProps.pageId && (
-          <div style={{ 
-            flexShrink: 0,
-            borderBottom: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
-            padding: '0 2rem',
-            paddingLeft: isMobile ? '1rem' : '2rem',
-            backgroundColor: 'var(--bg-color, #ffffff)',
-            backdropFilter: 'blur(8px)',
-            transition: 'background-color 0.2s ease'
-          }}>
-            <TopNav 
-              pageProps={pageProps} 
-              block={block} 
-              isMobile={isMobile}
-              onToggleMobileMenu={toggleMobileMenu}
-            />
-          </div>
+          <TopNav 
+            pageProps={pageProps} 
+            isMobile={isMobile}
+            onToggleMobileMenu={toggleMobileMenu}
+          />
         )}
         
         <div style={{ 
           flex: 1,
           overflow: 'auto',
+          paddingTop: '88px', /* Add padding to prevent content overlap */
           paddingRight: paddingRight,
           display: isCategory ? 'flex' : 'block',
           justifyContent: isCategory ? 'center' : 'flex-start'

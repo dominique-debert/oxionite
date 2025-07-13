@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { createPortal } from 'react-dom'
@@ -15,7 +15,6 @@ import { PageSocial } from './PageSocial'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import siteConfig from '../site.config'
 
-// Dark mode toggle button component
 function ToggleThemeButton() {
   const [hasMounted, setHasMounted] = React.useState(false)
   const { isDarkMode, toggleDarkMode } = useDarkMode()
@@ -24,67 +23,21 @@ function ToggleThemeButton() {
     setHasMounted(true)
   }, [])
 
-  const onToggleTheme = React.useCallback(() => {
-    toggleDarkMode()
-  }, [toggleDarkMode])
-
   return (
     <button
-      style={{
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        padding: '8px',
-        borderRadius: '6px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'background-color 0.2s ease',
-        fontSize: '18px',
-        color: 'var(--fg-color-icon)',
-        opacity: hasMounted ? 1 : 0
-      }}
-      onClick={onToggleTheme}
+      className="glass-item"
+      onClick={toggleDarkMode}
       title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = 'transparent'
-      }}
+      style={{ opacity: hasMounted ? 1 : 0 }}
     >
       {hasMounted && isDarkMode ? <IoMoonSharp /> : <IoSunnyOutline />}
     </button>
   )
 }
 
-// Mobile menu button component
 function MobileMenuButton({ onToggle }: { onToggle: () => void }) {
   return (
-    <button
-      style={{
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        padding: '8px',
-        borderRadius: '6px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'background-color 0.2s ease',
-        fontSize: '20px',
-        color: 'var(--fg-color-icon)',
-        marginRight: '8px'
-      }}
-      onClick={onToggle}
-      title="Toggle menu"
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = 'transparent'
-      }}
-    >
+    <button className="glass-item" onClick={onToggle} title="Toggle menu">
       <IoMenuOutline />
     </button>
   )
@@ -97,7 +50,6 @@ interface SearchResult {
   snippet?: string
 }
 
-// Search button component
 function SearchButton() {
   const [isOpen, setIsOpen] = React.useState(false)
   const [query, setQuery] = React.useState('')
@@ -106,270 +58,89 @@ function SearchButton() {
   const [mounted, setMounted] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const router = useRouter()
-  const { isDarkMode } = useDarkMode()
-  
-  // Get texts for current locale
   const t = useI18n(router.locale || 'ko')
 
   React.useEffect(() => {
     setMounted(true)
-    return () => setMounted(false)
   }, [])
 
-  const openModal = React.useCallback(() => {
+  const openModal = () => {
     setIsOpen(true)
-    setTimeout(() => {
-      inputRef.current?.focus()
-    }, 100)
-  }, [])
+    setTimeout(() => inputRef.current?.focus(), 100)
+  }
 
-  const closeModal = React.useCallback(() => {
+  const closeModal = () => {
     setIsOpen(false)
     setQuery('')
     setResults([])
-  }, [])
+  }
 
-  const handleSearch = React.useCallback(async (searchQuery: string) => {
+  const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([])
       return
     }
-
     setIsLoading(true)
     try {
       const response = await fetch('/api/search-notion', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          query: searchQuery,
-          ancestorId: siteConfig.rootNotionPageId,
-          filters: {
-            isDeletedOnly: false,
-            excludeTemplates: true,
-            isNavigableOnly: false,
-            requireEditPermissions: false
-          },
-          limit: 20
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: searchQuery, ancestorId: siteConfig.rootNotionPageId })
       })
-
       if (response.ok) {
-        const data = await response.json() as any
-        console.log('Search results raw data:', data)
-        console.log('Search results array:', data.results)
-        
-        // Transform results to our format using recordMap data
-        const transformedResults: SearchResult[] = data.results?.map((result: any) => {
-          const blockId = result.id
-          const block = data.recordMap?.block?.[blockId]?.value
-          
-          // Get title from block properties or use highlight text
-          let title = 'Untitled'
-          if (block?.properties?.title?.[0]?.[0]) {
-            title = block.properties.title[0][0]
-          } else if (result.highlight?.text) {
-            title = result.highlight.text
-          }
-          
-          // Generate proper URL based on block type and ID
-          let url = `/${blockId.replace(/-/g, '')}`
-          
-          return {
-            id: blockId,
-            title: title,
-            url: url,
-            snippet: result.highlight?.text || ''
-          }
-        }) || []
-        
-        console.log('Transformed results:', transformedResults)
+        const data: any = await response.json()
+        const transformedResults = data.results?.map((result: any) => ({
+          id: result.id,
+          title: result.highlight?.text || data.recordMap?.block?.[result.id]?.value?.properties?.title?.[0]?.[0] || 'Untitled',
+          url: `/${result.id.replace(/-/g, '')}`,
+          snippet: result.highlight?.text || ''
+        })) || []
         setResults(transformedResults)
       }
     } catch (error) {
       console.error('Search error:', error)
-      setResults([])
     } finally {
       setIsLoading(false)
     }
-  }, [])
-
-  const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setQuery(value)
-    handleSearch(value)
-  }, [handleSearch])
-
-  const handleResultClick = React.useCallback((url: string) => {
-    closeModal()
-    router.push(url)
-  }, [closeModal, router])
-
-  // Close modal on escape key
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeModal()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown)
-      return () => document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isOpen, closeModal])
-
-  if (!isSearchEnabled) {
-    return null
   }
 
-  // Color schemes for light and dark mode
-  const overlayBg = isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.1)'
-  const modalBg = isDarkMode ? 'rgba(32, 32, 32, 0.85)' : 'rgba(255, 255, 255, 0.85)'
-  const modalBorder = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
-  const inputBg = isDarkMode ? 'rgba(32, 32, 32, 0.6)' : 'rgba(255, 255, 255, 0.6)'
-  const inputBorder = isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'
-  const inputBorderFocus = isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.25)'
-  const borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'
-  const hoverBg = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)'
-  const resultBorder = isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.04)'
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => e.key === 'Escape' && closeModal()
+    if (isOpen) document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, closeModal])
+
+  if (!isSearchEnabled) return null
 
   const modalContent = (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: overlayBg,
-        backdropFilter: 'blur(4px)',
-        WebkitBackdropFilter: 'blur(4px)', // Safari support
-        zIndex: 2147483647, // Maximum safe z-index value
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        paddingTop: '10vh'
-      }}
-      onClick={closeModal}
-    >
-      <div
-        style={{
-          backgroundColor: modalBg,
-          borderRadius: '12px',
-          width: '90%',
-          maxWidth: '600px',
-          maxHeight: '70vh',
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 16px rgba(0, 0, 0, 0.08)',
-          border: `1px solid ${modalBorder}`,
-          position: 'relative'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Search Input */}
-        <div style={{
-          padding: '20px 20px 16px 20px',
-          borderBottom: `1px solid ${borderColor}`
-        }}>
+    <div className="search-modal-overlay" onClick={closeModal}>
+      <div className="search-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="search-input-wrapper">
           <input
             ref={inputRef}
             type="text"
             value={query}
-            onChange={handleInputChange}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              handleSearch(e.target.value)
+            }}
             placeholder={t.searchPlaceholder}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              fontSize: '16px',
-              border: `1px solid ${inputBorder}`,
-              borderRadius: '8px',
-              backgroundColor: inputBg,
-              color: 'var(--fg-color)',
-              outline: 'none',
-              transition: 'border-color 0.2s ease'
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = inputBorderFocus
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = inputBorder
-            }}
+            className="search-input"
           />
         </div>
-
-        {/* Search Results */}
-        <div style={{
-          maxHeight: '400px',
-          overflowY: 'auto',
-          padding: '8px 0'
-        }}>
-          {isLoading && (
-            <div style={{
-              padding: '20px',
-              textAlign: 'center',
-              color: 'var(--fg-color-2)'
-            }}>
-              {t.searching}
-            </div>
-          )}
-
-          {!isLoading && query && results.length === 0 && (
-            <div style={{
-              padding: '20px',
-              textAlign: 'center',
-              color: 'var(--fg-color-2)'
-            }}>
-              {t.noResults}
-            </div>
-          )}
-
+        <div className="search-results-container">
+          {isLoading && <div className="search-message">{t.searching}</div>}
+          {!isLoading && query && results.length === 0 && <div className="search-message">{t.noResults}</div>}
+          {!isLoading && !query && <div className="search-message">{t.typeToSearch}</div>}
           {!isLoading && results.map((result) => (
-            <div
-              key={result.id}
-              style={{
-                padding: '12px 20px',
-                cursor: 'pointer',
-                borderBottom: `1px solid ${resultBorder}`,
-                transition: 'background-color 0.2s ease'
-              }}
-              onClick={() => handleResultClick(result.url)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = hoverBg
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent'
-              }}
-            >
-              <div style={{
-                fontWeight: '500',
-                color: 'var(--fg-color)',
-                marginBottom: '4px'
-              }}>
-                {result.title}
-              </div>
-              {result.snippet && (
-                <div style={{
-                  fontSize: '14px',
-                  color: 'var(--fg-color-2)',
-                  lineHeight: '1.4'
-                }}>
-                  {result.snippet}
-                </div>
-              )}
+            <div key={result.id} className="search-result-item" onClick={() => {
+              closeModal()
+              router.push(result.url)
+            }}>
+              <div className="search-result-title">{result.title}</div>
+              {result.snippet && <div className="search-result-snippet">{result.snippet}</div>}
             </div>
           ))}
-
-          {!query && (
-            <div style={{
-              padding: '20px',
-              textAlign: 'center',
-              color: 'var(--fg-color-2)'
-            }}>
-              {t.typeToSearch}
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -377,38 +148,10 @@ function SearchButton() {
 
   return (
     <>
-      {/* Search Button - Icon only */}
-      <button
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: '8px',
-          borderRadius: '6px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'background-color 0.2s ease',
-          fontSize: '18px',
-          color: 'var(--fg-color-icon)'
-        }}
-        onClick={openModal}
-        title={t.search}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent'
-        }}
-      >
+      <button className="glass-item" onClick={openModal} title={t.search}>
         <IoSearchOutline />
       </button>
-
-      {/* Search Modal - Rendered using Portal */}
-      {isOpen && mounted && typeof document !== 'undefined' && createPortal(
-        modalContent,
-        document.body
-      )}
+      {isOpen && mounted && createPortal(modalContent, document.body)}
     </>
   )
 }
@@ -420,162 +163,53 @@ interface BreadcrumbItem {
 
 interface TopNavProps {
   pageProps: types.PageProps
-  block?: any
   isMobile?: boolean
   onToggleMobileMenu?: () => void
 }
 
-export function TopNav({ pageProps, block, isMobile = false, onToggleMobileMenu }: TopNavProps) {
-  const { siteMap } = pageProps
-  
-  // Build breadcrumbs from siteMap if available
+export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopNavProps) {
+  const { siteMap, pageId } = pageProps
+  const { isDarkMode } = useDarkMode()
+
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
-    if (!siteMap || !pageProps.pageId) return []
-    
-    const findPagePath = (pageId: string): BreadcrumbItem[] => {
-      // Find the page in siteMap
-      const findInMap = (items: types.PageInfo[], path: BreadcrumbItem[] = []): BreadcrumbItem[] | null => {
-        for (const item of items) {
-          const currentBreadcrumb: BreadcrumbItem = {
-            title: item.title || 'Untitled',
-            pageInfo: item
-          }
-          
-          if (item.pageId === pageId) {
-            return [...path, currentBreadcrumb]
-          }
-          if (item.children) {
-            const result = findInMap(item.children, [...path, currentBreadcrumb])
-            if (result) return result
-          }
+    if (!siteMap || !pageId) return []
+    const findPagePath = (pageId: string, tree: types.PageInfo[]): BreadcrumbItem[] | null => {
+      for (const item of tree) {
+        const currentPath = [{ title: item.title || 'Untitled', pageInfo: item }]
+        if (item.pageId === pageId) return currentPath
+        if (item.children) {
+          const subPath = findPagePath(pageId, item.children)
+          if (subPath) return [...currentPath, ...subPath]
         }
-        return null
       }
-      
-      return findInMap(siteMap.navigationTree || []) || []
+      return null
     }
-    
-    return findPagePath(pageProps.pageId)
-  }, [siteMap, pageProps.pageId])
+    return findPagePath(pageId, siteMap.navigationTree || []) || []
+  }, [siteMap, pageId])
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '1rem 0',
-      minHeight: '60px'
-    }}>
-      {/* Left side - Mobile menu button + Breadcrumbs */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        fontSize: '14px',
-        color: 'var(--text-color, #666)',
-        flex: 1,
-        minWidth: 0 // Allow shrinking
-      }}>
-        {/* Mobile Menu Button */}
-        {isMobile && onToggleMobileMenu && (
-          <MobileMenuButton onToggle={onToggleMobileMenu} />
-        )}
-        
-        {/* Breadcrumbs */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          fontSize: '14px',
-          color: 'var(--fg-color-2)',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap'
-        }}>
-          <Link 
-            href="/"
-            style={{
-              textDecoration: 'none',
-              color: 'var(--fg-color-2)',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '4px 6px',
-              borderRadius: '4px',
-              transition: 'background-color 0.2s ease',
-              fontWeight: '500',
-              fontSize: '14px',
-              flexShrink: 0
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
-          >
-            {siteConfig.name}
-          </Link>
-          {/* Show full breadcrumbs only on desktop */}
-          {!isMobile && breadcrumbs.map((crumb, index) => (
-            <React.Fragment key={index}>
-              <span style={{ 
-                margin: '0 0.5rem', 
-                flexShrink: 0,
-                color: 'var(--fg-color-3)'
-              }}>›</span>
-              {crumb.pageInfo && crumb.pageInfo.language && crumb.pageInfo.slug ? (
-                <Link
-                  href={`/${crumb.pageInfo.language}/${crumb.pageInfo.slug}`}
-                  style={{
-                    textDecoration: 'none',
-                    fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
-                    color: index === breadcrumbs.length - 1 ? 'var(--fg-color)' : 'var(--fg-color-2)',
-                    padding: '4px 6px',
-                    borderRadius: '4px',
-                    transition: 'background-color 0.2s ease',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (index !== breadcrumbs.length - 1) {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent'
-                  }}
-                >
-                  {crumb.title}
-                </Link>
-              ) : (
-                <span style={{ 
-                  fontWeight: index === breadcrumbs.length - 1 ? 600 : 400,
-                  color: index === breadcrumbs.length - 1 ? 'var(--fg-color)' : 'var(--fg-color-2)',
-                  padding: '4px 6px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {crumb.title}
-                </span>
-              )}
-            </React.Fragment>
-          ))}
+    <div className={`glass-nav-container ${isDarkMode ? 'dark-mode' : ''}`}>
+      <nav className="glass-nav">
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+          {isMobile && onToggleMobileMenu && <MobileMenuButton onToggle={onToggleMobileMenu} />}
+          <div className="glass-breadcrumb">
+            <Link href="/" className="breadcrumb-item">{siteConfig.name}</Link>
+            {!isMobile && breadcrumbs.map((crumb, index) => (
+              <React.Fragment key={index}>
+                <span className="breadcrumb-separator">›</span>
+                <Link href={`/${crumb.pageInfo?.slug}`} className="breadcrumb-item">{crumb.title}</Link>
+              </React.Fragment>
+            ))}
+          </div>
         </div>
-      </div>
-      
-      {/* Right side - Social buttons, language selector, theme toggle, and search */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '0.5rem',
-        flexShrink: 0
-      }}>
-        {!isMobile && <PageSocial variant="header" />}
-        <LanguageSwitcher />
-        <ToggleThemeButton />
-        <SearchButton />
-      </div>
+
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {!isMobile && <PageSocial variant="header" />}
+          <LanguageSwitcher />
+          <ToggleThemeButton />
+          <SearchButton />
+        </div>
+      </nav>
     </div>
   )
-} 
+}
