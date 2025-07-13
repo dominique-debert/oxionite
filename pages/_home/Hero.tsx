@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Site } from '@/lib/types'
-import styles from './styles.module.css'
+import styles from 'styles/pages/home.module.css'
 
 interface HeroProps {
   site: Site

@@ -1,6 +1,6 @@
 import cs from 'classnames'
 
-import styles from './styles.module.css'
+import styles from 'styles/components/common.module.css'
 
 export function LoadingIcon(props: any) {
   const { className, ...rest } = props

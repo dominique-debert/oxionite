@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 
 import { NotionPage } from '@/components/NotionPage'
 import { CategoryPage } from '@/components/CategoryPage'
+import { Loading } from '@/components/Loading'
 import { getSiteMap } from '@/lib/get-site-map'
 import { getPage } from '@/lib/notion'
 import { type PageProps } from '@/lib/types'
@@ -97,6 +98,12 @@ export const getStaticPaths: GetStaticPaths<SlugParams> = async () => {
 }
 
 export default function SlugPage(props: PageProps) {
+  const router = useRouter()
+
+  if (router.isFallback) {
+    return <Loading />
+  }
+
   const { siteMap, pageId } = props
   
   // Get page info to determine the type

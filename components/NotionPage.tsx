@@ -23,7 +23,7 @@ import { PageHead } from './PageHead'
 import { Page404 } from './Page404'
 import { PostHeader } from './PostHeader'
 
-import styles from './styles.module.css'
+import styles from 'styles/components/common.module.css'
 
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'

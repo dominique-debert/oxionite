@@ -7,8 +7,8 @@ import Hero from './Hero'
 import HomeNav from './HomeNav'
 import RecentPosts from './RecentPosts'
 import Categories from './Categories'
-import Tags from './Tags'
-import styles from './styles.module.css'
+import { Tags } from './Tags'
+import styles from 'styles/pages/home.module.css'
 
 export const Home: React.FC<PageProps> = ({ site, siteMap, homeRecordMaps }) => {
   const homePages = useMemo(() => {
@@ -60,7 +60,7 @@ export const Home: React.FC<PageProps> = ({ site, siteMap, homeRecordMaps }) => 
       case 'Categories':
         return <Categories siteMap={siteMap} />
       case 'Tags':
-        return <Tags siteMap={siteMap} />
+        return <Tags />
       default:
         return <RecentPosts siteMap={siteMap} />
     }

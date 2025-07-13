@@ -1,4 +1,4 @@
-import styles from './styles.module.css'
+import styles from 'styles/components/common.module.css'
 
 export function GitHubShareButton() {
   return (
@@ -14,14 +14,13 @@ export function GitHubShareButton() {
         height='80'
         viewBox='0 0 250 250'
         style={{
-          fill: '#70B7FD',
-          color: '#fff',
+          fill: 'var(--fg-color)',
+          color: 'var(--bg-color)',
           position: 'absolute',
-          zIndex: 1001,
           top: 0,
-          right: 0,
           border: 0,
-          transform: 'scale(1, 1)'
+          right: 0,
+          zIndex: 10
         }}
         aria-hidden='true'
       >

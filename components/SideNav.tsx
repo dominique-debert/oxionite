@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import type * as types from '@/lib/types'
 import { CategoryTree } from './CategoryTree'
 import { useI18n } from '@/lib/i18n'
-import styles from './SideNav.module.css'
+import styles from 'styles/components/SideNav.module.css'
 
 export const SideNav = ({ 
   siteMap, 

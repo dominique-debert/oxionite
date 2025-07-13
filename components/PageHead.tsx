@@ -11,7 +11,7 @@ export function PageHead({
   pageId,
   image,
   url
-}: types.PageProps & {
+}: Partial<types.PageProps> & {
   title?: string
   description?: string
   image?: string

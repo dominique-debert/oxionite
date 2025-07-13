@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
 import { IoChevronForward } from '@react-icons/all-files/io5/IoChevronForward'
 import type { PageInfo } from '@/lib/types'
-import styles from './CategoryTree.module.css'
+import styles from 'styles/components/CategoryTree.module.css'
 
 interface CategoryTreeProps {
   items: PageInfo[]

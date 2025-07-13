@@ -1,20 +1,22 @@
+import * as React from 'react'
 import { PageHead } from './PageHead'
-import styles from './styles.module.css'
+import styles from 'styles/components/common.module.css'
+import * as config from '@/lib/config'
+import type { Site } from '@/lib/types'
 
-export function ErrorPage({ statusCode }: { statusCode: number }) {
-  const title = 'Error'
+export const ErrorPage: React.FC<{ statusCode: number, site: Site }> = ({ statusCode, site }) => {
+  const title = statusCode === 404 ? 'Page Not Found' : 'Error'
 
   return (
     <>
-      <PageHead title={title} />
-
+      <PageHead site={site} title={title} />
       <div className={styles.container}>
         <main className={styles.main}>
-          <h1>Error Loading Page</h1>
+          <h1>{title}</h1>
 
-          {statusCode && <p>Error code: {statusCode}</p>}
-
-          <img src='/error.png' alt='Error' className={styles.errorImage} />
+          {statusCode === 404 && (
+            <p>We can't seem to find the page you're looking for.</p>
+          )}
         </main>
       </div>
     </>

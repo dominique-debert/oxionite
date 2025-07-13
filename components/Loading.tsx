@@ -1,10 +1,10 @@
-import { LoadingIcon } from './LoadingIcon'
-import styles from './styles.module.css'
+import * as React from 'react'
+import styles from 'styles/components/common.module.css'
 
-export function Loading() {
+export const Loading: React.FC = () => {
   return (
-    <div className={styles.container}>
-      <LoadingIcon />
+    <div className={styles.loading}>
+      <div className={styles.loadingIcon} />
     </div>
   )
 }
