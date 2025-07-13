@@ -30,6 +30,7 @@ import {
 import * as types from '@/lib/types'
 import { SideNav } from '@/components/SideNav'
 import { TopNav } from '@/components/TopNav'
+import Background from '@/components/Background'
 
 if (typeof window !== 'undefined') {
   bootstrap()
@@ -199,6 +200,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       height: '100vh',
       overflow: 'hidden'
     }}>
+      <Background />
       {/* Mobile Menu Overlay */}
       {isMobile && isMobileMenuOpen && (
         <div 
