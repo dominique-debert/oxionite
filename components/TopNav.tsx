@@ -188,28 +188,26 @@ export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopN
   }, [siteMap, pageId])
 
   return (
-    <div className={`glass-nav-container ${isDarkMode ? 'dark-mode' : ''}`}>
-      <nav className="glass-nav">
-        <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-          {isMobile && onToggleMobileMenu && <MobileMenuButton onToggle={onToggleMobileMenu} />}
-          <div className="glass-breadcrumb">
-            <Link href="/" className="breadcrumb-item">{siteConfig.name}</Link>
-            {!isMobile && breadcrumbs.map((crumb, index) => (
-              <React.Fragment key={index}>
-                <span className="breadcrumb-separator">›</span>
-                <Link href={`/${crumb.pageInfo?.slug}`} className="breadcrumb-item">{crumb.title}</Link>
-              </React.Fragment>
-            ))}
-          </div>
+    <nav className="glass-nav">
+      <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+        {isMobile && onToggleMobileMenu && <MobileMenuButton onToggle={onToggleMobileMenu} />}
+        <div className="glass-breadcrumb">
+          <Link href="/" className="breadcrumb-item">{siteConfig.name}</Link>
+          {!isMobile && breadcrumbs.map((crumb, index) => (
+            <React.Fragment key={index}>
+              <span className="breadcrumb-separator">›</span>
+              <Link href={`/${crumb.pageInfo?.slug}`} className="breadcrumb-item">{crumb.title}</Link>
+            </React.Fragment>
+          ))}
         </div>
+      </div>
 
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          {!isMobile && <PageSocial variant="header" />}
-          <LanguageSwitcher />
-          <ToggleThemeButton />
-          <SearchButton />
-        </div>
-      </nav>
-    </div>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        {!isMobile && <PageSocial variant="header" />}
+        <LanguageSwitcher />
+        <ToggleThemeButton />
+        <SearchButton />
+      </div>
+    </nav>
   )
 }

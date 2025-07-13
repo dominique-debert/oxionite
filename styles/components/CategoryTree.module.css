@@ -15,10 +15,13 @@
   font-size: 14px;
   display: flex;
   align-items: center;
+  justify-content: center; /* Center the icon */
   color: var(--fg-color-icon);
   transition: transform 0.2s ease, background-color 0.2s ease;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: 50%; /* Make it a circle */
+  width: 24px; /* Explicit width */
+  height: 24px; /* Explicit height */
 }
 
 .expandButton:hover {
@@ -63,6 +66,7 @@
   border-radius: 10px;
   min-width: 18px;
   text-align: center;
+  margin-left: 8px; /* Add margin to the left */
 }
 
 .postLink {

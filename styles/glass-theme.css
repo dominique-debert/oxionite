@@ -1,21 +1,12 @@
 /* styles/glass-theme.css */
 
-/* Provides margin from the top and sides */
-.glass-nav-container {
-  padding: 1rem 1.5rem;
-  position: absolute; /* Positioned relative to the main content area */
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  box-sizing: border-box;
-}
 
 /* The main navigation bar with the glass effect */
 .glass-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin: 1rem;
   padding: 0.5rem;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -144,4 +135,75 @@
 
 .dark-mode .language-switcher-menu a:hover {
   background-color: rgba(60, 60, 60, 0.7);
+}
+
+/* --- SideNav Styles --- */
+
+.glass-sidenav {
+  padding: 1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s ease;
+  width: 320px; /* Fixed width for desktop */
+  flex-shrink: 0;
+}
+
+.dark-mode .glass-sidenav {
+  background-color: rgba(40, 40, 40, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidenav-item {
+  display: block;
+  padding: 0.5rem 0.75rem; /* Reduced padding */
+  border-radius: 9999px;
+  color: var(--text-color-primary);
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.sidenav-item:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.dark-mode .sidenav-item {
+  color: #ffffff;
+}
+
+.dark-mode .sidenav-item:hover {
+  background-color: rgba(60, 60, 60, 0.7);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.sidenav-item.active {
+  background-color: rgba(0, 122, 255, 0.2);
+  border-color: rgba(0, 122, 255, 0.4);
+  font-weight: 600;
+}
+
+.dark-mode .sidenav-item.active {
+  background-color: rgba(0, 122, 255, 0.3);
+  border-color: rgba(0, 122, 255, 0.5);
+}
+
+/* Mobile SideNav positioning */
+.mobile .glass-sidenav {
+  border-radius: 24px;
+  position: fixed;
+  top: 120px; /* Height of the TopNav */
+  left: 1.5rem;
+  right: 1.5rem;
+  transform: translateX(-110%);
+  opacity: 0;
+  z-index: 998;
+}
+
+.mobile.mobile-open .glass-sidenav {
+  transform: translateX(0);
+  opacity: 1;
 }

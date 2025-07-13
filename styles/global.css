@@ -28,6 +28,7 @@ body {
   font-family: var(--notion-font);
   overflow-x: hidden;
   background-color: var(--bg-color);
+  --header-height: 60px;
 }
 
 .static-tweet blockquote {

@@ -39,27 +39,24 @@ const countPostsRecursively = (item: PageInfo): number => {
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
-  const [isExpanded, setIsExpanded] = useState(false) // Start collapsed to avoid hydration mismatch
+  const [isExpanded, setIsExpanded] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
   const hasChildren = item.children && item.children.length > 0
   const isCategory = item.type === 'Category'
   const router = useRouter()
-  
-  // Expand all categories after component mounts to avoid hydration issues
+  const { asPath } = router
+
   useEffect(() => {
     setHasMounted(true)
     if (hasChildren) {
       setIsExpanded(true)
     }
   }, [hasChildren])
-  
-  // Get current locale or default to 'en'
-  const locale = router.locale || 'en'
-  
-  // Generate URL: /locale/slug
-  const pageUrl = `/${locale}/${item.slug}`
 
-  // Count posts in this category (only for categories)
+  const locale = router.locale || 'en'
+  const pageUrl = `/${locale}/${item.slug}`
+  const isActive = asPath === pageUrl
+
   const postCount = isCategory ? countPostsRecursively(item) : 0
 
   const toggleExpanded = () => {
@@ -68,49 +65,23 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level }) => {
     }
   }
 
+  const linkClassName = `sidenav-item ${isActive ? 'active' : ''}`;
+
   return (
     <div>
       <div
         className={styles.categoryItemContainer}
-        style={{
-          paddingLeft: `${level * 20 + 8}px`, // Level-based indentation + base padding
-        }}
+        style={{ paddingLeft: `${level * 12}px` }}
       >
-        {/* Expand/Collapse Arrow Button */}
         {hasChildren && (
-          <button
-            onClick={toggleExpanded}
-            className={styles.expandButton}
-          >
+          <button onClick={toggleExpanded} className={styles.expandButton}>
             {isExpanded ? <IoChevronDown /> : <IoChevronForward />}
           </button>
         )}
-        
-        {/* Category/Post Content */}
-        {isCategory ? (
-          <Link 
-            href={pageUrl}
-            className={styles.categoryLink}
-          >
-            <span 
-              className={`${styles.categoryTitle} ${hasChildren ? styles.categoryTitleWithChildren : styles.categoryTitleWithoutChildren}`}
-            >
-              {item.title}
-            </span>
-            {postCount > 0 && (
-              <span className={styles.postCount}>
-                {postCount}
-              </span>
-            )}
-          </Link>
-        ) : (
-          <Link 
-            href={pageUrl} 
-            className={styles.postLink}
-          >
-            {item.title}
-          </Link>
-        )}
+        <Link href={pageUrl} className={linkClassName}>
+          <span className={styles.title}>{item.title}</span>
+          {postCount > 0 && <span className={styles.postCount}>{postCount}</span>}
+        </Link>
       </div>
 
       {isExpanded && hasChildren && (
