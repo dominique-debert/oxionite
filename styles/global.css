@@ -10,11 +10,27 @@ a {
 body.light-mode {
   --border-color: #e9ecef;
   --bg-color: rgba(255, 255, 255, 0.0); /* Add transparency */
+
+  /* Text Colors */
+  --primary-text-color: #111111;
+  --secondary-text-color: #555555;
+  --tertiary-text-color: #888888;
+  
+  /* Background Colors */
+  --blue-bg-color: #1459C2;
 }
 
 body.dark-mode {
   --border-color: #333;
   --bg-color: rgba(26, 26, 26, 0.0); /* Add transparency */
+
+  /* Text Colors */
+  --primary-text-color: #fafafa;
+  --secondary-text-color: #bbbbbb;
+  --tertiary-text-color: #999999;
+  
+  /* Background Colors */
+  --blue-bg-color: #1459C2;
 }
 
 body,

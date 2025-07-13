@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 import * as types from '@/lib/types'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { useI18n } from '@/lib/i18n'
+import { useDarkMode } from '@/lib/use-dark-mode'
 
 interface CategoryPageProps {
   pageProps: types.PageProps
@@ -18,6 +19,7 @@ interface PostItem {
   slug: string
   language: string
   coverImage?: string
+  coverImageBlock?: types.Block // Add block for mapImageUrl
 }
 
 const POSTS_PER_PAGE = 20
@@ -36,7 +38,8 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
         published: pageInfo.published,
         slug: pageInfo.slug,
         language: pageInfo.language || 'ko',
-        coverImage: pageInfo.coverImage || undefined
+        coverImage: pageInfo.coverImage || undefined,
+        coverImageBlock: pageInfo.coverImageBlock || undefined // Pass the block
       })
     }
     
@@ -60,7 +63,8 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
   const { siteMap, pageId, isMobile = false } = pageProps
   const router = useRouter()
   const [currentPage, setCurrentPage] = React.useState(1)
-  
+  const { isDarkMode } = useDarkMode()
+
   // Get texts for current locale
   const locale = router.locale || 'ko'
   const t = useI18n(locale)
@@ -123,45 +127,90 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
       return dateString
     }
   }
-  
+
   // Generate page numbers for pagination
   const getPageNumbers = () => {
-    const pages = []
-    const maxVisiblePages = 5
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
-    
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    const siblingCount = 2; // Number of pages on each side of the current page, creating a block of 5
+    const totalPageNumbers = siblingCount + 5; // A threshold to decide when to use ellipsis
+
+    // If total pages are less than the threshold, show all page numbers
+    if (totalPageNumbers >= totalPages) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+    const rightSiblingIndex = Math.min(
+      currentPage + siblingCount,
+      totalPages
+    );
+
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+
+    const firstPageIndex = 1;
+    const lastPageIndex = totalPages;
+
+    if (!shouldShowLeftDots && shouldShowRightDots) {
+      const leftItemCount = 3 + 2 * siblingCount;
+      const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1);
+      return [...leftRange, '...', totalPages];
+    }
+
+    if (shouldShowLeftDots && !shouldShowRightDots) {
+      const rightItemCount = 3 + 2 * siblingCount;
+      const rightRange = Array.from({ length: rightItemCount }, (_, i) => totalPages - rightItemCount + 1 + i);
+      return [firstPageIndex, '...', ...rightRange];
+    }
+
+    if (shouldShowLeftDots && shouldShowRightDots) {
+      const middleRange = Array.from({ length: rightSiblingIndex - leftSiblingIndex + 1 }, (_, i) => leftSiblingIndex + i);
+      return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex];
     }
     
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i)
-    }
-    
-    return pages
-  }
-  
+    // Default case: show all pages (shouldn't be reached often with the logic above)
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  };
+
   if (!currentPageInfo) {
     return <div>Category not found</div>
   }
-  
+
+  // Define styles for glassmorphism effect on post cards
+  const cardStyle: React.CSSProperties = {
+    textDecoration: 'none',
+    color: 'inherit',
+    borderRadius: '16px',
+    border: '1px solid',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    backgroundColor: isDarkMode ? 'rgba(40, 40, 40, 0.5)' : 'rgba(255, 255, 255, 0.4)',
+    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)'
+  }
+
+  const cardHoverStyle: React.CSSProperties = {
+    transform: 'translateY(-3px)',
+    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.12)',
+    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'
+  }
+
   return (
     <div style={{
-      maxWidth: '800px',
+      maxWidth: '900px',
       margin: '0 auto',
       padding: '2rem'
     }}>
       {/* Category Header */}
       <div style={{
         marginBottom: '3rem',
-        borderBottom: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
+        borderBottom: '1px solid rgba(55, 53, 47, 0.16)',
         paddingBottom: '2rem'
       }}>
         <h1 style={{
           fontSize: '2.5rem',
           fontWeight: '700',
-          color: 'var(--fg-color)',
+          color: 'var(--primary-text-color)',
           marginBottom: '1rem',
           lineHeight: '1.2'
         }}>
@@ -170,7 +219,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
         {currentPageInfo.description && (
           <p style={{
             fontSize: '1.1rem',
-            color: 'var(--fg-color-2)',
+            color: 'var(--secondary-text-color)',
             lineHeight: '1.6',
             marginBottom: '1rem'
           }}>
@@ -179,7 +228,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
         )}
         <div style={{
           fontSize: '0.9rem',
-          color: 'var(--fg-color-2)'
+          color: 'var(--secondary-text-color)'
         }}>
           {t.totalPostsCount(allPosts.length)}
         </div>
@@ -189,41 +238,34 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '2rem'
+        gap: '2.5rem'
       }}>
         {currentPosts.map((post) => (
           <Link
             key={post.pageId}
             href={`/${post.language}/${post.slug}`}
-            style={{
-              textDecoration: 'none',
-              color: 'inherit'
+            style={cardStyle}
+            onMouseEnter={(e) => {
+              Object.assign(e.currentTarget.style, cardHoverStyle)
+            }}
+            onMouseLeave={(e) => {
+              // Reset to base styles defined in `cardStyle`
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)'
             }}
           >
             <article style={{
               display: 'flex',
               flexDirection: isMobile ? 'column' : 'row',
-              borderRadius: '12px',
-              border: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
-              transition: 'all 0.2s ease',
-              cursor: 'pointer',
               width: 'clamp(360px, 80vw, 800px)',
               minHeight: isMobile ? 'auto' : '140px',
-              overflow: 'hidden'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.1)'
-              e.currentTarget.style.borderColor = 'var(--fg-color-1, rgba(55, 53, 47, 0.3))'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
-              e.currentTarget.style.borderColor = 'var(--border-color, rgba(55, 53, 47, 0.16))'
+              overflow: 'hidden',
+              borderRadius: '16px' // Match parent Link's rounding
             }}
             >
               {/* Cover Image - 모바일에서는 위에, 데스크톱에서는 오른쪽 */}
-              {post.coverImage && (
+              {post.coverImage && post.coverImageBlock && (
                 <div style={{
                   width: isMobile ? '100%' : '260px',
                   height: isMobile ? '200px' : 'auto',
@@ -231,10 +273,10 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
                   alignSelf: isMobile ? 'stretch' : 'stretch',
                   backgroundColor: 'var(--bg-color-1)',
                   flexShrink: 0,
-                  backgroundImage: `url(${post.coverImage})`,
+                  backgroundImage: `url('${mapImageUrl(post.coverImage, post.coverImageBlock)}')`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  borderRadius: isMobile ? '12px 12px 0 0' : '0 12px 12px 0'
+                  borderRadius: isMobile ? '16px 16px 0 0' : '0 16px 16px 0'
                 }} />
               )}
 
@@ -245,14 +287,14 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 order: isMobile ? 2 : 1,
-                padding: '1.5rem'
+                padding: '1.5rem 2rem'
               }}>
                 <div>
                   <h2 style={{
                     fontSize: '1.25rem',
                     fontWeight: '600',
-                    color: 'var(--fg-color)',
-                    margin: '0', // 상하단 마진 제거
+                    color: 'var(--primary-text-color)',
+                    margin: '0',
                     lineHeight: '1.4'
                   }}>
                     {post.title}
@@ -260,9 +302,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
                   {post.description && (
                     <p style={{
                       fontSize: '0.95rem',
-                      color: 'var(--fg-color-2)',
+                      color: 'var(--secondary-text-color)',
                       lineHeight: '1.5',
-                      marginTop: '0.5rem', // title과의 간격
+                      marginTop: '0.5rem',
                       marginBottom: '1rem',
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
@@ -276,7 +318,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
                 {post.published && (
                   <div style={{
                     fontSize: '0.85rem',
-                    color: 'var(--fg-color-3)',
+                    color: 'var(--tertiary-text-color)',
                     fontWeight: '500'
                   }}>
                     {formatDate(post.published)}
@@ -294,97 +336,52 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: '0.5rem',
-          marginTop: '3rem',
+          gap: '0.75rem',
+          marginTop: '4rem',
+          marginBottom: '3rem',
           paddingTop: '2rem',
-          borderTop: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))'
+          borderTop: '1px solid rgba(55, 53, 47, 0.16)'
         }}>
-          {/* Previous Button */}
-          {currentPage > 1 && (
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
-                borderRadius: '6px',
-                backgroundColor: 'var(--bg-color)',
-                color: 'var(--fg-color-2)',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-                e.currentTarget.style.borderColor = 'var(--fg-color-1)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-color)'
-                e.currentTarget.style.borderColor = 'var(--border-color, rgba(55, 53, 47, 0.16))'
-              }}
-            >
-              {t.previousPage}
-            </button>
-          )}
-          
           {/* Page Numbers */}
-          {getPageNumbers().map((pageNum) => (
-            <button
-              key={pageNum}
-              onClick={() => setCurrentPage(pageNum)}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
-                borderRadius: '6px',
-                backgroundColor: pageNum === currentPage ? 'var(--fg-color)' : 'var(--bg-color)',
-                color: pageNum === currentPage ? 'var(--bg-color)' : 'var(--fg-color-2)',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                fontWeight: pageNum === currentPage ? '600' : '400',
-                transition: 'all 0.2s ease',
-                minWidth: '36px'
-              }}
-              onMouseEnter={(e) => {
-                if (pageNum !== currentPage) {
-                  e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-                  e.currentTarget.style.borderColor = 'var(--fg-color-1)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (pageNum !== currentPage) {
-                  e.currentTarget.style.backgroundColor = 'var(--bg-color)'
-                  e.currentTarget.style.borderColor = 'var(--border-color, rgba(55, 53, 47, 0.16))'
-                }
-              }}
-            >
-              {pageNum}
-            </button>
-          ))}
-          
-          {/* Next Button */}
-          {currentPage < totalPages && (
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid var(--border-color, rgba(55, 53, 47, 0.16))',
-                borderRadius: '6px',
-                backgroundColor: 'var(--bg-color)',
-                color: 'var(--fg-color-2)',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-color-1)'
-                e.currentTarget.style.borderColor = 'var(--fg-color-1)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-color)'
-                e.currentTarget.style.borderColor = 'var(--border-color, rgba(55, 53, 47, 0.16))'
-              }}
-            >
-              {t.nextPage}
-            </button>
+          {getPageNumbers().map((pageNum, index) =>
+            typeof pageNum === 'string' ? (
+              <span key={`ellipsis-${index}`} style={{ padding: '0 0.25rem', color: 'var(--tertiary-text-color)' }}>
+                {pageNum}
+              </span>
+            ) : (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid',
+                  borderColor: pageNum === currentPage ? 'var(--blue-bg-color)' : (isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0,0,0,0.2)'),
+                  borderRadius: '9999px',
+                  backgroundColor: pageNum === currentPage ? 'var(--blue-bg-color)' : 'transparent',
+                  color: pageNum === currentPage ? '#FFFFFF' : 'var(--secondary-text-color)',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: pageNum === currentPage ? '600' : '400',
+                  transition: 'all 0.2s ease',
+                  minWidth: '40px',
+                  lineHeight: '1'
+                }}
+                onMouseEnter={(e) => {
+                  if (pageNum !== currentPage) {
+                    e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pageNum !== currentPage) {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'
+                  }
+                }}
+              >
+                {pageNum}
+              </button>
+            )
           )}
         </div>
       )}
@@ -392,9 +389,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
       {/* No Posts Message */}
       {allPosts.length === 0 && (
         <div style={{
+          maxWidth: '900px', // Match container width
+          margin: '0 auto', // Center it
           textAlign: 'center',
           padding: '4rem 2rem',
-          color: 'var(--fg-color-2)'
+          color: 'var(--secondary-text-color)'
         }}>
           <div style={{
             fontSize: '1.1rem',

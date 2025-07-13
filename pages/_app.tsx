@@ -253,11 +253,17 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           flex: 1,
           overflow: 'auto',
           paddingTop: '88px', /* Add padding to prevent content overlap */
-          paddingRight: paddingRight,
-          display: isCategory ? 'flex' : 'block',
-          justifyContent: isCategory ? 'center' : 'flex-start'
+          paddingRight: paddingRight
         }}>
-          <Component {...pageProps} isMobile={isMobile} />
+          <div
+            className='glass-content-panel'
+            style={{
+              display: isCategory ? 'flex' : 'block',
+              justifyContent: isCategory ? 'center' : 'flex-start'
+            }}
+          >
+            <Component {...pageProps} isMobile={isMobile} />
+          </div>
         </div>
       </main>
     </div>
