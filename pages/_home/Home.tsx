@@ -11,15 +11,28 @@ import Tags from './Tags'
 import styles from './styles.module.css'
 
 export const Home: React.FC<PageProps> = ({ site, siteMap, homeRecordMaps }) => {
-  const [activeTab, setActiveTab] = useState<string>('Recent Posts')
-  const [activeNotionPageId, setActiveNotionPageId] = useState<string | null>(null)
-
   const homePages = useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap).filter(
       (page: PageInfo) => page.type === 'Home'
     )
   }, [siteMap])
+  
+  const getInitialTab = () => {
+    if (homePages.length > 0 && homePages[0]) {
+      return {
+        tab: homePages[0].title,
+        pageId: homePages[0].pageId
+      }
+    }
+    return {
+      tab: 'Recent Posts',
+      pageId: null
+    }
+  }
+
+  const [activeTab, setActiveTab] = useState<string>(getInitialTab().tab)
+  const [activeNotionPageId, setActiveNotionPageId] = useState<string | null>(getInitialTab().pageId)
 
   const handleNavClick = (tab: string, pageId?: string) => {
     setActiveTab(tab)

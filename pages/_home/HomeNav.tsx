@@ -14,15 +14,6 @@ const HomeNav: React.FC<HomeNavProps> = ({ homePages, activeTab, onNavClick }) =
 
   return (
     <nav className={styles.homeNav}>
-      {navItems.map((item) => (
-        <button
-          key={item}
-          className={cs(styles.navItem, activeTab === item && styles.active)}
-          onClick={() => onNavClick(item)}
-        >
-          {item}
-        </button>
-      ))}
       {homePages.map((page) => (
         <button
           key={page.pageId}
@@ -30,6 +21,15 @@ const HomeNav: React.FC<HomeNavProps> = ({ homePages, activeTab, onNavClick }) =
           onClick={() => onNavClick(page.title, page.pageId)}
         >
           {page.title}
+        </button>
+      ))}
+      {navItems.map((item) => (
+        <button
+          key={item}
+          className={cs(styles.navItem, activeTab === item && styles.active)}
+          onClick={() => onNavClick(item)}
+        >
+          {item}
         </button>
       ))}
     </nav>
