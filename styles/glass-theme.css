@@ -3,10 +3,14 @@
 
 /* The main navigation bar with the glass effect */
 .glass-nav {
+  position: absolute; /* Changed from sticky to float over content */
+  top: 1rem; /* Position from the top of the main container */
+  left: 1rem; /* Position from the left */
+  right: 1rem; /* Position from the right */
+  z-index: 10; /* Ensure it's above the scrolling content */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 1rem;
   padding: 0.5rem;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.2);
