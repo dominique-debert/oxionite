@@ -92,7 +92,7 @@ export const Home: React.FC<PageProps> = ({
 
       {/* Render NotionPage outside the main container but with the same padding */}
       {isNotionPageActive && (
-        <div className={styles.homeContainer}>
+        <div className={styles.homeNotionContainer}>
           <NotionPage
             site={site}
             recordMap={homeRecordMaps[activeNotionPageId]}
