@@ -111,6 +111,10 @@
   margin-bottom: 1em;
 }
 
+.notion-asset-wrapper img {
+  border-radius: 16px;
+}
+
 .notion-asset-wrapper-video > div,
 .notion-asset-wrapper-video video {
   width: 100% !important;
@@ -213,9 +217,8 @@
 .notion-quote {
   padding: 0.2em 0.75em;
   line-height: 1.5;
-  font-style: italic;
   font-size: 1.2em;
-  border-left: 4px solid #67bdfc;
+  border-left: 4px solid var(--primary-text-color);
 }
 
 .notion-h1,
@@ -226,6 +229,7 @@
 
 .notion-callout {
   margin: 0.75em 0;
+  border-radius: 16px;
 }
 
 .notion-hr {
@@ -343,28 +347,35 @@
 }
 
 .notion-link {
-  position: relative;
-  transition: unset;
-  opacity: 1;
-  border-bottom-width: 0.1rem;
-  background: transparent;
-  background-origin: border-box;
-  background-repeat: no-repeat;
-  background-position: 50% 100%;
-  background-size: 0 0.1rem;
+  color: var(--secondary-text-color);
+  border: none;
+  text-decoration: none;
+  padding: 0.1em 0.3em;
+  margin: -0.1em -0.3em;
+}
+
+.notion-link,
+.notion-page-link,
+.notion-collection-card,
+.notion-table-of-contents-item a,
+.notion-equation {
+  transition: background-color 200ms ease-in-out, color 200ms ease-in-out;
+  border-radius: 4px;
+}
+
+.notion-link:hover,
+.notion-page-link:hover,
+.notion-collection-card:hover,
+.notion-table-of-contents-item a:hover,
+.notion-equation:hover {
+  background-color: var(--hover-bg-color);
 }
 
 .notion-link:focus,
 .notion-link:hover {
-  border-bottom-color: transparent;
-
-  background-image: linear-gradient(90.68deg, #b439df 0.26%, #e5337e 102.37%);
-  background-repeat: no-repeat;
-  background-position: 0 100%;
-  background-size: 100% 0.1rem;
-
-  transition-property: background-position, background-size;
-  transition-duration: 300ms;
+  color: var(--primary-text-color);
+  text-decoration: none; /* Ensure no underline */
+  background-image: none; /* Remove default gradient */
 }
 
 .notion-red_background,
@@ -547,6 +558,68 @@
 
 .notion-asset-object-fit {
   object-fit: cover;
+}
+
+.notion-app.dark-mode {
+  --bg-color: rgba(26, 26, 26, 0.0) !important;
+}
+
+/*
+  --- Custom Link & Hover/Focus Styles ---
+  This section replaces all previous custom styles for
+  .notion-link, .notion-page-link, and .notion-collection-card.
+*/
+
+/* 1. Base styles for hyperlinks */
+.notion-link {
+  color: var(--secondary-text-color);
+  border: none;
+  text-decoration: none;
+  padding: 0.1em 0.3em;
+  margin: -0.1em -0.3em;
+}
+
+/* 2. Base styles for all elements with hover/focus effects (transition, border-radius) */
+.notion-link,
+.notion-page-link,
+.notion-collection-card,
+a.notion-table-of-contents-item,
+.notion-equation {
+  transition: background-color 200ms ease-in-out, color 200ms ease-in-out;
+  border-radius: 4px;
+}
+
+/* 3. Apply hover/focus background to all targeted elements */
+.notion-link:hover,
+.notion-link:focus,
+.notion-page-link:hover,
+.notion-page-link:focus,
+.notion-collection-card:hover,
+.notion-collection-card:focus-within,
+a.notion-table-of-contents-item:hover,
+a.notion-table-of-contents-item:focus,
+.notion-equation:hover,
+.notion-equation:focus-within {
+  background-color: var(--hover-bg-color);
+  outline: none; /* Remove default focus outline since we have a background */
+}
+
+/* 4. Specific text color change on hyperlink hover/focus */
+.notion-link:focus,
+.notion-link:hover {
+  color: var(--primary-text-color);
+  text-decoration: none; /* Ensure no underline */
+  background-image: none; /* Remove default gradient */
+}
+
+/* 5. Keep collection card cover brightness effect */
+.notion-collection-card:hover .notion-collection-card-cover {
+  filter: brightness(120%);
+}
+
+/* 6. Set default text color for TOC items */
+a.notion-table-of-contents-item {
+  color: var(--primary-text-color);
 }
 
 

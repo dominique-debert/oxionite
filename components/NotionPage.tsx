@@ -192,6 +192,11 @@ export const NotionPage: React.FC<types.PageProps> = ({
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
 
+  const [hasMounted, setHasMounted] = React.useState(false)
+  React.useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
   if (router.isFallback) {
     return <Loading />
   }
@@ -213,7 +218,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
 
   // A top-level page is a "blog post" if it's a page in a collection.
   const isBlogPost =
-    pageInfo && block?.type === 'page' && block?.parent_table === 'collection'
+    !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
   
   // A sub-page is any page that is not a category and doesn't have pageInfo from the site map.
   const isSubPage = !pageInfo && block?.type === 'page'
@@ -296,7 +301,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
                 pageId === site.rootNotionPageId && 'index-page',
                 'custom-notion-page'
               )}
-              darkMode={isDarkMode}
+              darkMode={hasMounted ? isDarkMode : false}
               recordMap={recordMap}
               rootPageId={site.rootNotionPageId || undefined}
               fullPage={true} // Ensure cover, icon, and title are rendered

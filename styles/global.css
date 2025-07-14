@@ -9,7 +9,7 @@ a {
 
 body.light-mode {
   --border-color: #e9ecef;
-  --bg-color: rgba(255, 255, 255, 0.0); /* Add transparency */
+  --bg-color: rgba(255, 255, 255, 0.0) !important; /* Add transparency */
 
   /* Text Colors */
   --primary-text-color: #111111;
@@ -17,12 +17,13 @@ body.light-mode {
   --tertiary-text-color: #888888;
   
   /* Background Colors */
-  --blue-bg-color: #1459C2;
+  --primary-highlight-color: #1459C2;
+  --hover-bg-color: rgba(0, 0, 0, 0.04);
 }
 
 body.dark-mode {
   --border-color: #333;
-  --bg-color: rgba(26, 26, 26, 0.0); /* Add transparency */
+  --bg-color: rgba(26, 26, 26, 0.0) !important; /* Add transparency */
 
   /* Text Colors */
   --primary-text-color: #fafafa;
@@ -30,7 +31,8 @@ body.dark-mode {
   --tertiary-text-color: #999999;
   
   /* Background Colors */
-  --blue-bg-color: #1459C2;
+  --primary-highlight-color: #1459C2;
+  --hover-bg-color: rgba(255, 255, 255, 0.06);
 }
 
 body,
@@ -45,7 +47,7 @@ body {
     'Droid Sans', 'Helvetica Neue', 'Noto Sans', sans-serif;
   font-family: var(--notion-font);
   overflow-x: hidden;
-  background-color: var(--bg-color);
+  background-color: var(--bg-color) !important;
   --header-height: 60px;
 }
 

@@ -121,14 +121,22 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
   const isCategory = pageInfo?.type === 'Category'
 
-  // Calculate TOC display in real-time instead of using state
+  // Calculate TOC display in real-time for applying container padding
   const showTOC = React.useMemo(() => {
+    // We need the block and recordMap to count headers.
     if (!block || !recordMap?.block) return false
+
+    // A top-level page is a "blog post" if it's in a collection.
+    const isBlogPost =
+      !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
+
+    // A sub-page is any page that doesn't have pageInfo from the site map.
+    const isSubPage = !pageInfo && block?.type === 'page'
     
-    const isBlogPost = block?.type === 'page' && block?.parent_table === 'collection'
-    if (!isBlogPost) return false
+    // We only want to show a TOC for blog posts or sub-pages.
+    if (!isBlogPost && !isSubPage) return false
     
-    // Count headers
+    // Count headers in the page content.
     let headerCount = 0
     Object.values(recordMap.block).forEach((blockWrapper: any) => {
       const blockData = blockWrapper?.value
@@ -138,17 +146,10 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     })
     
     const minTableOfContentsItems = 3
-    const result = headerCount >= minTableOfContentsItems
-    
-    console.log('DEBUG _app.tsx - Real-time TOC calculation:', {
-      isBlogPost,
-      headerCount,
-      minTableOfContentsItems,
-      showTOC: result
-    })
+    const result = headerCount >= minTableOfContentsItems && !isMobile
     
     return result
-  }, [block, recordMap])
+  }, [block, recordMap, pageInfo, isMobile])
 
   // DEBUG: Let's see what we're getting
   console.log('DEBUG _app.tsx - pageProps:', pageProps)

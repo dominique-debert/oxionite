@@ -355,9 +355,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
                 style={{
                   padding: '8px 12px',
                   border: '1px solid',
-                  borderColor: pageNum === currentPage ? 'var(--blue-bg-color)' : (isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0,0,0,0.2)'),
+                  borderColor: pageNum === currentPage ? 'var(--primary-highlight-color)' : (isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0,0,0,0.2)'),
                   borderRadius: '9999px',
-                  backgroundColor: pageNum === currentPage ? 'var(--blue-bg-color)' : 'transparent',
+                  backgroundColor: pageNum === currentPage ? 'var(--primary-highlight-color)' : 'transparent',
                   color: pageNum === currentPage ? '#FFFFFF' : 'var(--secondary-text-color)',
                   cursor: 'pointer',
                   fontSize: '0.9rem',
