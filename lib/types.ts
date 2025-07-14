@@ -20,6 +20,7 @@ export interface PageProps {
   isMobile?: boolean
   homeRecordMaps?: { [pageId: string]: ExtendedRecordMap }
   isPrivate?: boolean
+  topLevelPageInfo?: PageInfo | null
 }
 
 export interface Params extends ParsedUrlQuery {

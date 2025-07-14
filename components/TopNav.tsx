@@ -6,6 +6,7 @@ import { IoMoonSharp } from '@react-icons/all-files/io5/IoMoonSharp'
 import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
 import { IoSearchOutline } from '@react-icons/all-files/io5/IoSearchOutline'
 import { IoMenuOutline } from '@react-icons/all-files/io5/IoMenuOutline'
+import { getBlockTitle, parsePageId } from 'notion-utils'
 
 import * as types from '@/lib/types'
 import { useDarkMode } from '@/lib/use-dark-mode'
@@ -159,6 +160,7 @@ function SearchButton() {
 interface BreadcrumbItem {
   title: string
   pageInfo?: types.PageInfo
+  href?: string
 }
 
 interface TopNavProps {
@@ -168,14 +170,26 @@ interface TopNavProps {
 }
 
 export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopNavProps) {
-  const { siteMap, pageId } = pageProps
+  const { siteMap, pageId, recordMap, topLevelPageInfo } = pageProps
   const { isDarkMode } = useDarkMode()
+  const router = useRouter()
 
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
-    if (!siteMap || !pageId) return []
-    const findPagePath = (pageId: string, tree: types.PageInfo[]): BreadcrumbItem[] | null => {
+    if (!siteMap || !pageId || !topLevelPageInfo || !recordMap) return []
+
+    // 1. Find the base path for the top-level post from the siteMap tree
+    const findPagePath = (
+      pageId: string,
+      tree: types.PageInfo[]
+    ): BreadcrumbItem[] | null => {
       for (const item of tree) {
-        const currentPath = [{ title: item.title || 'Untitled', pageInfo: item }]
+        const currentPath = [
+          {
+            title: item.title || 'Untitled',
+            pageInfo: item,
+            href: `/${item.slug}`
+          }
+        ]
         if (item.pageId === pageId) return currentPath
         if (item.children) {
           const subPath = findPagePath(pageId, item.children)
@@ -184,21 +198,74 @@ export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopN
       }
       return null
     }
-    return findPagePath(pageId, siteMap.navigationTree || []) || []
-  }, [siteMap, pageId])
+
+    const basePath =
+      findPagePath(topLevelPageInfo.pageId, siteMap.navigationTree || []) || []
+
+    // 2. Build the hierarchical path for sub-pages from the URL slug array
+    const slugParts = (router.query.slug as string[]) || []
+    const subPageCrumbs: BreadcrumbItem[] = []
+
+    if (slugParts.length > 1) {
+      // Iterate from the first sub-page slug to the last one
+      for (let i = 1; i < slugParts.length; i++) {
+        const subPageSlug = slugParts[i]
+        const subPageId = parsePageId(subPageSlug)
+
+        if (subPageId && recordMap.block[subPageId]?.value) {
+          const subPageBlock = recordMap.block[subPageId].value
+          const subPageTitle = getBlockTitle(subPageBlock, recordMap) || 'Untitled'
+
+          // Construct the full path for the link
+          const href = `/${slugParts.slice(0, i + 1).join('/')}`
+
+          subPageCrumbs.push({
+            title: subPageTitle,
+            href: href
+          })
+        }
+      }
+    }
+
+    return [...basePath, ...subPageCrumbs]
+  }, [siteMap, pageId, recordMap, topLevelPageInfo, router.query.slug])
 
   return (
     <nav className="glass-nav">
-      <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-        {isMobile && onToggleMobileMenu && <MobileMenuButton onToggle={onToggleMobileMenu} />}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flex: 1,
+          minWidth: 0
+        }}
+      >
+        {isMobile && onToggleMobileMenu && (
+          <MobileMenuButton onToggle={onToggleMobileMenu} />
+        )}
         <div className="glass-breadcrumb">
-          <Link href="/" className="breadcrumb-item">{siteConfig.name}</Link>
-          {!isMobile && breadcrumbs.map((crumb, index) => (
-            <React.Fragment key={index}>
-              <span className="breadcrumb-separator">›</span>
-              <Link href={`/${crumb.pageInfo?.slug}`} className="breadcrumb-item">{crumb.title}</Link>
-            </React.Fragment>
-          ))}
+          <Link href="/" className="breadcrumb-item">
+            {siteConfig.name}
+          </Link>
+          {!isMobile &&
+            breadcrumbs.map((crumb, index) => {
+              const isLastCrumb = index === breadcrumbs.length - 1
+              return (
+                <React.Fragment key={index}>
+                  <span className="breadcrumb-separator">›</span>
+                  {isLastCrumb || !crumb.href ? (
+                    <span className="breadcrumb-item is-active">
+                      {crumb.title}
+                    </span>
+                  ) : (
+                    <Link href={crumb.href} className="breadcrumb-item">
+                      {crumb.title}
+                    </Link>
+                  )}
+                </React.Fragment>
+              )
+            })}
+            
         </div>
       </div>
 

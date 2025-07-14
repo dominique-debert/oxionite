@@ -211,17 +211,20 @@ export const NotionPage: React.FC<types.PageProps> = ({
 
   const pageInfo = siteMap?.pageInfoMap?.[pageId]
 
-  // Check if this is a blog post (collection item) or a home page
+  // A top-level page is a "blog post" if it's a page in a collection.
   const isBlogPost =
-    (block?.type === 'page' && block?.parent_table === 'collection') ||
-    pageInfo?.type === 'Home'
+    pageInfo && block?.type === 'page' && block?.parent_table === 'collection'
+  
+  // A sub-page is any page that is not a category and doesn't have pageInfo from the site map.
+  const isSubPage = !pageInfo && block?.type === 'page'
 
   // Table of contents settings - count actual headers
   const minTableOfContentsItems = 3
   
-  // Count header blocks in recordMap
+  // Count header blocks in recordMap to determine if we should show a TOC.
   const headerCount = React.useMemo(() => {
-    if (!isBlogPost || !recordMap?.block) return 0
+    // Run this check only for blog posts or sub-pages.
+    if ((!isBlogPost && !isSubPage) || !recordMap?.block) return 0
     
     let count = 0
     Object.values(recordMap.block).forEach((blockWrapper: any) => {
@@ -231,17 +234,23 @@ export const NotionPage: React.FC<types.PageProps> = ({
       }
     })
     
-    console.log('DEBUG NotionPage - Header count:', count)
     return count
-  }, [isBlogPost, recordMap])
+  }, [isBlogPost, isSubPage, recordMap])
   
-  const showTableOfContents = isBlogPost && headerCount >= minTableOfContentsItems && !isMobile
+  const showTableOfContents = (isBlogPost || isSubPage) && headerCount >= minTableOfContentsItems && !isMobile
 
   // Create page URL mapper for proper navigation
   const siteMapPageUrl = React.useMemo(() => {
     const searchParams = new URLSearchParams()
-    return site ? mapPageUrl(site, recordMap, searchParams) : undefined
-  }, [site, recordMap])
+    const { slug } = router.query
+
+    // Use the current full URL path as the base path for sub-pages.
+    const basePath = Array.isArray(slug) ? slug.join('/') : ''
+
+    return site
+      ? mapPageUrl(site, recordMap, searchParams, basePath)
+      : undefined
+  }, [site, recordMap, router.query])
 
   console.log('NotionPage debug:', {
     pageId,
@@ -270,13 +279,16 @@ export const NotionPage: React.FC<types.PageProps> = ({
       <div className="notion-page">
         <div className='notion-viewport'>
           <div className={cs(styles.main, styles.hasSideNav)}>
-            {/* Post Header with Title, Author, Published, Tags, and Cover Image */}
-            <PostHeader
-              block={block}
-              recordMap={recordMap}
-              isBlogPost={isBlogPost}
-              isMobile={isMobile}
-            />
+            {/* Show our custom header for both top-level posts and sub-pages */}
+            {(isBlogPost || isSubPage) && (
+              <PostHeader
+                block={block}
+                recordMap={recordMap}
+                isBlogPost={isBlogPost} // Still needed for internal logic in PostHeader
+                isMobile={isMobile}
+                variant={isBlogPost ? 'full' : 'simple'}
+              />
+            )}
             
             <NotionRenderer
               bodyClassName={cs(
@@ -287,7 +299,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
               darkMode={isDarkMode}
               recordMap={recordMap}
               rootPageId={site.rootNotionPageId || undefined}
-              fullPage={true}
+              fullPage={true} // Ensure cover, icon, and title are rendered
               previewImages={!!recordMap.preview_images}
               showCollectionViewDropdown={false}
               showTableOfContents={showTableOfContents}
@@ -308,6 +320,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
                 Pdf,
                 Modal: Modal2,
                 Tweet,
+                // Always use an empty header to hide Notion's built-in header
                 Header: EmptyHeader,
                 propertyLastEditedTimeValue,
                 propertyDateValue,

@@ -10,17 +10,22 @@ import { type Site } from './types'
 const uuid = !!includeNotionIdInUrls
 
 export const mapPageUrl =
-  (site: Site, recordMap: ExtendedRecordMap, searchParams: URLSearchParams) =>
+  (
+    site: Site,
+    recordMap: ExtendedRecordMap,
+    searchParams: URLSearchParams,
+    basePath = ''
+  ) =>
   (pageId = '') => {
     const pageUuid = parsePageId(pageId, { uuid: true })!
 
     if (uuidToId(pageUuid) === site.rootNotionPageId) {
       return createUrl('/', searchParams)
     } else {
-      return createUrl(
-        `/${getCanonicalPageId(pageUuid, recordMap, { uuid })}`,
-        searchParams
-      )
+      const canonicalPageId = getCanonicalPageId(pageUuid, recordMap, { uuid })
+      // Join the base path with the new canonical page ID to create a hierarchical URL.
+      const path = [basePath, canonicalPageId].filter(Boolean).join('/')
+      return createUrl(`/${path}`, searchParams)
     }
   }
 
