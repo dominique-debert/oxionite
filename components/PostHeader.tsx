@@ -96,9 +96,9 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
               fontSize: '1rem',
               gap: '0.5rem'
             }}>
-              {author && <span style={{ fontWeight: '600', color: 'var(--fg-color, #000)' }}>{author}</span>}
-              {author && formattedPublished && <span style={{ color: 'var(--fg-color-2, #868e96)', fontWeight: '400' }}>•</span>}
-              {formattedPublished && <span style={{ color: 'var(--fg-color-2, #868e96)', fontWeight: '400' }}>{formattedPublished}</span>}
+              {author && <span style={{ fontWeight: '600', color: 'var(--primary-text-color)' }}>{author}</span>}
+              {author && formattedPublished && <span style={{ color: 'var(--secondary-text-color)', fontWeight: '400' }}>•</span>}
+              {formattedPublished && <span style={{ color: 'var(--secondary-text-color)', fontWeight: '400' }}>{formattedPublished}</span>}
             </div>
           )}
 
