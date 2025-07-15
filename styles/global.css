@@ -17,8 +17,13 @@ body.light-mode {
   --tertiary-text-color: #888888;
   
   /* Background Colors */
+  --default-bg-color: rgba(255, 255, 255, 0.3);
   --primary-highlight-color: #1459C2;
   --hover-bg-color: rgba(0, 0, 0, 0.04);
+  --button-bg-color: rgba(255, 255, 255, 0.3);
+
+  /* Border Colors */
+  --hover-border-color: rgba(0, 0, 0, 0.1);
 }
 
 body.dark-mode {
@@ -31,8 +36,12 @@ body.dark-mode {
   --tertiary-text-color: #999999;
   
   /* Background Colors */
+  --default-bg-color: rgba(0, 0, 0, 0.3);
   --primary-highlight-color: #1459C2;
   --hover-bg-color: rgba(255, 255, 255, 0.06);
+  --button-bg-color: rgba(0, 0, 0, 0.3);
+  /* Border Colors */
+  --hover-border-color: rgba(255, 255, 255, 0.1);
 }
 
 body,

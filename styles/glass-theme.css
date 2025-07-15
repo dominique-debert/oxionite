@@ -14,7 +14,7 @@
   padding: 0.5rem;
   border-radius: 9999px;
   border: 0.5px solid rgba(0, 0, 0, 0.2);
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: var(--default-bg-color);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -29,8 +29,8 @@
   height: 2.5rem;
   min-width: 2.5rem;
   border-radius: 9999px;
-  border: 1px solid transparent; /* Start with a transparent border */
-  background-color: transparent; /* Start with a transparent background */
+  border: 1px solid var(--hover-border-color); /* Start with a transparent border */
+  background-color: var(--default-bg-color);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -39,23 +39,24 @@
 }
 
 .glass-item:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-  border-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
 }
 
 /* Dark mode adjustments */
 .dark-mode .glass-nav {
-  background-color: rgba(40, 40, 40, 0.5);
+  background-color: var(--default-bg-color);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
 .dark-mode .glass-item {
   color: #ffffff;
+  background-color: var(--default-bg-color);
 }
 
 .dark-mode .glass-item:hover {
-  background-color: rgba(60, 60, 60, 0.7);
-  border-color: rgba(255, 255, 255, 0.25);
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
 }
 
 /* Make social icons white in dark mode */
@@ -89,11 +90,13 @@
 }
 
 .breadcrumb-item:hover {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
 }
 
 .dark-mode .breadcrumb-item:hover {
-  background-color: rgba(60, 60, 60, 0.7);
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
 }
 
 .dark-mode .breadcrumb-item {
@@ -103,6 +106,7 @@
 .glass-breadcrumb .breadcrumb-separator {
   margin: 0 0.5rem;
   opacity: 0.5;
+  color: var(--primary-text-color);
 }
 
 /* Language switcher dropdown menu */
@@ -112,7 +116,7 @@
   right: 0;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: var(--default-bg-color);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   padding: 0.5rem;
@@ -121,7 +125,7 @@
 }
 
 .dark-mode .language-switcher-menu {
-  background-color: rgba(40, 40, 40, 0.5);
+  background-color: var(--default-bg-color);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -134,11 +138,13 @@
 }
 
 .language-switcher-menu a:hover {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
 }
 
 .dark-mode .language-switcher-menu a:hover {
-  background-color: rgba(60, 60, 60, 0.7);
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
 }
 
 /* --- SideNav Styles --- */
@@ -147,7 +153,7 @@
   padding: 1rem;
   border-radius: 32px;
   border: 0.5px solid rgba(0, 0, 0, 0.2);
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: var(--default-bg-color);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition: all 0.3s ease;
@@ -156,7 +162,7 @@
 }
 
 .dark-mode .glass-sidenav {
-  background-color: rgba(40, 40, 40, 0.5);
+  background-color: var(--default-bg-color);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -171,8 +177,8 @@
 }
 
 .sidenav-item:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-  border-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
 }
 
 .dark-mode .sidenav-item {
@@ -180,8 +186,8 @@
 }
 
 .dark-mode .sidenav-item:hover {
-  background-color: rgba(60, 60, 60, 0.7);
-  border-color: rgba(255, 255, 255, 0.25);
+  background-color: var(--hover-bg-color);
+  border-color: var(--hover-border-color);
 }
 
 .sidenav-item.active {

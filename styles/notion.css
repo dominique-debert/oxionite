@@ -94,8 +94,24 @@
   display: none !important;
 }
 
+.notion-table-of-contents-active-item {
+  color: var(--primary-text-color) !important;
+}
+
 .index-page {
   --notion-max-width: 900px;
+}
+
+.notion-tag {
+  background-color: var(--default-bg-color);
+  color: var(--primary-text-color);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  border: 1px solid var(--hover-border-color);
+  transition: all 0.2s ease;
 }
 
 .notion-text {
@@ -564,6 +580,43 @@
   --bg-color: rgba(26, 26, 26, 0.0) !important;
 }
 
+.notion-code {
+  border-radius: 12px;
+  background-color: var(--default-bg-color);
+  backdrop-filter: blur(10px);
+  border-color: var(--hover-border-color);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 1.5em !important;
+}
+
+.notion-code-copy-button {
+  background-color: var(--button-bg-color);
+  box-shadow: none !important;
+  color: var(--secondary-text-color);
+  border-radius: 12px;
+}
+
+.notion-code-copy-button:hover {
+  background-color: var(--hover-bg-color);
+  color: var(--primary-text-color);
+}
+
+
+
+/*
+  --- Custom Default Background Styles ---
+*/
+
+.notion-bookmark {
+  border-radius: 12px;
+  background-color: var(--default-bg-color);
+  backdrop-filter: blur(10px);
+  border-color: var(--hover-border-color);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+
+
 /*
   --- Custom Link & Hover/Focus Styles ---
   This section replaces all previous custom styles for
@@ -598,6 +651,7 @@ a.notion-table-of-contents-item,
 .notion-collection-card:focus-within,
 a.notion-table-of-contents-item:hover,
 a.notion-table-of-contents-item:focus,
+.notion-bookmark:hover,
 .notion-equation:hover,
 .notion-equation:focus-within {
   background-color: var(--hover-bg-color);

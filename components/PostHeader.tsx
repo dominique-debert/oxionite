@@ -113,17 +113,7 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
               {tags.map((tag, index) => (
                 <span
                   key={index}
-                  style={{
-                    backgroundColor: 'var(--fg-color, #000)',
-                    color: 'var(--bg-color, #fff)',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '20px',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    letterSpacing: '0.025em',
-                    border: 'none',
-                    transition: 'all 0.2s ease'
-                  }}
+                  className="notion-tag"
                 >
                   {tag}
                 </span>
