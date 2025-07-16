@@ -20,6 +20,7 @@ export interface LocaleTexts {
   searching: string
   noResults: string
   typeToSearch: string
+  resultsCount: (count: number) => string
 }
 
 const koTexts: LocaleTexts = {
@@ -43,7 +44,8 @@ const koTexts: LocaleTexts = {
   searchPlaceholder: '검색...',
   searching: '검색 중...',
   noResults: '검색 결과가 없습니다',
-  typeToSearch: '검색어를 입력하세요...'
+  typeToSearch: '검색어를 입력하세요...',
+  resultsCount: (count: number) => `총 ${count}개의 결과를 찾았습니다.`
 }
 
 const enTexts: LocaleTexts = {
@@ -67,7 +69,8 @@ const enTexts: LocaleTexts = {
   searchPlaceholder: 'Search...',
   searching: 'Searching...',
   noResults: 'No results found',
-  typeToSearch: 'Type to search...'
+  typeToSearch: 'Type to search...',
+  resultsCount: (count: number) => `Found ${count} result${count !== 1 ? 's' : ''}`
 }
 
 const translations = {

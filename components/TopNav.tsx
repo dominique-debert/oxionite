@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { IoMoonSharp } from '@react-icons/all-files/io5/IoMoonSharp'
 import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
 import { IoSearchOutline } from '@react-icons/all-files/io5/IoSearchOutline'
+import { IoCloseCircleOutline } from '@react-icons/all-files/io5/IoCloseCircleOutline'
 import { IoMenuOutline } from '@react-icons/all-files/io5/IoMenuOutline'
 import { getBlockTitle, parsePageId } from 'notion-utils'
 
@@ -15,6 +16,7 @@ import { useI18n } from '@/lib/i18n'
 import { PageSocial } from './PageSocial'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import siteConfig from '../site.config'
+import styles from '@/styles/components/SearchModal.module.css'
 
 function ToggleThemeButton() {
   const [hasMounted, setHasMounted] = React.useState(false)
@@ -114,32 +116,52 @@ function SearchButton() {
   if (!isSearchEnabled) return null
 
   const modalContent = (
-    <div className="search-modal-overlay" onClick={closeModal}>
-      <div className="search-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="search-input-wrapper">
+    <div className={styles.searchModalOverlay} onClick={closeModal}>
+      <div className={styles.searchModalContent} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.searchInputWrapper}>
+          <IoSearchOutline className={styles.inputIcon} />
           <input
             ref={inputRef}
             type="text"
             value={query}
+            className={styles.searchInput}
             onChange={(e) => {
               setQuery(e.target.value)
               handleSearch(e.target.value)
             }}
             placeholder={t.searchPlaceholder}
-            className="search-input"
           />
+          {query && (
+            <button
+              className={styles.clearButton}
+              onClick={() => {
+                setQuery('')
+                setResults([])
+                inputRef.current?.focus()
+              }}
+            >
+              <IoCloseCircleOutline />
+            </button>
+          )}
         </div>
-        <div className="search-results-container">
-          {isLoading && <div className="search-message">{t.searching}</div>}
-          {!isLoading && query && results.length === 0 && <div className="search-message">{t.noResults}</div>}
-          {!isLoading && !query && <div className="search-message">{t.typeToSearch}</div>}
+
+        {!isLoading && query && (
+          <div className={styles.searchResultsCount}>
+            {t.resultsCount(results.length)}
+          </div>
+        )}
+
+        <div className={styles.searchResultsList}>
+          {isLoading && <div className={styles.loadingSpinner}>Loading...</div>}
+          {!isLoading && query && results.length === 0 && <div className={styles.searchMessage}>{t.noResults}</div>}
+          {!isLoading && !query && <div className={styles.searchMessage}>{t.typeToSearch}</div>}
           {!isLoading && results.map((result) => (
-            <div key={result.id} className="search-result-item" onClick={() => {
+            <div key={result.id} className={styles.searchResultItem} onClick={() => {
               closeModal()
               router.push(result.url)
             }}>
-              <div className="search-result-title">{result.title}</div>
-              {result.snippet && <div className="search-result-snippet">{result.snippet}</div>}
+              <div className={styles.searchResultTitle}>{result.title}</div>
+              {result.snippet && <div className={styles.searchResultSnippet} dangerouslySetInnerHTML={{ __html: result.snippet }} />}
             </div>
           ))}
         </div>

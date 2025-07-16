@@ -24,6 +24,9 @@ body.light-mode {
 
   /* Border Colors */
   --hover-border-color: rgba(0, 0, 0, 0.1);
+
+  /* Shadow Colors */
+  --shadow-color: rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode {
@@ -42,6 +45,9 @@ body.dark-mode {
   --button-bg-color: rgba(0, 0, 0, 0.3);
   /* Border Colors */
   --hover-border-color: rgba(255, 255, 255, 0.1);
+
+  /* Shadow Colors */
+  --shadow-color: rgba(0, 0, 0, 0.3);
 }
 
 body,
