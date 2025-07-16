@@ -63,8 +63,7 @@ export interface PageInfo {
   translationOf: string[]
   public: boolean | null
   description: string | null
-  published: string | null
-  lastUpdated: string | null
+  date: string | null
   coverImage?: string | null
   coverImageBlock?: Block // Add block for mapImageUrl
 

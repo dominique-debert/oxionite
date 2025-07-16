@@ -49,8 +49,13 @@ function MobileMenuButton({ onToggle }: { onToggle: () => void }) {
 interface SearchResult {
   id: string
   title: string
+  type: string
   url: string
-  snippet?: string
+  breadcrumb: string | null
+}
+
+interface NotionSearchResponse {
+  results: SearchResult[]
 }
 
 function SearchButton() {
@@ -91,14 +96,8 @@ function SearchButton() {
         body: JSON.stringify({ query: searchQuery, ancestorId: siteConfig.rootNotionPageId })
       })
       if (response.ok) {
-        const data: any = await response.json()
-        const transformedResults = data.results?.map((result: any) => ({
-          id: result.id,
-          title: result.highlight?.text || data.recordMap?.block?.[result.id]?.value?.properties?.title?.[0]?.[0] || 'Untitled',
-          url: `/${result.id.replace(/-/g, '')}`,
-          snippet: result.highlight?.text || ''
-        })) || []
-        setResults(transformedResults)
+        const data = (await response.json()) as NotionSearchResponse
+        setResults(data.results || [])
       }
     } catch (error) {
       console.error('Search error:', error)
@@ -155,15 +154,38 @@ function SearchButton() {
           {isLoading && <div className={styles.loadingSpinner}>Loading...</div>}
           {!isLoading && query && results.length === 0 && <div className={styles.searchMessage}>{t.noResults}</div>}
           {!isLoading && !query && <div className={styles.searchMessage}>{t.typeToSearch}</div>}
-          {!isLoading && results.map((result) => (
-            <div key={result.id} className={styles.searchResultItem} onClick={() => {
-              closeModal()
-              router.push(result.url)
-            }}>
-              <div className={styles.searchResultTitle}>{result.title}</div>
-              {result.snippet && <div className={styles.searchResultSnippet} dangerouslySetInnerHTML={{ __html: result.snippet }} />}
-            </div>
-          ))}
+          {!isLoading &&
+            results.map((result) => {
+              const pageTypeClass =
+                styles[`pageTypeTag${result.type}`] || styles.pageTypeTagSubPage
+
+              return (
+                <div key={result.id} className={styles.searchResultItem}>
+                  <a
+                    href={result.url}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      router.push(result.url)
+                      closeModal()
+                    }}
+                  >
+                    <span className={`${styles.pageTypeTag} ${pageTypeClass}`}>
+                      {result.type}
+                    </span>
+                    <div className={styles.searchResultTextContainer}>
+                      <span className={styles.searchResultTitle}>
+                        {result.title}
+                      </span>
+                      {result.breadcrumb && (
+                        <span className={styles.searchResultBreadcrumb}>
+                          {result.breadcrumb}
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                </div>
+              )
+            })}
         </div>
       </div>
     </div>
