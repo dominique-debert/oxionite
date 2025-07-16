@@ -31,6 +31,7 @@ import * as types from '@/lib/types'
 import { SideNav } from '@/components/SideNav'
 import { TopNav } from '@/components/TopNav'
 import Background from '@/components/Background'
+import { mapImageUrl } from '@/lib/map-image-url'
 
 if (typeof window !== 'undefined') {
   bootstrap()
@@ -41,6 +42,18 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isMobile, setIsMobile] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  const [scrollProgress, setScrollProgress] = React.useState(0)
+
+  const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
+    if (scrollHeight - clientHeight === 0) {
+      setScrollProgress(0)
+      return
+    }
+    const progress = scrollTop / (scrollHeight - clientHeight)
+    setScrollProgress(progress)
+  }, [])
 
   // Detect mobile screen size
   React.useEffect(() => {
@@ -118,6 +131,21 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
 
   // Get page info to determine layout style
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
+
+  // Determine page type for cover image logic
+  const isPost = pageInfo?.type === 'Post'
+  const isCategoryPage = pageInfo?.type === 'Category'
+  const isSubPage = !pageInfo && block?.type === 'page'
+
+  // Determine the cover image URL to pass to the Background component
+  let coverImageUrl: string | undefined = undefined
+  if ((isPost || isCategoryPage) && pageInfo?.coverImage) {
+    coverImageUrl = pageInfo.coverImage
+  } else if (isSubPage && block?.format?.page_cover) {
+    // For sub-pages, we need to construct the URL from the block data
+    coverImageUrl = mapImageUrl(block.format.page_cover, block)
+  }
+
   const isCategory = pageInfo?.type === 'Category'
 
   // Calculate TOC display in real-time for applying container padding
@@ -202,7 +230,8 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       height: '100vh',
       overflow: 'hidden'
     }}>
-      <Background />
+      <Background imageUrl={coverImageUrl} scrollProgress={scrollProgress} />
+
       {/* Mobile Menu Overlay */}
       {isMobile && isMobileMenuOpen && (
         <div 
@@ -249,7 +278,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           />
         )}
         
-        <div style={{ 
+        <div ref={scrollRef} onScroll={handleScroll} style={{ 
           flex: 1,
           overflow: 'auto',
           paddingTop: '88px', /* Add padding to prevent content overlap */

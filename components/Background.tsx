@@ -14,6 +14,15 @@ const DARK_MODE_OPACITY_RANGE = { min: 0.2, max: 0.9 }
 // max: Opacity for the darkest backgrounds (luminance: 0)
 const LIGHT_MODE_OPACITY_RANGE = { min: 0.2, max: 0.7 }
 
+// How much to zoom the background. 1.5 means 150% zoom.
+const BACKGROUND_ZOOM = 1.5
+
+// Defines the visible portion of the background image during scroll.
+// 0.0 is the very top, 1.0 is the very bottom.
+// To avoid blurred edges, we can restrict this range, e.g., from 0.1 to 0.9.
+const BACKGROUND_VISIBLE_START = 0.25 // Start scrolling from 10% down the image
+const BACKGROUND_VISIBLE_END = 0.75   // End scrolling at 90% down the image
+
 // Helper to map a value from one range to another
 const mapRange = (
   value: number,
@@ -71,17 +80,15 @@ const getAverageLuminance = (imgSrc: string): Promise<number> => {
 interface BackgroundProps {
   imageUrl?: string
   videoUrl?: string
+  scrollProgress?: number
 }
 
-// A component that renders a blurred, infinitely scrolling background.
-// It uses four copies of the same image/video, with every second one flipped
-// to create a seamless, mirrored, and truly infinite effect.
-const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl }) => {
+// A component that renders a blurred, scrolling background.
+const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgress = 0 }) => {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
   const backgroundSource = imageUrl || '/default_background.webp'
-  const translateY = useRef(0)
-  const backgroundRef = useRef<HTMLDivElement>(null)
+  const backgroundRef = useRef<HTMLDivElement | HTMLVideoElement>(null)
 
   useEffect(() => {
     if (videoUrl) {
@@ -97,22 +104,14 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl }) => {
 
       let newOpacity: number
       if (isDarkMode) {
-        // Dark Mode: Brighter background => more opaque black overlay
         newOpacity = mapRange(
-          luminance,
-          0,
-          255,
-          DARK_MODE_OPACITY_RANGE.min,
-          DARK_MODE_OPACITY_RANGE.max
+          luminance, 0, 255,
+          DARK_MODE_OPACITY_RANGE.min, DARK_MODE_OPACITY_RANGE.max
         )
       } else {
-        // Light Mode: Darker background => more opaque white overlay
         newOpacity = mapRange(
-          luminance,
-          0,
-          255,
-          LIGHT_MODE_OPACITY_RANGE.max,
-          LIGHT_MODE_OPACITY_RANGE.min
+          luminance, 0, 255,
+          LIGHT_MODE_OPACITY_RANGE.max, LIGHT_MODE_OPACITY_RANGE.min
         )
       }
       setOverlayOpacity(newOpacity)
@@ -120,94 +119,38 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl }) => {
 
     calculateAndSetOpacity()
 
-    return () => {
-      isMounted = false
-    }
+    return () => { isMounted = false }
   }, [backgroundSource, isDarkMode, videoUrl])
 
   useEffect(() => {
-    let animationFrameId: number
+    if (backgroundRef.current) {
+      const vh = window.innerHeight
+      const movableDistance = vh * (BACKGROUND_ZOOM - 1)
 
-    const handleWheel = (event: WheelEvent) => {
-      const scrollAmount = event.deltaY * 0.1
-      translateY.current -= scrollAmount
+      // The full potential translation range for the background
+      const fullRangeTop = movableDistance / 2
+      const fullRangeBottom = -movableDistance / 2
 
-      // Use rAF for smooth animations
-      cancelAnimationFrame(animationFrameId)
-      animationFrameId = requestAnimationFrame(() => {
-        if (backgroundRef.current) {
-          const vh = window.innerHeight
-          // The repeating cycle is two elements (normal + flipped), which is 200vh.
-          const cycleHeight = vh * 2
+      // Calculate the actual start and end points based on the visible range constants
+      const startTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_START
+      const endTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_END
 
-          // This logic creates a seamless loop.
-          // When the scroll position goes past the end of the cycle (-cycleHeight),
-          // it wraps around to the beginning (0).
-          // This works because the element at -cycleHeight (the 3rd element) is identical
-          // to the element at 0 (the 1st element).
-          if (translateY.current <= -cycleHeight) {
-            translateY.current %= cycleHeight
-          }
-          // Handle scrolling upwards
-          else if (translateY.current > 0) {
-            translateY.current = (translateY.current % cycleHeight) - cycleHeight
-          }
+      // Map the scroll progress to the new restricted translation range
+      const newTranslateY = startTranslateY + scrollProgress * (endTranslateY - startTranslateY)
 
-          backgroundRef.current.style.transform = `translateY(${translateY.current}px)`
-        }
-      })
+      backgroundRef.current.style.transform = `scale(${BACKGROUND_ZOOM}) translateY(${newTranslateY}px)`
     }
+  }, [scrollProgress])
 
-    window.addEventListener('wheel', handleWheel, { passive: true })
-
-    return () => {
-      window.removeEventListener('wheel', handleWheel)
-      cancelAnimationFrame(animationFrameId)
-    }
-  }, [])
-
-  const renderBackgroundElement = (key: number) => {
-    const style: React.CSSProperties = {
-      position: 'absolute',
-      left: 0,
-      top: `${key * 100}vh`,
-      width: '100%',
-      height: '100vh',
-      objectFit: 'cover',
-      filter: 'blur(40px)',
-      transform: 'scale(1.2)'
-    }
-
-    // Flip every second element (at index 1 and 3) for a mirrored effect
-    if (key % 2 !== 0) {
-      style.transform += ' scaleY(-1)'
-    }
-
-    if (videoUrl) {
-      return (
-        <video
-          key={key}
-          autoPlay
-          loop
-          muted
-          playsInline
-          src={videoUrl}
-          style={style}
-        />
-      )
-    } else {
-      return (
-        <div
-          key={key}
-          style={{
-            ...style,
-            backgroundImage: `url(${backgroundSource})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
-      )
-    }
+  const backgroundStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: '100%',
+    height: '100vh',
+    objectFit: 'cover',
+    filter: 'blur(40px)',
+    transition: 'transform 0.3s ease-out'
   }
 
   return (
@@ -220,17 +163,27 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl }) => {
         overflow: 'hidden'
       }}
     >
-      {/* The scrolling container now holds four elements */}
-      <div
-        ref={backgroundRef}
-        style={{
-          width: '100%',
-          height: '400vh', // Height for four stacked elements
-          position: 'relative'
-        }}
-      >
-        {[0, 1, 2, 3].map(renderBackgroundElement)}
-      </div>
+      {videoUrl ? (
+        <video
+          ref={backgroundRef as React.RefObject<HTMLVideoElement>}
+          autoPlay
+          loop
+          muted
+          playsInline
+          src={videoUrl}
+          style={backgroundStyle}
+        />
+      ) : (
+        <div
+          ref={backgroundRef as React.RefObject<HTMLDivElement>}
+          style={{
+            ...backgroundStyle,
+            backgroundImage: `url(${backgroundSource})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
+      )}
       {/* The dark/light mode overlay */}
       <div
         style={{
