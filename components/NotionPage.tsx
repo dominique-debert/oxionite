@@ -181,14 +181,15 @@ const propertyTextValue = (
   return defaultFn()
 }
 
-export const NotionPage: React.FC<types.PageProps> = ({
+export const NotionPage = ({
   site,
   recordMap,
   error,
   pageId,
   siteMap,
-  isMobile = false
-}) => {
+  isMobile = false,
+  showTOC = false
+}: types.PageProps) => {
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
 
@@ -226,23 +227,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
   // Table of contents settings - count actual headers
   const minTableOfContentsItems = 3
   
-  // Count header blocks in recordMap to determine if we should show a TOC.
-  const headerCount = React.useMemo(() => {
-    // Run this check only for blog posts or sub-pages.
-    if ((!isBlogPost && !isSubPage) || !recordMap?.block) return 0
-    
-    let count = 0
-    Object.values(recordMap.block).forEach((blockWrapper: any) => {
-      const block = blockWrapper?.value
-      if (block?.type === 'header' || block?.type === 'sub_header' || block?.type === 'sub_sub_header') {
-        count++
-      }
-    })
-    
-    return count
-  }, [isBlogPost, isSubPage, recordMap])
-  
-  const showTableOfContents = (isBlogPost || isSubPage) && headerCount >= minTableOfContentsItems && !isMobile
+  const showTableOfContents = showTOC
 
   // Create page URL mapper for proper navigation
   const siteMapPageUrl = React.useMemo(() => {
@@ -265,13 +250,11 @@ export const NotionPage: React.FC<types.PageProps> = ({
     blockId: block?.id,
     blockType: block?.type,
     isBlogPost,
-    headerCount,
     minTableOfContentsItems,
     showTableOfContents
   })
 
-  // Debug TOC calculation
-  console.log('DEBUG NotionPage - showTableOfContents:', showTableOfContents)
+
 
   return (
     <>

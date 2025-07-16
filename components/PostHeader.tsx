@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
 import { type PageBlock } from 'notion-types'
@@ -19,6 +19,8 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
   isMobile = false,
   variant = 'full' // Default to 'full'
 }) => {
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
+
   // For 'full' variant, we require it to be a blog post from a collection
   if (variant === 'full' && (!isBlogPost || !block || block.parent_table !== 'collection')) {
     return null
@@ -67,7 +69,7 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
   return (
     <div style={{
       maxWidth: 'var(--notion-max-width, 800px)',
-      paddingLeft: '2.5rem',
+      paddingLeft: isMobile ? '2.5rem' : '1rem',
       paddingRight: '1rem',
       paddingTop: '2rem',
       width: '100%'
@@ -128,21 +130,32 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
         <div style={{
           position: 'relative',
           width: '100%',
-          height: isMobile ? '0' : '400px',
-          aspectRatio: isMobile ? '16 / 9' : 'auto',
-          paddingBottom: isMobile ? '56.25%' : '0',
-          borderRadius: '12px',
-          overflow: 'hidden',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          // Dynamically set aspect ratio from image dimensions
+          aspectRatio: imageAspectRatio ? `${imageAspectRatio}` : undefined,
+          // Hide container until aspect ratio is known to prevent layout shift
+          opacity: imageAspectRatio ? 1 : 0,
+          transition: 'opacity 0.3s ease-in-out',
+          // Apply styles only when the image is visible
+          borderRadius: imageAspectRatio ? '12px' : '0',
+          boxShadow: imageAspectRatio
+            ? '0 10px 30px rgba(0, 0, 0, 0.1)'
+            : 'none',
+          overflow: 'hidden'
         }}>
           <Image
             src={coverImageUrl}
             alt={title || 'Cover image'}
             fill
             style={{
+              // Container has the correct aspect ratio, so 'cover' will fill it perfectly.
               objectFit: 'cover',
               objectPosition: `center ${(1 - coverPosition) * 100}%`
+            }}
+            onLoadingComplete={({ naturalWidth, naturalHeight }) => {
+              if (naturalHeight > 0) {
+                setImageAspectRatio(naturalWidth / naturalHeight)
+              }
             }}
             priority
             sizes="(max-width: 1024px) 100vw, 800px"

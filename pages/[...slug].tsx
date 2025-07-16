@@ -82,7 +82,7 @@ export const getServerSideProps: GetServerSideProps<
   }
 }
 
-export default function SlugPage(props: PageProps) {
+export default function SlugPage({ showTOC, ...props }: PageProps) {
   const router = useRouter()
 
   if (router.isFallback) {
@@ -106,5 +106,5 @@ export default function SlugPage(props: PageProps) {
     return <CategoryPage pageProps={props} />
   }
 
-  return <NotionPage {...props} />
+  return <NotionPage {...props} showTOC={showTOC} />
 }

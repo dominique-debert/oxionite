@@ -21,6 +21,7 @@ export interface PageProps {
   homeRecordMaps?: { [pageId: string]: ExtendedRecordMap }
   isPrivate?: boolean
   topLevelPageInfo?: PageInfo | null
+  showTOC?: boolean
 }
 
 export interface Params extends ParsedUrlQuery {

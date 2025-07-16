@@ -149,21 +149,27 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const isCategory = pageInfo?.type === 'Category'
 
   // Calculate TOC display in real-time for applying container padding
+  const [screenWidth, setScreenWidth] = React.useState(0)
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth)
+    }
+    // Set initial screen width
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const showTOC = React.useMemo(() => {
-    // We need the block and recordMap to count headers.
     if (!block || !recordMap?.block) return false
 
-    // A top-level page is a "blog post" if it's in a collection.
     const isBlogPost =
       !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
-
-    // A sub-page is any page that doesn't have pageInfo from the site map.
     const isSubPage = !pageInfo && block?.type === 'page'
-    
-    // We only want to show a TOC for blog posts or sub-pages.
+
     if (!isBlogPost && !isSubPage) return false
-    
-    // Count headers in the page content.
+
     let headerCount = 0
     Object.values(recordMap.block).forEach((blockWrapper: any) => {
       const blockData = blockWrapper?.value
@@ -171,23 +177,17 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         headerCount++
       }
     })
-    
-    const minTableOfContentsItems = 3
-    const result = headerCount >= minTableOfContentsItems && !isMobile
-    
-    return result
-  }, [block, recordMap, pageInfo, isMobile])
 
-  // DEBUG: Let's see what we're getting
-  console.log('DEBUG _app.tsx - pageProps:', pageProps)
-  console.log('DEBUG _app.tsx - siteMap exists:', !!siteMap)
-  console.log('DEBUG _app.tsx - block exists:', !!block)
-  console.log('DEBUG _app.tsx - isCategory:', isCategory)
-  console.log('DEBUG _app.tsx - showTOC calculated:', showTOC)
+    const minTableOfContentsItems = 3
+    // Also check screen width
+    return headerCount >= minTableOfContentsItems && !isMobile && screenWidth >= 1300
+  }, [block, recordMap, pageInfo, isMobile, screenWidth])
+
+
   
   // Adjust position of Notion Page
-  const paddingRight = showTOC ? '30rem' : '0'
-  console.log('DEBUG _app.tsx - paddingRight will be:', paddingRight)
+  const paddingRight = showTOC ? '34rem' : '0'
+
 
   const toggleMobileMenu = React.useCallback(() => {
     console.log('DEBUG: Toggle mobile menu called - current state:', isMobileMenuOpen, '-> new state:', !isMobileMenuOpen)
@@ -291,7 +291,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
               justifyContent: isCategory ? 'center' : 'flex-start'
             }}
           >
-            <Component {...pageProps} isMobile={isMobile} />
+            <Component {...pageProps} isMobile={isMobile} showTOC={showTOC} />
           </div>
         </div>
       </main>
