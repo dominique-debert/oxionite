@@ -141,27 +141,24 @@ export const CategoryTree: React.FC<Omit<CategoryTreeProps, 'expandedItems' | 't
                 isExpanded={isExpanded}
                 toggleExpanded={() => toggleItemExpanded(item.pageId)}
               />
-              <CSSTransition
-                in={isExpanded && hasChildren}
-                timeout={300}
-                classNames={{
-                  enter: styles.collapsibleEnter,
-                  enterActive: styles.collapsibleEnterActive,
-                  exit: styles.collapsibleExit,
-                  exitActive: styles.collapsibleExitActive,
-                }}
-                unmountOnExit
-              >
-                <div className={styles.collapsible}>
-                  <div className={styles.line} />
-                  <RecursiveCategoryTree
-                    items={item.children!}
-                    level={level + 1}
-                    expandedItems={expandedItems}
-                    toggleItemExpanded={toggleItemExpanded}
-                  />
+              {hasChildren && isExpanded && (
+                <div 
+                  className={styles.line} 
+                  style={{ left: `${level * 12 + 11}px` }}
+                />
+              )}
+              {hasChildren && (
+                <div className={`${styles.childrenContainer} ${isExpanded ? styles.expanded : styles.collapsed}`}>
+                  <div className={styles.childrenContent}>
+                    <RecursiveCategoryTree
+                      items={item.children!}
+                      level={level + 1}
+                      expandedItems={expandedItems}
+                      toggleItemExpanded={toggleItemExpanded}
+                    />
+                  </div>
                 </div>
-              </CSSTransition>
+              )}
             </div>
           );
         })}
