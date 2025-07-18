@@ -12,6 +12,7 @@
 /coverage
 /tmp
 /original_code
+/notion_code_theme
 
 # next.js
 /.next/

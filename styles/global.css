@@ -8,11 +8,11 @@ a {
 }
 
 body.light-mode {
-  --border-color: #e9ecef;
+  --border-color: rgba(255, 255, 255, 0.2);
   --bg-color: rgba(255, 255, 255, 0.0) !important; /* Add transparency */
 
   /* Text Colors */
-  --primary-text-color: #111111;
+  --primary-text-color: rgb(50, 48, 44);
   --secondary-text-color: #555555;
   --tertiary-text-color: #888888;
   
@@ -23,18 +23,18 @@ body.light-mode {
   --button-bg-color: rgba(255, 255, 255, 0.3);
 
   /* Border Colors */
-  --hover-border-color: rgba(0, 0, 0, 0.1);
+  --hover-border-color: rgba(255, 255, 255, 0.1);
 
   /* Shadow Colors */
   --shadow-color: rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode {
-  --border-color: #333;
+  --border-color: rgba(255, 255, 255, 0.2);
   --bg-color: rgba(26, 26, 26, 0.0) !important; /* Add transparency */
 
   /* Text Colors */
-  --primary-text-color: #fafafa;
+  --primary-text-color: rgba(255, 255, 255, 0.81);
   --secondary-text-color: #bbbbbb;
   --tertiary-text-color: #999999;
   

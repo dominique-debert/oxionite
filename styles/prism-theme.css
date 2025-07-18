@@ -1,93 +1,172 @@
 /* prism theme adjustments */
 
-
+.notion .notion-inline-code {
+  color: #E45649;
+  background: var(--default-bg-color) !important;
+  border: 1px solid var(--border-color);
+  padding: 0.2em 0.4em !important;
+  border-radius: 4px;
+}
 
 .dark-mode .notion .notion-inline-code {
   background: var(--hover-bg-color) !important;
-  color: #ff4081;
+  border: 1px solid var(--border-color);
+  color: #D7BA7D;
   padding: 0.2em 0.4em !important;
   border-radius: 4px;
 }
 
-.notion .notion-inline-code {
-  color: #ff4081;
-  background: var(--default-bg-color) !important;
-  padding: 0.2em 0.4em !important;
-  border-radius: 4px;
+/**
+* Base Theme
+*/
+code[class*='language-'],
+pre[class*='language-'],
+.token.constant {
+  color: #383A42;
 }
 
-.token.cdata,
-.token.doctype,
-.token.prolog {
-  color: rgba(55, 65, 81, 1);
-}
-.token.comment {
-  color: #5b9b4c;
-}
-.dark-mode .token.cdata,
-.dark-mode .token.doctype,
-.dark-mode .token.prolog {
-  color: rgba(209, 213, 219, 1);
-}
-.token.punctuation {
-  color: rgba(55, 65, 81, 1);
-}
-.dark-mode .token.punctuation {
-  color: rgba(209, 213, 219, 1);
-}
-.token.boolean,
-.token.constant,
-.token.deleted,
-.token.number,
-.token.property,
-.token.symbol,
-.token.tag {
-  color: rgba(16, 185, 129, 1);
-}
-.token.attr-name,
-.token.builtin,
-.token.char,
-.token.inserted,
-.token.selector,
-.token.string {
-  color: rgba(139, 92, 246, 1);
-}
-.language-css .token.string,
-.style .token.string,
-.token.entity,
-.token.operator,
-.token.url {
-  color: rgba(245, 158, 11, 1);
-}
 .token.atrule,
 .token.attr-value,
-.token.keyword {
-  color: rgba(59, 130, 246, 1);
-}
-.token.class-name,
-.token.function {
-  color: rgba(236, 72, 153, 1);
-}
+.token.keyword,
 .token.important,
-.token.regex,
-.token.variable {
-  color: rgba(245, 158, 11, 1);
+.token.operator,
+.token.directive-hash {
+  color: #A626A4;
 }
-code[class*='language-'],
-pre[class*='language-'] {
-  color: rgba(31, 41, 55, 1);
+
+.token.builtin,
+.token.content {
+  color: #0384BC;
 }
+
+.token.boolean,
+.token.number {
+  color: #D19A66;
+}
+
+.token.class-name,
+.token.attr-name,
+.token.name,
+.token.selector {
+  color: #C18403;
+}
+
+.token.doctype,
+.token.tag,
+.token.property,
+.token.variable,
+.token.title,
+.token.deleted {
+  color: #E45649;
+}
+
+.token.string,
+.token.url,
+.token.attr-value,
+.token.inserted {
+  color: #50A150;
+}
+
+.token.comment,
+.token.prolog,
+.token.cdata {
+  color: #A0A1A7;
+  font-style: italic;
+}
+
+.token.function {
+  color: #4078F2;
+}
+
+.token.punctuation {
+  color: #0631FA;
+}
+
+/**
+* Dark Mode Theme
+*/
 .dark-mode code[class*='language-'],
-.dark-mode pre[class*='language-'] {
-  color: rgba(249, 250, 251, 1);
+.dark-mode pre[class*='language-'],
+.dark-mode .token.constant {
+  color: #c3c9d3;
 }
+
+.dark-mode .token.atrule,
+.dark-mode .token.attr-value,
+.dark-mode .token.keyword,
+.dark-mode .token.important,
+.dark-mode .token.operator,
+.dark-mode .token.directive-hash {
+  color: #C678DD;
+}
+
+.dark-mode .token.builtin,
+.dark-mode .token.content {
+  color: #56B6C2;
+}
+
+.dark-mode .token.boolean,
+.dark-mode .token.number {
+  color: #D19A66;
+}
+
+.dark-mode .token.class-name,
+.dark-mode .token.attr-name,
+.dark-mode .token.name,
+.dark-mode .token.selector {
+  color: #E5C07B;
+}
+
+.dark-mode .token.doctype,
+.dark-mode .token.tag,
+.dark-mode .token.property,
+.dark-mode .token.variable,
+.dark-mode .token.title,
+.dark-mode .token.deleted {
+  color: #E06C75;
+}
+
+
+
+.dark-mode .token.string,
+.dark-mode .token.url,
+.dark-mode .token.attr-value,
+.dark-mode .token.inserted {
+  color: #98C379;
+}
+
+
+.dark-mode .token.comment,
+.dark-mode .token.prolog,
+.dark-mode .token.cdata {
+  color: #5C6370;
+  font-style: italic;
+}
+
+
+.dark-mode .token.function {
+  color: #61AFEF;
+}
+
+
+.dark-mode .token.punctuation {
+  color: #FFD700;
+}
+
+
+
+/**
+* General overrides
+*/
 pre::-webkit-scrollbar {
   display: none;
 }
+
 pre {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .token.operator,
 .token.entity,
 .token.url,
