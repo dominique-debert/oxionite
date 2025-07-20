@@ -19,6 +19,25 @@ export default siteConfig({
   // open graph metadata (optional)
   description: 'Next Notion Blog Engine Example Description',
 
+  // author metadata (optional)
+  authors: [
+    {
+      name: 'Jzahnny',                       // Author name
+      avatar_dir: '/authors/Jzahnny.jpeg',   // Author avatar image path in public folder (28px x 28px recommended)
+      home_url: 'https://bit.ly/alemem64',   // Author home URL
+    },
+    {
+      name: 'Jzahnny2',                      // Multiple author support
+      avatar_dir: '/authors/Jzahnny2.png',   // When three is no avatar, it will be hidden
+      home_url: 'https://bit.ly/ypjr_n',     
+    },
+    {
+      name: 'Jzahnny3',                      
+      avatar_dir: '',                        // Empty string for no avatar
+      home_url: '',                          // Empty string for no link
+    },
+  ],
+
   // social links, the order is preserved.
   socials: {
     github: 'alemem64',  // optional github username

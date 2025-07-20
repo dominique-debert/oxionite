@@ -732,7 +732,7 @@ span.notion-default_background {
 .notion-page-link,
 .notion-collection-card,
 a.notion-table-of-contents-item,
-.notion-file
+.notion-file,
 .notion-equation {
   transition: background-color 200ms ease-in-out, color 200ms ease-in-out;
   border-radius: 4px;
@@ -748,15 +748,14 @@ a.notion-table-of-contents-item,
 a.notion-table-of-contents-item:hover,
 a.notion-table-of-contents-item:focus,
 .notion-bookmark:hover,
+.notion-file:hover,
 .notion-file-link:hover,
-.notion-equation:hover,
-.notion-equation:focus-within {
+.notion-equation:hover {
   background-color: var(--hover-bg-color);
   outline: none; /* Remove default focus outline since we have a background */
 }
 
 /* 4. Specific text color change on hyperlink hover/focus */
-.notion-link:focus,
 .notion-link:hover {
   color: var(--primary-text-color);
   text-decoration: none; /* Ensure no underline */
@@ -774,4 +773,10 @@ a.notion-table-of-contents-item {
 }
 
 
+.notion-equation:focus,
+.notion-equation:focus-within,
+.notion-equation-inline:focus,
+.notion-equation-inline:focus-within {
+  background-color: transparent;
+}
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
+import { PageAuthor } from './PageAuthor'
 import { type PageBlock } from 'notion-types'
 import { mapImageUrl } from '@/lib/map-image-url'
 
@@ -33,7 +34,7 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
 
   // Extract data
   const title = getBlockTitle(block, recordMap)
-  const author = getPageProperty<string>('Author', block, recordMap)
+  const authors = getPageProperty<string[]>('Authors', block, recordMap) || []
   const published = getPageProperty<number>('Published', block, recordMap)
   
   // Tags logic remains the same...
@@ -90,16 +91,23 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
       {variant === 'full' && (
         <>
           {/* Author and Published Date Row */}
-          {(author || formattedPublished) && (
+          {(authors.length > 0 || formattedPublished) && (
             <div style={{
               display: 'flex',
               alignItems: 'center',
+              flexWrap: 'wrap', // Allow wrapping on smaller screens
               marginBottom: '1.5rem',
               fontSize: '1rem',
               gap: '0.5rem'
             }}>
-              {author && <span style={{ fontWeight: '600', color: 'var(--primary-text-color)' }}>{author}</span>}
-              {author && formattedPublished && <span style={{ color: 'var(--secondary-text-color)', fontWeight: '400' }}>•</span>}
+              {authors.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                  {authors.map((authorName) => (
+                    <PageAuthor key={authorName} authorName={authorName} />
+                  ))}
+                </div>
+              )}
+              {authors.length > 0 && formattedPublished && <span style={{ color: 'var(--secondary-text-color)', fontWeight: '400' }}>•</span>}
               {formattedPublished && <span style={{ color: 'var(--secondary-text-color)', fontWeight: '400' }}>{formattedPublished}</span>}
             </div>
           )}

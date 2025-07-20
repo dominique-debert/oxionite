@@ -8,6 +8,7 @@ export interface SiteConfig {
   name: string
   domain: string
   author: string
+  authors?: Array<{ name: string; avatar_dir: string; home_url: string }>
   description?: string
   language?: string
 
