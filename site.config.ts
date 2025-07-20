@@ -19,13 +19,19 @@ export default siteConfig({
   // open graph metadata (optional)
   description: 'Next Notion Blog Engine Example Description',
 
-  // social usernames (optional)
-  twitter: 'alemem64',
-  github: 'alemem644',
-  linkedin: 'alemem64',
-  // mastodon: '#', // optional mastodon profile URL, provides link verification
-  // newsletter: '#', // optional newsletter URL
-  // youtube: '#', // optional youtube channel name or `channel/UCGbXXXXXXXXXXXXXXXXXXXXXX`
+  // social links, the order is preserved.
+  socials: {
+    github: 'alemem64',  // optional github username
+    linkedin: 'alemem64', // optional linkedin username
+    youtube: 'channel/UCV7iVbVip33wD_rsiQLSubg?si=Tf0bKAPvtDY_J833', // optional youtube channel id eg. channel/UCXXXXXXXXXXXXXXXXXXXXXX
+    instagram: 'alemem64', // optional instagram username
+    // tiktok: '#', // optional tiktok username
+    // threads: '#', // optional threads username
+    // facebook: '#',  // optional facebook profile id on profile page eg. 1000XXXXXXXXXXX
+    // twitter: '#', // optional twitter username
+    // mastodon: '#', // optional mastodon profile URL, provides link verification
+    // newsletter: '#' // optional personal newsletter URL
+  },
 
   // default notion icon and cover images for site-wide consistency (optional)
   // page-specific values will override these site-wide defaults

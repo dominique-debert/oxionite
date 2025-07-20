@@ -13,7 +13,7 @@
   justify-content: space-between;
   padding: 0.5rem;
   border-radius: 9999px;
-  border: 0.5px solid rgba(0, 0, 0, 0.2);
+  border: 0.5px solid var(--border-color);
   background-color: var(--default-bg-color);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -29,7 +29,7 @@
   height: 2.5rem;
   min-width: 2.5rem;
   border-radius: 9999px;
-  border: 1px solid var(--hover-border-color); /* Start with a transparent border */
+  border: 1px solid var(--border-color); /* Start with a transparent border */
   background-color: var(--default-bg-color);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -46,11 +46,11 @@
 /* Dark mode adjustments */
 .dark-mode .glass-nav {
   background-color: var(--default-bg-color);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--border-color);
 }
 
 .dark-mode .glass-item {
-  color: #ffffff;
+  color: var(--primary-text-color);
   background-color: var(--default-bg-color);
 }
 
@@ -61,7 +61,7 @@
 
 /* Make social icons white in dark mode */
 .dark-mode .glass-item svg {
-  fill: #ffffff;
+  fill: var(--primary-text-color);
 }
 
 /* Breadcrumb container - no longer a pill */
@@ -100,7 +100,7 @@
 }
 
 .dark-mode .breadcrumb-item {
-  color: #ffffff;
+  color: var(--primary-text-color);
 }
 
 .glass-breadcrumb .breadcrumb-separator {
@@ -153,7 +153,7 @@
 .glass-sidenav {
   padding: 1rem;
   border-radius: 32px;
-  border: 0.5px solid rgba(0, 0, 0, 0.2);
+  border: 0.5px solid var(--border-color);
   background-color: var(--default-bg-color);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -164,7 +164,7 @@
 
 .dark-mode .glass-sidenav {
   background-color: var(--default-bg-color);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--border-color);
 }
 
 .sidenav-item {
@@ -183,7 +183,7 @@
 }
 
 .dark-mode .sidenav-item {
-  color: #ffffff;
+  color: var(--primary-text-color);
 }
 
 .dark-mode .sidenav-item:hover {

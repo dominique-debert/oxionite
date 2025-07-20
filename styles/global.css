@@ -35,7 +35,7 @@ body.dark-mode {
   --bg-color: rgba(26, 26, 26, 0.0) !important; /* Add transparency */
 
   /* Text Colors */
-  --primary-text-color: rgba(255, 255, 255, 0.81);
+  --primary-text-color: rgba(255, 255, 255, 0.9);
   --secondary-text-color: #bbbbbb;
   --tertiary-text-color: #999999;
   

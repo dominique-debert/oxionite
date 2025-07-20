@@ -35,7 +35,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
         pageId: pageInfo.pageId,
         title: pageInfo.title,
         description: pageInfo.description,
-        published: pageInfo.published,
+        published: (pageInfo as any).published, // Fix: Property 'published' does not exist on type 'PageInfo'
         slug: pageInfo.slug,
         language: pageInfo.language || 'ko',
         coverImage: pageInfo.coverImage || undefined,
@@ -197,14 +197,15 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
 
   return (
     <div style={{
-      maxWidth: '900px',
+      width: '100%',
+      maxWidth: '800px',
       margin: '0 auto',
       padding: '2rem'
     }}>
       {/* Category Header */}
       <div style={{
         marginBottom: '3rem',
-        borderBottom: '1px solid rgba(55, 53, 47, 0.16)',
+        borderBottom: '1px solid var(--secondary-bg-color)',
         paddingBottom: '2rem'
       }}>
         <h1 style={{
@@ -238,6 +239,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
       <div style={{
         display: 'flex',
         flexDirection: 'column',
+        justifyContent: 'flex-start',
         gap: '2.5rem'
       }}>
         {currentPosts.map((post) => (
@@ -258,7 +260,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
             <article style={{
               display: 'flex',
               flexDirection: isMobile ? 'column' : 'row',
-              width: 'clamp(360px, 80vw, 800px)',
+              width: '100%',
               minHeight: isMobile ? 'auto' : '140px',
               overflow: 'hidden',
               borderRadius: '16px' // Match parent Link's rounding
@@ -287,7 +289,8 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 order: isMobile ? 2 : 1,
-                padding: '1.5rem 2rem'
+                padding: isMobile ? '1.5rem 1rem' : '1.5rem 2rem',
+                minWidth: 0 // flex item이 수축할 때 내용이 넘치는 것을 방지
               }}>
                 <div>
                   <h2 style={{
@@ -389,23 +392,29 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
       {/* No Posts Message */}
       {allPosts.length === 0 && (
         <div style={{
-          maxWidth: '900px', // Match container width
-          margin: '0 auto', // Center it
           textAlign: 'center',
           padding: '4rem 2rem',
-          color: 'var(--secondary-text-color)'
+          color: 'var(--secondary-text-color)',
+          minHeight: '30vh', // Set a minimum height
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}>
-          <div style={{
-            fontSize: '1.1rem',
-            marginBottom: '0.5rem'
-          }}>
-            {t.noPosts}
-          </div>
-          <div style={{
-            fontSize: '0.9rem'
-          }}>
-            {t.noPostsDescription}
-          </div>
+          <React.Fragment>
+            <div style={{
+              fontSize: '1.1rem',
+              marginBottom: '0.5rem',
+              width: '100%'
+            }}>
+              {t.noPosts}
+            </div>
+            <div style={{
+              fontSize: '0.9rem'
+            }}>
+              {t.noPostsDescription}
+            </div>
+          </React.Fragment>
         </div>
       )}
     </div>

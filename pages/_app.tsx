@@ -288,7 +288,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
             className='glass-content-panel'
             style={{
               display: isCategory ? 'flex' : 'block',
-              justifyContent: isCategory ? 'center' : 'flex-start'
+              justifyContent: isCategory && (pageInfo as any)?.postsCount === 0 ? 'stretch' : 'center'
             }}
           >
             <Component {...pageProps} isMobile={isMobile} showTOC={showTOC} />

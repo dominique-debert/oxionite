@@ -1,6 +1,8 @@
 .pageSocial {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   text-align: center;
   color: var(--fg-color);
@@ -10,9 +12,7 @@
 .pageSocial.header {
   flex-direction: row;
   align-items: center;
-  gap: 0.5em;
   margin-left: 0.5em;
-  margin-right: 0.5em;
 }
 
 .action {
@@ -22,7 +22,7 @@
   transition: all 300ms ease-out;
   width: 3.5em;
   height: 3.5em;
-  margin: 0 0 1em;
+  margin: 0.5em;
   display: flex;
   flex-direction: column;
   justify-content: center;

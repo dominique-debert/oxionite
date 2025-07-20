@@ -55,23 +55,22 @@ export const description: string = getSiteConfig('description', 'Notion Blog')
 export const language: string = getSiteConfig('language', 'en')
 
 // social accounts
-export const twitter: string | undefined = getSiteConfig('twitter')
-export const mastodon: string | undefined = getSiteConfig('mastodon')
-export const github: string | undefined = getSiteConfig('github')
-export const youtube: string | undefined = getSiteConfig('youtube')
-export const linkedin: string | undefined = getSiteConfig('linkedin')
-export const newsletter: string | undefined = getSiteConfig('newsletter')
-export const zhihu: string | undefined = getSiteConfig('zhihu')
+export const socials: Record<string, string> = getSiteConfig('socials', {})
 
 export const getMastodonHandle = (): string | undefined => {
-  if (!mastodon) {
+  if (!socials.mastodon) {
     return
   }
 
-  // Since Mastodon is decentralized, handles include the instance domain name.
-  // e.g. @example@mastodon.social
-  const url = new URL(mastodon)
-  return `${url.pathname.slice(1)}@${url.hostname}`
+  try {
+    const url = new URL(socials.mastodon)
+    // Since Mastodon is decentralized, handles include the instance domain name.
+    // e.g. @example@mastodon.social
+    return `${url.pathname.slice(1)}@${url.hostname}`
+  } catch (err) {
+    // ignore invalid urls
+    return
+  }
 }
 
 // default notion values for site-wide consistency (optional; may be overridden on a per-page basis)

@@ -692,6 +692,11 @@ span.notion-default_background {
   background-color: var(--default-bg-color);
 }
 
+.notion-hr {
+  border-color: var(--secondary-bg-color);
+}
+
+
 
 /*
   --- Custom Default Background Styles ---
