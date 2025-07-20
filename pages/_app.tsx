@@ -44,6 +44,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const [mounted, setMounted] = React.useState(false)
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = React.useState(0)
+  const [backgroundAsset, setBackgroundAsset] = React.useState<{ type: 'image' | 'video'; src: string } | null>(null)
 
   const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
@@ -216,7 +217,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           height: '100vh',
           overflow: 'hidden'
         }}>
-          <Component {...pageProps} isMobile={isMobile} />
+          <Component {...pageProps} isMobile={isMobile} setBackgroundAsset={setBackgroundAsset} />
         </main>
       </div>
     )
@@ -230,7 +231,11 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       height: '100vh',
       overflow: 'hidden'
     }}>
-      <Background imageUrl={coverImageUrl} scrollProgress={scrollProgress} />
+      <Background 
+        imageUrl={backgroundAsset?.type === 'image' ? backgroundAsset.src : undefined}
+        videoUrl={backgroundAsset?.type === 'video' ? backgroundAsset.src : undefined}
+        scrollProgress={scrollProgress} 
+      />
 
       {/* Mobile Menu Overlay */}
       {isMobile && isMobileMenuOpen && (
@@ -291,7 +296,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
               justifyContent: isCategory && (pageInfo as any)?.postsCount === 0 ? 'stretch' : 'center'
             }}
           >
-            <Component {...pageProps} isMobile={isMobile} showTOC={showTOC} />
+            <Component {...pageProps} isMobile={isMobile} showTOC={showTOC} setBackgroundAsset={setBackgroundAsset} />
           </div>
         </div>
       </main>

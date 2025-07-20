@@ -10,7 +10,8 @@ import Categories from './Categories'
 import { Tags } from './Tags'
 import styles from 'styles/pages/home.module.css'
 
-export const Home: React.FC<PageProps> = ({
+export const Home: React.FC<PageProps & { setBackgroundAsset: (asset: { type: 'image' | 'video'; src: string } | null) => void }> = ({
+  setBackgroundAsset,
   site,
   siteMap,
   homeRecordMaps,
@@ -77,7 +78,7 @@ export const Home: React.FC<PageProps> = ({
       />
 
       <div className={styles.homeContainer}>
-        <Hero site={site} />
+        <Hero site={site} isMobile={isMobile || false} onAssetChange={setBackgroundAsset} />
         <HomeNav
           homePages={homePages}
           activeTab={activeTab}

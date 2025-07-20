@@ -28,6 +28,7 @@ body.light-mode {
 
   /* Shadow Colors */
   --shadow-color: rgba(0, 0, 0, 0.2);
+  --shadow-bg-color: rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode {
@@ -51,6 +52,7 @@ body.dark-mode {
 
   /* Shadow Colors */
   --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-bg-color: rgba(255, 255, 255, 0.2);
 }
 
 body,

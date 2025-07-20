@@ -12,6 +12,14 @@ export interface SiteConfig {
   description?: string
   language?: string
 
+  // hero section (optional)
+  heroAssets?: Array<{
+    type: 'image' | 'video'
+    src: string
+    title?: string
+    description?: string
+  }>
+
   socials?: Record<string, string>
 
   defaultPageIcon?: string | null
