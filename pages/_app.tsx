@@ -126,6 +126,11 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   // Extract siteMap and recordMap for the SideNav component
   const { siteMap, recordMap, pageId } = pageProps
 
+  // Get the page cover image from the Notion data
+  const pageBlockForCover = pageId ? recordMap?.block?.[pageId]?.value : undefined
+  const pageCover = pageBlockForCover?.format?.page_cover
+  const notionImageUrl = pageBlockForCover ? mapImageUrl(pageCover, pageBlockForCover) : undefined
+
   // Extract block from recordMap for search functionality
   const keys = Object.keys(recordMap?.block || {})
   const block = keys[0] ? recordMap?.block?.[keys[0]]?.value : undefined
@@ -231,10 +236,10 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       height: '100vh',
       overflow: 'hidden'
     }}>
-      <Background 
-        imageUrl={backgroundAsset?.type === 'image' ? backgroundAsset.src : undefined}
-        videoUrl={backgroundAsset?.type === 'video' ? backgroundAsset.src : undefined}
-        scrollProgress={scrollProgress} 
+      <Background
+        imageUrl={router.pathname === '/' && backgroundAsset?.type === 'image' ? backgroundAsset.src : notionImageUrl}
+        videoUrl={router.pathname === '/' && backgroundAsset?.type === 'video' ? backgroundAsset.src : undefined}
+        scrollProgress={scrollProgress}
       />
 
       {/* Mobile Menu Overlay */}
