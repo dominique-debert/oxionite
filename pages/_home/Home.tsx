@@ -10,8 +10,14 @@ import Categories from './Categories'
 import { Tags } from './Tags'
 import styles from 'styles/pages/home.module.css'
 
-export const Home: React.FC<PageProps & { setBackgroundAsset: (asset: { type: 'image' | 'video'; src: string } | null) => void }> = ({
+export const Home: React.FC<PageProps & { 
+  setBackgroundAsset: (asset: { type: 'image' | 'video'; src: string } | null) => void; 
+  isHeroPaused: boolean;
+  setIsHeroPaused: (isPaused: boolean) => void;
+}> = ({
   setBackgroundAsset,
+  isHeroPaused,
+  setIsHeroPaused,
   site,
   siteMap,
   homeRecordMaps,
@@ -78,7 +84,13 @@ export const Home: React.FC<PageProps & { setBackgroundAsset: (asset: { type: 'i
       />
 
       <div className={styles.homeContainer}>
-        <Hero site={site} isMobile={isMobile || false} onAssetChange={setBackgroundAsset} />
+        <Hero 
+          site={site} 
+          isMobile={isMobile || false} 
+          onAssetChange={setBackgroundAsset} 
+          isPaused={isHeroPaused} 
+          setIsPaused={setIsHeroPaused} 
+        />
         <HomeNav
           homePages={homePages}
           activeTab={activeTab}

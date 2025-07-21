@@ -45,6 +45,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = React.useState(0)
   const [backgroundAsset, setBackgroundAsset] = React.useState<{ type: 'image' | 'video'; src: string } | null>(null)
+  const [isHeroPaused, setIsHeroPaused] = React.useState(false)
 
   const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
@@ -222,7 +223,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           height: '100vh',
           overflow: 'hidden'
         }}>
-          <Component {...pageProps} isMobile={isMobile} setBackgroundAsset={setBackgroundAsset} />
+          <Component {...pageProps} isMobile={isMobile} setBackgroundAsset={setBackgroundAsset} isHeroPaused={isHeroPaused} setIsHeroPaused={setIsHeroPaused} />
         </main>
       </div>
     )
@@ -240,6 +241,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         imageUrl={router.pathname === '/' && backgroundAsset?.type === 'image' ? backgroundAsset.src : notionImageUrl}
         videoUrl={router.pathname === '/' && backgroundAsset?.type === 'video' ? backgroundAsset.src : undefined}
         scrollProgress={scrollProgress}
+        isPaused={isHeroPaused}
       />
 
       {/* Mobile Menu Overlay */}
@@ -301,7 +303,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
               justifyContent: isCategory && (pageInfo as any)?.postsCount === 0 ? 'stretch' : 'center'
             }}
           >
-            <Component {...pageProps} isMobile={isMobile} showTOC={showTOC} setBackgroundAsset={setBackgroundAsset} />
+            <Component {...pageProps} isMobile={isMobile} showTOC={showTOC} setBackgroundAsset={setBackgroundAsset} isHeroPaused={isHeroPaused} setIsHeroPaused={setIsHeroPaused} />
           </div>
         </div>
       </main>

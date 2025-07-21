@@ -17,12 +17,14 @@ interface HeroProps {
   site: Site
   isMobile: boolean
   onAssetChange: (asset: HeroAsset | null) => void
+  isPaused: boolean
+  setIsPaused: (isPaused: boolean) => void
 }
 
-const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
+const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, setIsPaused }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [progress, setProgress] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
+
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const animationFrameRef = useRef<number | null>(null)
@@ -99,7 +101,7 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
     if (asset.type === 'video' && video) {
       video.currentTime = 0
       const onCanPlay = () => {
-        if (!isPaused) video.play()
+        if (!isPaused) video.play().catch(err => console.error("Hero video play failed:", err))
         animationFrameRef.current = requestAnimationFrame(animate)
       }
       if (video.readyState >= video.HAVE_ENOUGH_DATA) {
@@ -120,15 +122,17 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
 
   useEffect(() => {
     const video = videoRef.current
+    if (!video) return
+
     if (isPaused) {
-      video?.pause()
+      video.pause()
       pauseStartTimeRef.current = performance.now()
     } else {
       if (pauseStartTimeRef.current > 0) {
         totalPauseDurationRef.current += performance.now() - pauseStartTimeRef.current
         pauseStartTimeRef.current = 0
       }
-      video?.play()
+      video.play().catch(err => console.error("Hero video play failed:", err))
     }
   }, [isPaused])
 

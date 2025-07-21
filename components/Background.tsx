@@ -81,14 +81,16 @@ interface BackgroundProps {
   imageUrl?: string
   videoUrl?: string
   scrollProgress?: number
+  isPaused?: boolean
 }
 
 // A component that renders a blurred, scrolling background.
-const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgress = 0 }) => {
+const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }) => {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
   const backgroundSource = imageUrl || '/default_background.webp'
-  const backgroundRef = useRef<HTMLDivElement | HTMLVideoElement>(null)
+  const backgroundRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
     if (videoUrl) {
@@ -123,24 +125,35 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgr
   }, [backgroundSource, isDarkMode, videoUrl])
 
   useEffect(() => {
-    if (backgroundRef.current) {
+    const videoElement = videoRef.current
+    if (videoUrl && videoElement) {
+      if (isPaused) {
+        videoElement.pause()
+      } else {
+        videoElement.play().catch(error => {
+          console.error('Background video play failed:', error)
+        })
+      }
+    }
+  }, [isPaused, videoUrl])
+
+  useEffect(() => {
+    const element = videoUrl ? videoRef.current : backgroundRef.current
+    if (element) {
       const vh = window.innerHeight
       const movableDistance = vh * (BACKGROUND_ZOOM - 1)
 
-      // The full potential translation range for the background
       const fullRangeTop = movableDistance / 2
       const fullRangeBottom = -movableDistance / 2
 
-      // Calculate the actual start and end points based on the visible range constants
       const startTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_START
       const endTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_END
 
-      // Map the scroll progress to the new restricted translation range
       const newTranslateY = startTranslateY + scrollProgress * (endTranslateY - startTranslateY)
 
-      backgroundRef.current.style.transform = `scale(${BACKGROUND_ZOOM}) translateY(${newTranslateY}px)`
+      element.style.transform = `scale(${BACKGROUND_ZOOM}) translateY(${newTranslateY}px)`
     }
-  }, [scrollProgress])
+  }, [scrollProgress, videoUrl])
 
   const backgroundStyle: React.CSSProperties = {
     position: 'absolute',
@@ -165,7 +178,7 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgr
     >
       {videoUrl ? (
         <video
-          ref={backgroundRef as React.RefObject<HTMLVideoElement>}
+          ref={videoRef}
           autoPlay
           loop
           muted
@@ -175,7 +188,7 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgr
         />
       ) : (
         <div
-          ref={backgroundRef as React.RefObject<HTMLDivElement>}
+          ref={backgroundRef}
           style={{
             ...backgroundStyle,
             backgroundImage: `url(${backgroundSource})`,
