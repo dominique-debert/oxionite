@@ -23,15 +23,33 @@ export default siteConfig({
   // hero section (optional)
   heroAssets: [
     {
+      type: 'image',
+      src: '/hero-assets/02-1.jpeg',
+      title: 'Project B',
+      description: 'Next.js 블로그 엔진을 만들었습니다.'
+    },
+    {
       type: 'video',                                   // 'image' or 'video'
       src: '/hero-assets/01-1.mp4',               // Path to the video file in the public folder
       title: 'Project A',                              // Title of the hero section
       description: 'AI 기반의 추천 시스템을 개발했습니다.'     // Description of the hero section
     },
     {
+      type: 'video',
+      src: '/hero-assets/03-1.mov',
+      title: 'Project C',
+      description: 'Next.js 블로그 엔진을 만들었습니다.'
+    },
+    {
+      type: 'video',
+      src: '/hero-assets/04-1.mov',
+      title: 'Project D',
+      description: 'Next.js 블로그 엔진을 만들었습니다.'
+    },
+    {
       type: 'image',
-      src: '/hero-assets/02-1.jpeg',
-      title: 'Project B',
+      src: '/hero-assets/05-1.png',
+      title: 'Project E',
       description: 'Next.js 블로그 엔진을 만들었습니다.'
     },
   ],

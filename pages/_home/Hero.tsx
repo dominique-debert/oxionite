@@ -27,16 +27,19 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const animationFrameRef = useRef<number | null>(null)
   const startTimeRef = useRef<number>(0)
-  const pauseTimeRef = useRef<number>(0)
+  const pauseStartTimeRef = useRef<number>(0)
+  const totalPauseDurationRef = useRef<number>(0)
   const pointerDownTimeRef = useRef<number>(0)
 
   const { heroAssets } = siteConfig
 
   const goToNext = useCallback(() => {
+    setProgress(0) // Reset progress immediately
     setCurrentIndex(prev => (prev + 1) % (heroAssets?.length || 1))
   }, [heroAssets])
 
   const goToPrevious = useCallback(() => {
+    setProgress(0) // Reset progress immediately
     setCurrentIndex(prev => (prev - 1 + (heroAssets?.length || 1)) % (heroAssets?.length || 1))
   }, [heroAssets])
 
@@ -45,10 +48,12 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
       onAssetChange(null)
       return
     }
+
     onAssetChange(heroAssets[currentIndex] || null)
     setProgress(0)
-    pauseTimeRef.current = 0
-    startTimeRef.current = performance.now()
+    startTimeRef.current = 0
+    totalPauseDurationRef.current = 0
+    pauseStartTimeRef.current = 0
 
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
@@ -57,13 +62,29 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
     const asset = heroAssets[currentIndex]
     if (!asset) return
 
-    const duration = asset.type === 'video' 
-      ? (videoRef.current?.duration || 0) * 1000 
-      : IMAGE_DURATION
+    const video = videoRef.current
 
-    const animate = (time: number) => {
-      if (startTimeRef.current === 0) startTimeRef.current = time
-      const elapsedTime = time - startTimeRef.current
+    const animate = () => {
+      if (pauseStartTimeRef.current > 0) {
+        // If we are paused, simply request the next frame and do nothing.
+        animationFrameRef.current = requestAnimationFrame(animate)
+        return
+      }
+
+      const duration = asset.type === 'video' 
+        ? (video?.duration || 0) * 1000 
+        : IMAGE_DURATION
+
+      if (duration === 0) {
+        animationFrameRef.current = requestAnimationFrame(animate)
+        return
+      }
+
+      if (startTimeRef.current === 0) {
+        startTimeRef.current = performance.now()
+      }
+
+      const elapsedTime = performance.now() - startTimeRef.current - totalPauseDurationRef.current
       const currentProgress = Math.min(elapsedTime / duration, 1)
       setProgress(currentProgress)
 
@@ -74,15 +95,14 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
       }
     }
 
-    if (asset.type === 'video' && videoRef.current) {
-      const video = videoRef.current
+    // Start the animation loop
+    if (asset.type === 'video' && video) {
+      video.currentTime = 0
       const onCanPlay = () => {
-        startTimeRef.current = performance.now()
-        video.play()
+        if (!isPaused) video.play()
         animationFrameRef.current = requestAnimationFrame(animate)
       }
-      video.currentTime = 0
-      if (video.readyState >= video.HAVE_FUTURE_DATA) {
+      if (video.readyState >= video.HAVE_ENOUGH_DATA) {
         onCanPlay()
       } else {
         video.addEventListener('canplaythrough', onCanPlay, { once: true })
@@ -100,42 +120,17 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
 
   useEffect(() => {
     const video = videoRef.current
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current)
-    }
-
     if (isPaused) {
-      pauseTimeRef.current = performance.now()
       video?.pause()
+      pauseStartTimeRef.current = performance.now()
     } else {
-      if (startTimeRef.current > 0 && pauseTimeRef.current > 0) {
-        const pauseDuration = performance.now() - pauseTimeRef.current
-        startTimeRef.current += pauseDuration
+      if (pauseStartTimeRef.current > 0) {
+        totalPauseDurationRef.current += performance.now() - pauseStartTimeRef.current
+        pauseStartTimeRef.current = 0
       }
-
-      if (!heroAssets) return
-      const asset = heroAssets[currentIndex]
-      const duration = asset?.type === 'video' 
-        ? (video?.duration || 0) * 1000 
-        : IMAGE_DURATION
-
-      const animate = (time: number) => {
-        const elapsedTime = time - startTimeRef.current
-        const currentProgress = Math.min(elapsedTime / duration, 1)
-        setProgress(currentProgress)
-
-        if (currentProgress < 1) {
-          animationFrameRef.current = requestAnimationFrame(animate)
-        } else {
-          goToNext()
-        }
-      }
-
-      animationFrameRef.current = requestAnimationFrame(animate)
       video?.play()
     }
-  }, [isPaused, currentIndex, heroAssets, goToNext])
-
+  }, [isPaused])
 
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerDownTimeRef.current = Date.now()
@@ -143,9 +138,11 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (!isPaused) return
-
     const pressDuration = Date.now() - pointerDownTimeRef.current
+    
+    // Always resume playback after pointer up
+    setIsPaused(false)
+
     if (pressDuration < 200) { // Click
       const { clientX, currentTarget } = e
       const { left, width } = currentTarget.getBoundingClientRect()
@@ -156,11 +153,8 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange }) => {
       } else {
         goToNext()
       }
-      // After a click navigation, always resume playback
-      setIsPaused(false)
-    } else { // Hold release
-      setIsPaused(false)
     }
+    // For hold release, we just need to resume, which is already done by setIsPaused(false)
   }
 
   const handlePointerLeave = useCallback(() => {
