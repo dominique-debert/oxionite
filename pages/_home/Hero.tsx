@@ -228,6 +228,7 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
       onContextMenu={(e) => e.preventDefault()}
       style={{ touchAction: 'pan-y' }} // Allow vertical scroll on mobile
     >
+      <div className={styles.heroTopShadow} />
       <div className={styles.heroProgressContainer}>
         {heroAssets.map((_, index) => (
           <div key={index} className={styles.heroProgressBar}>
