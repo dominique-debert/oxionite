@@ -22,6 +22,8 @@ interface HeroProps {
 }
 
 const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, setIsPaused }) => {
+  const [isVisuallyPaused, setIsVisuallyPaused] = useState(false)
+  const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [progress, setProgress] = useState(0)
 
@@ -32,6 +34,8 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
   const pauseStartTimeRef = useRef<number>(0)
   const totalPauseDurationRef = useRef<number>(0)
   const pointerDownTimeRef = useRef<number>(0)
+  const pointerStartPosRef = useRef<{ x: number; y: number } | null>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
 
   const { heroAssets } = siteConfig
 
@@ -44,6 +48,33 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
     setProgress(0) // Reset progress immediately
     setCurrentIndex(prev => (prev - 1 + (heroAssets?.length || 1)) % (heroAssets?.length || 1))
   }, [heroAssets])
+
+  useEffect(() => {
+    setIsPaused(isVisuallyPaused || isHeld)
+  }, [isVisuallyPaused, isHeld, setIsPaused])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (entry) {
+          setIsVisuallyPaused(!entry.isIntersecting)
+        }
+      },
+      { threshold: 0.1 } // Trigger when 10% of the hero is visible
+    )
+
+    const currentHeroRef = heroRef.current
+    if (currentHeroRef) {
+      observer.observe(currentHeroRef)
+    }
+
+    return () => {
+      if (currentHeroRef) {
+        observer.unobserve(currentHeroRef)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!heroAssets || heroAssets.length === 0) {
@@ -121,33 +152,47 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
   }, [currentIndex, heroAssets, onAssetChange, goToNext])
 
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
+    const asset = heroAssets?.[currentIndex]
+    if (!asset) return
 
     if (isPaused) {
-      video.pause()
-      pauseStartTimeRef.current = performance.now()
+      if (pauseStartTimeRef.current === 0) { // Ensure we only set this once
+        pauseStartTimeRef.current = performance.now()
+        if (asset.type === 'video' && videoRef.current) {
+          videoRef.current.pause()
+        }
+      }
     } else {
       if (pauseStartTimeRef.current > 0) {
         totalPauseDurationRef.current += performance.now() - pauseStartTimeRef.current
         pauseStartTimeRef.current = 0
+        if (asset.type === 'video' && videoRef.current) {
+          videoRef.current.play().catch(err => console.error("Hero video play failed:", err))
+        }
       }
-      video.play().catch(err => console.error("Hero video play failed:", err))
     }
-  }, [isPaused])
+  }, [isPaused, currentIndex, heroAssets])
 
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerDownTimeRef.current = Date.now()
-    setIsPaused(true)
+    pointerStartPosRef.current = { x: e.clientX, y: e.clientY }
+    setIsHeld(true)
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
     const pressDuration = Date.now() - pointerDownTimeRef.current
+    const startPos = pointerStartPosRef.current
+    const endPos = { x: e.clientX, y: e.clientY }
     
-    // Always resume playback after pointer up
-    setIsPaused(false)
+    let movedDistance = 0
+    if (startPos) {
+      const deltaX = endPos.x - startPos.x
+      const deltaY = endPos.y - startPos.y
+      movedDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+    }
 
-    if (pressDuration < 200) { // Click
+    // It's a click, not a hold or scroll.
+    if (pressDuration < 200 && movedDistance < 20) {
       const { clientX, currentTarget } = e
       const { left, width } = currentTarget.getBoundingClientRect()
       const clickPosition = (clientX - left) / width
@@ -158,14 +203,14 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
         goToNext()
       }
     }
-    // For hold release, we just need to resume, which is already done by setIsPaused(false)
+
+    // Always end the hold on pointer up, this will resume playback if it was a hold.
+    setIsHeld(false)
   }
 
   const handlePointerLeave = useCallback(() => {
-    if (isPaused) {
-      setIsPaused(false)
-    }
-  }, [isPaused])
+    setIsHeld(false)
+  }, [])
 
   if (!heroAssets || heroAssets.length === 0) {
     return null
@@ -176,11 +221,12 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
   return (
     <div
       className={styles.heroContainer}
+      ref={heroRef}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
       onContextMenu={(e) => e.preventDefault()}
-      style={{ touchAction: 'none' }} // Prevents scrolling on mobile
+      style={{ touchAction: 'pan-y' }} // Allow vertical scroll on mobile
     >
       <div className={styles.heroProgressContainer}>
         {heroAssets.map((_, index) => (
