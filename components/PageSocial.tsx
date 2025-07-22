@@ -76,11 +76,13 @@ const socialLinkMap: Record<SocialPlatform, { href: (id: string) => string; titl
   }
 }
 
-export const PageSocial: React.FC<{
+export function PageSocial({
+  className,
+  header
+}: {
   className?: string
   header?: boolean
-  variant?: 'header' | 'footer'
-}> = ({ className, header, variant = 'footer' }) => {
+}) {
     const socialLinks = Object.entries(config.socials)
     .map(([name, username]) => {
       if (!username || !socialIconMap[name as SocialPlatform]) return null;

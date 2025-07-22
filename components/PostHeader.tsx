@@ -15,13 +15,13 @@ interface PostHeaderProps {
   variant?: 'full' | 'simple'
 }
 
-export const PostHeader: React.FC<PostHeaderProps> = ({ 
+export function PostHeader({ 
   block, 
   recordMap, 
   isBlogPost,
   isMobile = false,
   variant = 'full' // Default to 'full'
-}) => {
+}: PostHeaderProps) {
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
 
   // For 'full' variant, we require it to be a blog post from a collection

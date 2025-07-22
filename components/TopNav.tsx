@@ -78,11 +78,11 @@ function SearchButton() {
     setTimeout(() => inputRef.current?.focus(), 100)
   }
 
-  const closeModal = () => {
+  const closeModal = React.useCallback(() => {
     setIsOpen(false)
     setQuery('')
     setResults([])
-  }
+  }, [])
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -127,7 +127,7 @@ function SearchButton() {
             className={styles.searchInput}
             onChange={(e) => {
               setQuery(e.target.value)
-              handleSearch(e.target.value)
+              void handleSearch(e.target.value)
             }}
             placeholder={t.searchPlaceholder}
           />
@@ -164,10 +164,9 @@ function SearchButton() {
                 <div key={result.id} className={styles.searchResultItem}>
                   <a
                     href={result.url}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      router.push(result.url)
+                    onClick={() => {
                       closeModal()
+                      void router.push(result.url)
                     }}
                   >
                     <span className={`${styles.pageTypeTag} ${pageTypeClass}`}>
@@ -216,7 +215,6 @@ interface TopNavProps {
 
 export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopNavProps) {
   const { siteMap, pageId, recordMap, topLevelPageInfo } = pageProps
-  const { isDarkMode } = useDarkMode()
   const router = useRouter()
 
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {

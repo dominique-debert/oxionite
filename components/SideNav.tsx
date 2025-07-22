@@ -5,7 +5,7 @@ import { useRouter } from 'next/router'
 import * as React from 'react'
 
 import type * as types from '@/lib/types'
-import { useI18n } from '@/lib/i18n'
+
 import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SideNav.module.css'
 
@@ -23,7 +23,7 @@ export function SideNav({
   const router = useRouter()
   const { locale } = router
   const { isDarkMode } = useDarkMode()
-  const t = useI18n(locale || 'ko')
+
 
   const filterNavigationItems = React.useCallback((items: types.PageInfo[], currentLocale: string): types.PageInfo[] => {
     if (!items || !Array.isArray(items)) return []

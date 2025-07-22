@@ -7,12 +7,9 @@ import {
   formatDate,
   getBlockTitle,
   getPageProperty,
-  getTextContent,
-  idToUuid,
-  normalizeTitle} from 'notion-utils'
+} from 'notion-utils'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
-  type NotionComponents,
   NotionRenderer
 } from 'react-notion-x'
 import styles from 'styles/components/common.module.css'
@@ -20,7 +17,7 @@ import styles from 'styles/components/common.module.css'
 import type * as types from '@/lib/types'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
-import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
+import { mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
@@ -196,40 +193,30 @@ export function NotionPage({
 
   const [isShowingComments, setIsShowingComments] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
+
   useEffect(() => {
     setHasMounted(true)
-  }, [])
-
-  if (router.isFallback) {
-    return <Loading />
-  }
-
-  if (error || !site || !pageId || !recordMap) {
-    return <Page404 />
-  }
-
-  const keys = Object.keys(recordMap?.block || {})
-  const block = keys[0] ? recordMap?.block?.[keys[0]]?.value : undefined
-
-  if (!block) {
-    return <Page404 />
-  }
-
-  const title = getBlockTitle(block, recordMap) || site.name
-  const pageInfo = siteMap?.pageInfoMap?.[pageId]
-  const isBlogPost =
-    !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
-  const isSubPage = !pageInfo && block?.type === 'page'
-  const minTableOfContentsItems = 3
-  const showTableOfContents = showTOC
-  const tweetId = getPageProperty<string>('Tweet', block, recordMap)
+    setIsShowingComments(false)
+  }, [pageId])
 
   const siteMapPageUrl = useMemo(() => {
+    if (!site || !recordMap) return null
     const searchParams = new URLSearchParams()
     const { slug } = router.query
     const basePath = Array.isArray(slug) ? slug.join('/') : ''
     return mapPageUrl(site, recordMap, searchParams, basePath)
   }, [site, recordMap, router.query])
+
+  const { block, tweetId } = useMemo(() => {
+    const block = recordMap?.block?.[pageId!]?.value
+
+    if (block && recordMap) {
+      const tweetId = getPageProperty<string>('Tweet', block, recordMap)
+      return { block, tweetId }
+    }
+
+    return { block: undefined, tweetId: undefined }
+  }, [pageId, recordMap])
 
   const memoizedActions = useMemo(
     () => (tweetId ? <PageActions tweet={tweetId} /> : null),
@@ -237,21 +224,26 @@ export function NotionPage({
   )
 
   const memoizedComments = useMemo(
-    () => <NotionComments recordMap={recordMap} />,
+    () => (recordMap ? <NotionComments recordMap={recordMap} /> : null),
     [recordMap]
   )
 
-  const NotionPageRenderer = useMemo(
-    () =>
-      dynamic(
-        () =>
-          import('react-notion-x').then((notion) => notion.NotionRenderer),
-        {
-          ssr: true
-        }
-      ),
-    []
-  )
+  if (router.isFallback) {
+    return <Loading />
+  }
+
+  if (error || !site || !pageId || !recordMap || !block) {
+    return <Page404 />
+  }
+
+  const title = getBlockTitle(block, recordMap) || site.name
+  const pageInfo = siteMap?.pageInfoMap?.[pageId]
+
+  const isBlogPost =
+    !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
+  const isSubPage = !pageInfo && block?.type === 'page'
+  const minTableOfContentsItems = 3
+  const showTableOfContents = showTOC
 
   return (
     <>
@@ -275,7 +267,7 @@ export function NotionPage({
               />
             )}
             
-            <NotionPageRenderer
+            <NotionRenderer
               bodyClassName={cs(
                 styles.notion,
                 pageId === site.rootNotionPageId && 'index-page',
