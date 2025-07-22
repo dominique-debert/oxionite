@@ -100,18 +100,21 @@ export function PageSocial({
 
   return (
     <div className={cs(styles.pageSocial, header ? styles.header : styles.footer, className)}>
-      {socialLinks.map((action) => (
-        <a
-          className='glass-item'
-          href={action.href}
-          key={action.name}
-          title={action.title}
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          {action.icon}
-        </a>
-      ))}
+      {socialLinks.map(
+        (action) =>
+          action && (
+            <a
+              className='glass-item'
+              href={action.href}
+              key={action.name}
+              title={action.title}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              {action.icon}
+            </a>
+          )
+      )}
     </div>
   )
 }

@@ -275,6 +275,7 @@ export async function getNotionPageInfo({
     description: null,
     date: null,
     children: [],
+    status: getPageProperty<string>('status', block, recordMap) || getPageProperty<string>('Status', block, recordMap) || 'draft',
     translations: []
   }
 

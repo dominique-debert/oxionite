@@ -216,6 +216,7 @@ async function getAllPagesFromDatabase(
         date: getPageProperty<number>('Published', block, collectionRecordMap) ? new Date(getPageProperty<number>('Published', block, collectionRecordMap)!).toISOString() : null,
         coverImage: processedCoverImage,
         coverImageBlock: block,
+        status: getPageProperty<string>('status', block, recordMap) || getPageProperty<string>('Status', block, recordMap) || 'draft',
         children: [],
         translations: []
       }

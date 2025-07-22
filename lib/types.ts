@@ -3,6 +3,7 @@ import type { ParsedUrlQuery } from 'node:querystring'
 import { type  Block,type ExtendedRecordMap  } from 'notion-types'
 
 export * from 'notion-types'
+export type { Block }
 
 export type NavigationStyle = 'default' | 'custom'
 
