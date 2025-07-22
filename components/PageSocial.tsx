@@ -1,4 +1,4 @@
-import type * as React from 'react'
+import React from 'react'
 import cs from 'classnames'
 import {
   FaFacebookF,
@@ -76,13 +76,19 @@ const socialLinkMap: Record<SocialPlatform, { href: (id: string) => string; titl
   }
 }
 
-export const PageSocial: React.FC<{
+export function PageSocial({
+  className,
+  header,
+  variant = 'footer'
+}: {
   className?: string
   header?: boolean
   variant?: 'header' | 'footer'
-}> = ({ className, header, variant = 'footer' }) => {
-    const socialLinks = Object.entries(config.socials)
-    .map(([name, username]) => {
+}) {
+  const socialLinks = React.useMemo(
+    () =>
+      Object.entries(config.socials)
+        .map(([name, username]) => {
       if (!username || !socialIconMap[name as SocialPlatform]) return null;
 
       const { href, title } = socialLinkMap[name as SocialPlatform];
@@ -92,9 +98,11 @@ export const PageSocial: React.FC<{
         href: href(username),
         title: title(username),
         icon: socialIconMap[name as SocialPlatform]
-      };
+      }
     })
-    .filter(Boolean);
+    .filter(Boolean),
+    []
+  )
 
   return (
     <div className={cs(styles.pageSocial, header ? styles.header : styles.footer, className)}>

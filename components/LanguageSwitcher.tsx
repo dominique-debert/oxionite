@@ -16,22 +16,23 @@ export function LanguageSwitcher() {
 
   const currentLanguageShort = locale?.toUpperCase() || 'KO'
 
-  const handleLanguageChange = (newLocale: string) => {
+  const handleLanguageChange = React.useCallback((newLocale: string) => {
     router.push(asPath, asPath, { locale: newLocale })
     setIsOpen(false)
-  }
+  }, [router, asPath])
+
+  const handleClickOutside = React.useCallback((event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setIsOpen(false)
+    }
+  }, [])
 
   React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isOpen])
+  }, [isOpen, handleClickOutside])
 
   return (
     <div ref={dropdownRef} className="glass-item" style={{ position: 'relative' }}>
@@ -46,9 +47,9 @@ export function LanguageSwitcher() {
       {isOpen && (
         <div className="language-switcher-menu">
           {locales?.map((availableLocale) => (
-            <a key={availableLocale} onClick={() => handleLanguageChange(availableLocale)}>
+            <button key={availableLocale} onClick={() => handleLanguageChange(availableLocale)} className="language-switcher-button">
               {languageLabels[availableLocale] || availableLocale}
-            </a>
+            </button>
           ))}
         </div>
       )}

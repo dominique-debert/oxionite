@@ -15,14 +15,12 @@ interface HeroAsset {
 }
 
 interface HeroProps {
-  site: Site
-  isMobile: boolean
   onAssetChange: (asset: HeroAsset | null) => void
   isPaused: boolean
   setIsPaused: (isPaused: boolean) => void
 }
 
-const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, setIsPaused }) => {
+function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps) {
   const [isVisuallyPaused, setIsVisuallyPaused] = useState(false)
   const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -172,7 +170,7 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
         }
       }
     }
-  }, [isPaused, currentIndex, heroAssets])
+  }, [isPaused, currentIndex, heroAssets, onAssetChange])
 
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerDownTimeRef.current = Date.now()

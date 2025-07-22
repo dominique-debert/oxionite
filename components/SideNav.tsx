@@ -11,6 +11,26 @@ import styles from '@/styles/components/SideNav.module.css'
 
 import { CategoryTree } from './CategoryTree'
 
+function filterNavigationItems(items: types.PageInfo[], currentLocale: string): types.PageInfo[] {
+  if (!items || !Array.isArray(items)) return []
+
+  return items
+    .filter((item: types.PageInfo) => {
+      if (item.type === 'Home') return false
+      if (!item.language) return true
+      return item.language.toLowerCase() === currentLocale?.toLowerCase()
+    })
+    .map((item: types.PageInfo) => {
+      if (item.children && Array.isArray(item.children)) {
+        return {
+          ...item,
+          children: filterNavigationItems(item.children, currentLocale)
+        }
+      }
+      return item
+    })
+}
+
 export function SideNav({ 
   siteMap, 
   block,
@@ -27,32 +47,12 @@ export function SideNav({
   const { isDarkMode } = useDarkMode()
   const t = useI18n(locale || 'ko')
 
-  const filterNavigationItems = React.useCallback((items: types.PageInfo[], currentLocale: string): types.PageInfo[] => {
-    if (!items || !Array.isArray(items)) return []
-    
-    return items
-      .filter((item: types.PageInfo) => {
-        if (item.type === 'Home') return false
-        if (!item.language) return true
-        return item.language.toLowerCase() === currentLocale?.toLowerCase()
-      })
-      .map((item: types.PageInfo) => {
-        if (item.children && Array.isArray(item.children)) {
-          return {
-            ...item,
-            children: filterNavigationItems(item.children, currentLocale)
-          }
-        }
-        return item
-      })
-  }, [])
-
   const filteredNavigationTree = React.useMemo(() => {
     if (!siteMap?.navigationTree || !locale) {
       return siteMap?.navigationTree || []
     }
     return filterNavigationItems(siteMap.navigationTree, locale)
-  }, [siteMap?.navigationTree, locale, filterNavigationItems])
+  }, [siteMap?.navigationTree, locale])
 
   if (!siteMap?.navigationTree || filteredNavigationTree.length === 0) {
     return null

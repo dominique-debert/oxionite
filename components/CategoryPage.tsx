@@ -22,27 +22,33 @@ interface PostItem {
   coverImageBlock?: types.Block // Add block for mapImageUrl
 }
 
+// Extends PageInfo to include post-specific properties
+interface PostPageInfo extends types.PageInfo {
+  published?: string
+}
+
 const POSTS_PER_PAGE = 20
 
 // Utility function to get all posts from a category recursively (same logic as CategoryTree)
 const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] => {
   const posts: PostItem[] = []
-  
+
   const collectPosts = (pageInfo: types.PageInfo) => {
     // If this is a post, add it to the list
     if (pageInfo.type === 'Post') {
+      const postInfo = pageInfo as PostPageInfo
       posts.push({
-        pageId: pageInfo.pageId,
-        title: pageInfo.title,
-        description: pageInfo.description,
-        published: (pageInfo as any).published, // Fix: Property 'published' does not exist on type 'PageInfo'
-        slug: pageInfo.slug,
-        language: pageInfo.language || 'ko',
-        coverImage: pageInfo.coverImage || undefined,
-        coverImageBlock: pageInfo.coverImageBlock || undefined // Pass the block
+        pageId: postInfo.pageId,
+        title: postInfo.title,
+        description: postInfo.description,
+        published: postInfo.published || null,
+        slug: postInfo.slug,
+        language: postInfo.language || 'ko',
+        coverImage: postInfo.coverImage || undefined,
+        coverImageBlock: postInfo.coverImageBlock || undefined // Pass the block
       })
     }
-    
+
     // Recursively collect posts from children
     if (pageInfo.children && pageInfo.children.length > 0) {
       for (const child of pageInfo.children) {
@@ -50,16 +56,83 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
       }
     }
   }
-  
+
   // Start collecting from the category (same as CategoryTree countPostsRecursively)
   collectPosts(categoryPageInfo)
-  
+
   return posts
 }
 
+// Find the page in navigationTree (same logic as CategoryTree)
+const findInNavigationTree = (items: types.PageInfo[], targetPageId: string): types.PageInfo | null => {
+  for (const item of items) {
+    if (item.pageId === targetPageId) {
+      return item
+    }
+    if (item.children) {
+      const found = findInNavigationTree(item.children, targetPageId)
+      if (found) return found
+    }
+  }
+  return null
+}
 
+function formatDate(dateString: string | null): string {
+  if (!dateString) return ''
+  try {
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}.${month}.${day}`
+  } catch {
+    return dateString
+  }
+}
 
-export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
+function getPageNumbers(totalPages: number, currentPage: number): (number | string)[] {
+  const siblingCount = 2; // Number of pages on each side of the current page, creating a block of 5
+  const totalPageNumbers = siblingCount + 5; // A threshold to decide when to use ellipsis
+
+  // If total pages are less than the threshold, show all page numbers
+  if (totalPageNumbers >= totalPages) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+  const rightSiblingIndex = Math.min(
+    currentPage + siblingCount,
+    totalPages
+  );
+
+  const shouldShowLeftDots = leftSiblingIndex > 2;
+  const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+
+  const firstPageIndex = 1;
+  const lastPageIndex = totalPages;
+
+  if (!shouldShowLeftDots && shouldShowRightDots) {
+    const leftItemCount = 3 + 2 * siblingCount;
+    const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1);
+    return [...leftRange, '...', totalPages];
+  }
+
+  if (shouldShowLeftDots && !shouldShowRightDots) {
+    const rightItemCount = 3 + 2 * siblingCount;
+    const rightRange = Array.from({ length: rightItemCount }, (_, i) => totalPages - rightItemCount + 1 + i);
+    return [firstPageIndex, '...', ...rightRange];
+  }
+
+  if (shouldShowLeftDots && shouldShowRightDots) {
+    const middleRange = Array.from({ length: rightSiblingIndex - leftSiblingIndex + 1 }, (_, i) => leftSiblingIndex + i);
+    return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex];
+  }
+  
+  // Default case: show all pages (shouldn't be reached often with the logic above)
+  return Array.from({ length: totalPages }, (_, i) => i + 1);
+}
+
+export function CategoryPage({ pageProps }: CategoryPageProps) {
   const { siteMap, pageId, isMobile = false } = pageProps
   const router = useRouter()
   const [currentPage, setCurrentPage] = React.useState(1)
@@ -72,21 +145,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
   // Get current page info from navigationTree (same as CategoryTree uses)
   const currentPageInfo = React.useMemo(() => {
     if (!siteMap || !pageId || !siteMap.navigationTree) return null
-    
-    // Find the page in navigationTree (same logic as CategoryTree)
-    const findInNavigationTree = (items: types.PageInfo[], targetPageId: string): types.PageInfo | null => {
-      for (const item of items) {
-        if (item.pageId === targetPageId) {
-          return item
-        }
-        if (item.children) {
-          const found = findInNavigationTree(item.children, targetPageId)
-          if (found) return found
-        }
-      }
-      return null
-    }
-    
     return findInNavigationTree(siteMap.navigationTree, pageId)
   }, [siteMap, pageId])
   
@@ -114,63 +172,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
   const endIndex = startIndex + POSTS_PER_PAGE
   const currentPosts = allPosts.slice(startIndex, endIndex)
   
-  // Format date
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return ''
-    try {
-      const date = new Date(dateString)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}.${month}.${day}`
-    } catch {
-      return dateString
-    }
-  }
-
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const siblingCount = 2; // Number of pages on each side of the current page, creating a block of 5
-    const totalPageNumbers = siblingCount + 5; // A threshold to decide when to use ellipsis
-
-    // If total pages are less than the threshold, show all page numbers
-    if (totalPageNumbers >= totalPages) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-
-    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-    const rightSiblingIndex = Math.min(
-      currentPage + siblingCount,
-      totalPages
-    );
-
-    const shouldShowLeftDots = leftSiblingIndex > 2;
-    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
-
-    const firstPageIndex = 1;
-    const lastPageIndex = totalPages;
-
-    if (!shouldShowLeftDots && shouldShowRightDots) {
-      const leftItemCount = 3 + 2 * siblingCount;
-      const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1);
-      return [...leftRange, '...', totalPages];
-    }
-
-    if (shouldShowLeftDots && !shouldShowRightDots) {
-      const rightItemCount = 3 + 2 * siblingCount;
-      const rightRange = Array.from({ length: rightItemCount }, (_, i) => totalPages - rightItemCount + 1 + i);
-      return [firstPageIndex, '...', ...rightRange];
-    }
-
-    if (shouldShowLeftDots && shouldShowRightDots) {
-      const middleRange = Array.from({ length: rightSiblingIndex - leftSiblingIndex + 1 }, (_, i) => leftSiblingIndex + i);
-      return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex];
-    }
-    
-    // Default case: show all pages (shouldn't be reached often with the logic above)
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  };
-
   if (!currentPageInfo) {
     return <div>Category not found</div>
   }
@@ -346,7 +347,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
           borderTop: '1px solid rgba(55, 53, 47, 0.16)'
         }}>
           {/* Page Numbers */}
-          {getPageNumbers().map((pageNum, index) =>
+          {getPageNumbers(totalPages, currentPage).map((pageNum, index) =>
             typeof pageNum === 'string' ? (
               <span key={`ellipsis-${index}`} style={{ padding: '0 0.25rem', color: 'var(--tertiary-text-color)' }}>
                 {pageNum}

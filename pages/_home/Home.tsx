@@ -1,7 +1,7 @@
 import React, { useMemo,useState } from 'react'
 import styles from 'styles/pages/home.module.css'
 
-import type { ExtendedRecordMap,PageInfo, PageProps } from '@/lib/types'
+import type { PageInfo, PageProps } from '@/lib/types'
 
 import { NotionPage } from '../../components/NotionPage'
 import { PageHead } from '../../components/PageHead'
@@ -11,7 +11,7 @@ import HomeNav from './HomeNav'
 import RecentPosts from './RecentPosts'
 import { Tags } from './Tags'
 
-export const Home: React.FC<PageProps> = ({
+export function Home({
   setBackgroundAsset = () => {},
   isHeroPaused = false,
   setIsHeroPaused = () => {},
@@ -19,7 +19,7 @@ export const Home: React.FC<PageProps> = ({
   siteMap,
   homeRecordMaps,
   isMobile
-}) => {
+}: PageProps) {
   const homePages = useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap).filter(
@@ -82,8 +82,6 @@ export const Home: React.FC<PageProps> = ({
 
       <div className={styles.homeContainer}>
         <Hero 
-          site={site} 
-          isMobile={isMobile || false} 
           onAssetChange={setBackgroundAsset} 
           isPaused={isHeroPaused} 
           setIsPaused={setIsHeroPaused} 

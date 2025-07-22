@@ -18,9 +18,12 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
     const siteMap = await getSiteMap()
     
     // Find all pages with type 'Home'
-    const homePages = Object.values(siteMap.pageInfoMap).filter(
-      (page: PageInfo) => page.type === 'Home'
-    )
+    const homePages = []
+    for (const pageInfo of Object.values(siteMap.pageInfoMap)) {
+      if (pageInfo.type === 'Home') {
+        homePages.push(pageInfo)
+      }
+    }
 
     // Fetch recordMap for each home page
     const homeRecordMaps: { [pageId: string]: ExtendedRecordMap } = {}
@@ -29,12 +32,12 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
       const recordMapPromises = homePageIds.map((id) => getPage(id))
       const recordMaps = await Promise.all(recordMapPromises)
       
-      recordMaps.forEach((recordMap: ExtendedRecordMap, index: number) => {
+      for (const [index, recordMap] of recordMaps.entries()) {
         const pageId = homePageIds[index]
         if (pageId) {
           homeRecordMaps[pageId] = recordMap
         }
-      })
+      }
     }
 
     return {

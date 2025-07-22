@@ -3,34 +3,34 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import {
-  formatDate,
-  getBlockTitle,
-  getPageProperty,
-  getTextContent,
-  normalizeTitle,
-  idToUuid
-} from 'notion-utils'
-import React, { useEffect, useMemo, useState } from 'react'
-import {
-  type NotionComponents,
-  NotionRenderer
-} from 'react-notion-x'
+import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
+import * as React from 'react'
+import { NotionRenderer } from 'react-notion-x'
 import styles from 'styles/components/common.module.css'
 
-import type * as types from '@/lib/types'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
-import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
+import { mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
+import type * as types from '@/lib/types'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
 import { Loading } from './Loading'
-import { Page404 } from './Page404'
-import { PageHead } from './PageHead'
 import { NotionComments } from './NotionComments'
+import { Page404 } from './Page404'
 import { PageActions } from './PageActions'
+import { PageHead } from './PageHead'
 import { PostHeader } from './PostHeader'
+
+export const useHasMounted = () => {
+  const [hasMounted, setHasMounted] = React.useState(false)
+  React.useEffect(() => {
+    setHasMounted(true)
+  }, [])
+  return hasMounted
+}
+
+
 
 // -----------------------------------------------------------------------------
 // dynamic imports for optional components
@@ -191,68 +191,74 @@ export function NotionPage({
   siteMap,
   isMobile = false,
   showTOC = false
-}: types.PageProps) {
+}: types.PageProps): React.ReactElement {
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
+  const hasMounted = useHasMounted()
 
-  const [isShowingComments, setIsShowingComments] = useState(false)
-  const [hasMounted, setHasMounted] = useState(false)
-  useEffect(() => {
-    setHasMounted(true)
+  const [isShowingComments, setIsShowingComments] = React.useState(false)
+
+  const siteMapPageUrl = React.useMemo(() => {
+    const searchParams = new URLSearchParams()
+    if (router.query.slug && site && recordMap) {
+      const slug = Array.isArray(router.query.slug)
+        ? router.query.slug.join('/')
+        : router.query.slug
+      return mapPageUrl(site, recordMap, searchParams, slug)
+    }
+    return null
+  }, [site, recordMap, router.query])
+
+  const toggleComments = React.useCallback(() => {
+    setIsShowingComments((prev) => !prev)
   }, [])
+
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.style.setProperty('--fg-color', 'rgb(236, 236, 236)')
+    } else {
+      document.documentElement.style.setProperty('--fg-color', 'rgb(41, 41, 41)')
+    }
+  }, [isDarkMode])
 
   if (router.isFallback) {
     return <Loading />
   }
 
-  if (error || !site || !pageId || !recordMap) {
-    return <Page404 />
+  if (error || !site) {
+    return <Page404 site={site} pageId={pageId} error={error} />
   }
 
-  const keys = Object.keys(recordMap?.block || {})
-  const block = keys[0] ? recordMap?.block?.[keys[0]]?.value : undefined
+  if (!pageId || !recordMap) {
+    return <Page404 site={site} pageId={pageId} error={error} />
+  }
+
+  const keys = Object.keys(recordMap.block)
+  const block = recordMap.block[keys[0]]?.value
 
   if (!block) {
-    return <Page404 />
+    return <Page404 site={site} />
   }
 
-  const title = getBlockTitle(block, recordMap) || site.name
-  const pageInfo = siteMap?.pageInfoMap?.[pageId]
-  const isBlogPost =
-    !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
-  const isSubPage = !pageInfo && block?.type === 'page'
-  const minTableOfContentsItems = 3
-  const showTableOfContents = showTOC
   const tweetId = getPageProperty<string>('Tweet', block, recordMap)
 
-  const siteMapPageUrl = useMemo(() => {
-    const searchParams = new URLSearchParams()
-    const { slug } = router.query
-    const basePath = Array.isArray(slug) ? slug.join('/') : ''
-    return mapPageUrl(site, recordMap, searchParams, basePath)
-  }, [site, recordMap, router.query])
-
-  const memoizedActions = useMemo(
+  const memoizedActions = React.useMemo(
     () => (tweetId ? <PageActions tweet={tweetId} /> : null),
     [tweetId]
   )
 
-  const memoizedComments = useMemo(
+  const memoizedComments = React.useMemo(
     () => <NotionComments recordMap={recordMap} />,
     [recordMap]
   )
 
-  const NotionPageRenderer = useMemo(
-    () =>
-      dynamic(
-        () =>
-          import('react-notion-x').then((notion) => notion.NotionRenderer),
-        {
-          ssr: true
-        }
-      ),
-    []
-  )
+  const title = getBlockTitle(block, recordMap) || site.name
+  const pageInfo = siteMap?.pageInfoMap?.[pageId]
+  const isBlogPost =
+    !!(pageInfo && block.type === 'page' && block.parent_table === 'collection')
+  const isSubPage = !pageInfo && block.type === 'page'
+  const minTableOfContentsItems = 3
+  const showTableOfContents = showTOC
 
   return (
     <>
@@ -265,18 +271,17 @@ export function NotionPage({
       <div className="notion-page">
         <div className='notion-viewport'>
           <div className={cs(styles.main, styles.hasSideNav)}>
-            {/* Show our custom header for both top-level posts and sub-pages */}
             {(isBlogPost || isSubPage) && (
               <PostHeader
                 block={block}
                 recordMap={recordMap}
-                isBlogPost={isBlogPost} // Still needed for internal logic in PostHeader
+                isBlogPost={isBlogPost}
                 isMobile={isMobile}
                 variant={isBlogPost ? 'full' : 'simple'}
               />
             )}
             
-            <NotionPageRenderer
+            <NotionRenderer
               bodyClassName={cs(
                 styles.notion,
                 pageId === site.rootNotionPageId && 'index-page',
@@ -285,7 +290,7 @@ export function NotionPage({
               darkMode={hasMounted ? isDarkMode : false}
               recordMap={recordMap}
               rootPageId={site.rootNotionPageId || undefined}
-              fullPage={true} // Ensure cover, icon, and title are rendered
+              fullPage={true}
               previewImages={!!recordMap.preview_images}
               showCollectionViewDropdown={false}
               showTableOfContents={showTableOfContents}
@@ -306,7 +311,6 @@ export function NotionPage({
                 Pdf,
                 Modal: Modal2,
                 Tweet,
-                // Always use an empty header to hide Notion's built-in header
                 Header: EmptyHeader,
                 propertyLastEditedTimeValue,
                 propertyDateValue,
@@ -314,11 +318,11 @@ export function NotionPage({
               }}
             />
             
-                        {isBlogPost && (
+            {isBlogPost && (
               <div className={styles.pageActions}>
                 {memoizedActions}
                 <button
-                  onClick={() => setIsShowingComments(!isShowingComments)}
+                  onClick={toggleComments}
                   className={styles.pageActionsButton}
                 >
                   {isShowingComments ? 'Hide Comments' : 'Show Comments'}

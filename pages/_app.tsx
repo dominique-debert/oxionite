@@ -13,9 +13,10 @@ import '../styles/prism-theme.css'
 import '../styles/glass-theme.css'
 
 import type { AppProps } from 'next/app'
-import * as Fathom from 'fathom-client'
+
 import { useRouter } from 'next/router'
-import { posthog } from 'posthog-js'
+import * as Fathom from 'fathom-client'
+
 import * as React from 'react'
 
 import type * as types from '@/lib/types'
@@ -27,9 +28,7 @@ import { bootstrap } from '@/lib/bootstrap-client'
 import {
   fathomConfig,
   fathomId,
-  isServer,
-  posthogConfig,
-  posthogId
+
 } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 
@@ -103,18 +102,10 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       if (fathomId) {
         Fathom.trackPageview()
       }
-
-      if (posthogId) {
-        posthog.capture('$pageview')
-      }
     }
 
     if (fathomId) {
       Fathom.load(fathomId, fathomConfig)
-    }
-
-    if (posthogId) {
-      posthog.init(posthogId, posthogConfig)
     }
 
     router.events.on('routeChangeComplete', onRouteChangeComplete)
@@ -139,20 +130,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   // Get page info to determine layout style
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
 
-  // Determine page type for cover image logic
-  const isPost = pageInfo?.type === 'Post'
-  const isCategoryPage = pageInfo?.type === 'Category'
-  const isSubPage = !pageInfo && block?.type === 'page'
-
-  // Determine the cover image URL to pass to the Background component
-  let coverImageUrl: string | undefined
-  if ((isPost || isCategoryPage) && pageInfo?.coverImage) {
-    coverImageUrl = pageInfo.coverImage
-  } else if (isSubPage && block?.format?.page_cover) {
-    // For sub-pages, we need to construct the URL from the block data
-    coverImageUrl = mapImageUrl(block.format.page_cover, block)
-  }
-
+  // Calculate TOC display in real-time for applying container padding
   const isCategory = pageInfo?.type === 'Category'
 
   // Calculate TOC display in real-time for applying container padding
@@ -178,12 +156,12 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     if (!isBlogPost && !isSubPage) return false
 
     let headerCount = 0
-    Object.values(recordMap.block).forEach((blockWrapper: any) => {
+    for (const blockWrapper of Object.values(recordMap.block)) {
       const blockData = blockWrapper?.value
       if (blockData?.type === 'header' || blockData?.type === 'sub_header' || blockData?.type === 'sub_sub_header') {
         headerCount++
       }
-    })
+    }
 
     const minTableOfContentsItems = 3
     // Also check screen width

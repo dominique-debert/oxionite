@@ -73,18 +73,18 @@ function SearchButton() {
     setMounted(true)
   }, [])
 
-  const openModal = () => {
+  const openModal = React.useCallback(() => {
     setIsOpen(true)
     setTimeout(() => inputRef.current?.focus(), 100)
-  }
+  }, [])
 
-  const closeModal = () => {
+  const closeModal = React.useCallback(() => {
     setIsOpen(false)
     setQuery('')
     setResults([])
-  }
+  }, [])
 
-  const handleSearch = async (searchQuery: string) => {
+  const handleSearch = React.useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([])
       return
@@ -105,7 +105,7 @@ function SearchButton() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === 'Escape' && closeModal()
@@ -127,7 +127,7 @@ function SearchButton() {
             className={styles.searchInput}
             onChange={(e) => {
               setQuery(e.target.value)
-              handleSearch(e.target.value)
+              void handleSearch(e.target.value)
             }}
             placeholder={t.searchPlaceholder}
           />
@@ -208,6 +208,27 @@ interface BreadcrumbItem {
   href?: string
 }
 
+function findPagePath(
+  pageId: string,
+  tree: types.PageInfo[]
+): BreadcrumbItem[] | null {
+  for (const item of tree) {
+    const currentPath = [
+      {
+        title: item.title || 'Untitled',
+        pageInfo: item,
+        href: `/${item.slug}`
+      }
+    ]
+    if (item.pageId === pageId) return currentPath
+    if (item.children) {
+      const subPath = findPagePath(pageId, item.children)
+      if (subPath) return [...currentPath, ...subPath]
+    }
+  }
+  return null
+}
+
 interface TopNavProps {
   pageProps: types.PageProps
   isMobile?: boolean
@@ -221,28 +242,6 @@ export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopN
 
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     if (!siteMap || !pageId || !topLevelPageInfo || !recordMap) return []
-
-    // 1. Find the base path for the top-level post from the siteMap tree
-    const findPagePath = (
-      pageId: string,
-      tree: types.PageInfo[]
-    ): BreadcrumbItem[] | null => {
-      for (const item of tree) {
-        const currentPath = [
-          {
-            title: item.title || 'Untitled',
-            pageInfo: item,
-            href: `/${item.slug}`
-          }
-        ]
-        if (item.pageId === pageId) return currentPath
-        if (item.children) {
-          const subPath = findPagePath(pageId, item.children)
-          if (subPath) return [...currentPath, ...subPath]
-        }
-      }
-      return null
-    }
 
     const basePath =
       findPagePath(topLevelPageInfo.pageId, siteMap.navigationTree || []) || []

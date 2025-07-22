@@ -65,6 +65,7 @@ export interface PageInfo {
   language: string | null
   translationOf: string[]
   public: boolean | null
+  status: string
   description: string | null
   date: string | null
   coverImage?: string | null

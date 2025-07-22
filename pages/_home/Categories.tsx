@@ -8,7 +8,7 @@ interface CategoriesProps {
   siteMap?: SiteMap
 }
 
-const Categories: React.FC<CategoriesProps> = ({ siteMap }) => {
+export default function Categories({ siteMap }: CategoriesProps) {
   const categories = React.useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap)
@@ -34,4 +34,4 @@ const Categories: React.FC<CategoriesProps> = ({ siteMap }) => {
   )
 }
 
-export default Categories 
+ 
