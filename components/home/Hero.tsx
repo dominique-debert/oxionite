@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import React, { useCallback,useEffect, useRef, useState } from 'react'
 import siteConfig from 'site.config'
-import styles from 'styles/pages/home.module.css'
+import styles from 'styles/components/home.module.css'
 
 
 

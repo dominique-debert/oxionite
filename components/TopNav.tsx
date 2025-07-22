@@ -313,7 +313,7 @@ export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopN
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        {!isMobile && <PageSocial variant="header" />}
+        {!isMobile && <PageSocial header />}
         <LanguageSwitcher />
         <ToggleThemeButton />
         <SearchButton />

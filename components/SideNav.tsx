@@ -5,7 +5,6 @@ import { useRouter } from 'next/router'
 import * as React from 'react'
 
 import type * as types from '@/lib/types'
-
 import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SideNav.module.css'
 

@@ -11,16 +11,14 @@ export async function getTweetsMap(
 ): Promise<void> {
   const tweetIds = getPageTweetIds(recordMap)
 
-  const tweetsMap = Object.fromEntries(
-    await pMap(
-      tweetIds,
-      async (tweetId: string) => {
-        return [tweetId, await getTweet(tweetId)]
-      },
-      {
-        concurrency: 8
-      }
-    )
+  await pMap(
+    tweetIds,
+    async (tweetId: string) => {
+      await getTweet(tweetId)
+    },
+    {
+      concurrency: 8
+    }
   )
 
 }

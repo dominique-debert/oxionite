@@ -1,11 +1,47 @@
 import type { ExtendedRecordMap, PageBlock } from 'notion-types'
-import { getPageProperty, idToUuid } from 'notion-utils'
-import pMemoize from 'p-memoize'
+import { getPageProperty } from 'notion-utils'
 
-import type { CanonicalPageMap,PageInfo, SiteMap } from './types'
+import type { CanonicalPageMap, PageInfo, SiteMap } from './types'
 import * as config from './config'
 import { mapImageUrl } from './map-image-url'
 import { notion } from './notion-api'
+
+// Custom function to parse Notion relation properties
+function parseRelationProperty(
+  propertyId: string,
+  block: PageBlock,
+  collectionRecordMap: ExtendedRecordMap
+): string[] {
+  const rawValue = getPageProperty<any[]>(
+    propertyId,
+    block,
+    collectionRecordMap
+  )
+
+  if (!rawValue) {
+    return []
+  }
+
+  // The raw value of a relation property is an array of arrays,
+  // where each inner array contains metadata about the related page.
+  // The page ID is usually in the format ['‣', [['p', 'page-id']]]
+  return rawValue
+    .map((item) => {
+      if (
+        Array.isArray(item) &&
+        item.length > 1 &&
+        Array.isArray(item[1]) &&
+        item[1].length > 0 &&
+        Array.isArray(item[1][0]) &&
+        item[1][0].length > 1 &&
+        typeof item[1][0][1] === 'string'
+      ) {
+        return item[1][0][1]
+      }
+      return null
+    })
+    .filter((id): id is string => !!id)
+}
 
 /**
  * The main function to fetch all data from Notion and build the site map.
@@ -120,64 +156,38 @@ async function getAllPagesFromDatabase(
         block,
         collectionRecordMap
       )
-      // Custom function to parse Notion relation properties
-      const parseRelationProperty = (propertyId: string): string[] => {
-        const property = block.properties?.[propertyId]
-        if (!property || !Array.isArray(property)) return []
-        
-        console.log(`DEBUG: Raw property data for ${propertyId}:`, JSON.stringify(property, null, 2))
-        
-        const relationIds: string[] = []
-        for (const item of property) {
-          console.log(`DEBUG: Processing item:`, JSON.stringify(item, null, 2))
-          if (Array.isArray(item) && item.length === 2 && item[0] === '‣' && Array.isArray(item[1])) {
-            // Extract the page ID from the relation format: ['‣', [['p', pageId, spaceId]]]
-            const relationData = item[1][0] // This should be ['p', pageId, spaceId]
-            console.log(`DEBUG: Found relation data:`, relationData)
-            if (Array.isArray(relationData) && relationData.length >= 2 && relationData[0] === 'p') {
-              const actualPageId = relationData[1]
-              console.log(`DEBUG: Extracted actual pageId:`, actualPageId)
-              if (typeof actualPageId === 'string') {
-                relationIds.push(actualPageId)
-              }
-            }
-          }
-        }
-        return relationIds
-      }
       
-      const parentPropertyId = 'FMjE' // Parent property ID
-      const childrenPropertyId = 's]NH' // Children property ID
-      
-      const parentIds = parseRelationProperty(parentPropertyId)
-      const childrenIds = parseRelationProperty(childrenPropertyId)
-      
+      const parentPageId = parseRelationProperty(
+        'Parent Page',
+        block as PageBlock,
+        collectionRecordMap
+      )[0] || null
+      const childrenPageIds = parseRelationProperty(
+        'Sub Pages',
+        block as PageBlock,
+        collectionRecordMap
+      )
+      const translationOf = parseRelationProperty(
+        'Translation of',
+        block as PageBlock,
+        collectionRecordMap
+      )
+
       console.log(`DEBUG: Parsed relations for ${pageId}:`, {
         title,
-        parentIds,
-        childrenIds
+        parentPageId,
+        childrenPageIds,
+        translationOf
       })
-
-      // Debug: Check actual property names in the collection schema
-      const collectionId = Object.keys(collectionRecordMap.collection)[0]
-      if (collectionId) {
-        const collection = collectionRecordMap.collection[collectionId]?.value
-        const propertySchema = collection?.schema || {}
-        
-        console.log(`DEBUG: Available property names:`, Object.entries(propertySchema).map(([id, schema]: [string, any]) => ({
-          id,
-          name: schema?.name || 'Unknown',
-          type: schema?.type || 'Unknown'
-        })))
-      }
 
       console.log(`DEBUG: Processing page ${pageId}:`, {
         title,
         slug,
         type: pageType,
-        isPublic,
-        parentIds,
-        childrenIds,
+        public: isPublic,
+        parentPageId,
+        childrenPageIds,
+        translationOf,
         properties: Object.keys(block.properties || {})
       })
 
@@ -199,11 +209,11 @@ async function getAllPagesFromDatabase(
         type: pageType,
         public: isPublic,
         language: getPageProperty<string>('Language', block, collectionRecordMap) || null,
-        parentPageId: parentIds.length > 0 ? (parentIds[0] || null) : null,
-        childrenPageIds: childrenIds,
-        translationOf: getPageProperty<string[]>('Translation Of', block, collectionRecordMap) || [],
+        parentPageId,
+        childrenPageIds,
+        translationOf,
         description: getPageProperty<string>('Description', block, collectionRecordMap) || null,
-                date: getPageProperty<number>('Published', block, collectionRecordMap) ? new Date(getPageProperty<number>('Published', block, collectionRecordMap)!).toISOString() : null,
+        date: getPageProperty<number>('Published', block, collectionRecordMap) ? new Date(getPageProperty<number>('Published', block, collectionRecordMap)!).toISOString() : null,
         coverImage: processedCoverImage,
         coverImageBlock: block,
         children: [],

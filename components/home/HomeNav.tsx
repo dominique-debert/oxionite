@@ -1,6 +1,6 @@
 import cs from 'classnames'
 import React from 'react'
-import styles from 'styles/pages/home.module.css'
+import styles from 'styles/components/home.module.css'
 
 import type { PageInfo } from '@/lib/types'
 
