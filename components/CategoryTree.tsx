@@ -4,8 +4,7 @@ import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
 import { IoChevronForward } from '@react-icons/all-files/io5/IoChevronForward'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useCallback, useEffect,useState } from 'react'
-import { CSSTransition, TransitionGroup } from 'react-transition-group'
+import React, { useEffect, useState } from 'react'
 import styles from 'styles/components/CategoryTree.module.css'
 
 import type { PageInfo } from '@/lib/types'
@@ -46,7 +45,7 @@ const countPostsRecursively = (item: PageInfo): number => {
 
 
 
-const CategoryItem: React.FC<CategoryItemProps> = ({ item, level, isExpanded, toggleExpanded }) => {
+function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemProps) {
   const isCategory = item.type === 'Category'
   const router = useRouter()
   const { asPath } = router
@@ -84,11 +83,10 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ item, level, isExpanded, to
 }
 
 // This is the main component that will hold the state
-export const CategoryTree: React.FC<Omit<CategoryTreeProps, 'expandedItems' | 'toggleItemExpanded'>> = ({ 
+export function CategoryTree({ 
   items, 
-  level = 0, 
-  block 
-}) => {
+  level = 0
+}: Omit<CategoryTreeProps, 'expandedItems' | 'toggleItemExpanded' | 'block'>) {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({}) 
   const [hasInitialized, setHasInitialized] = useState(false)
 
@@ -121,7 +119,7 @@ export const CategoryTree: React.FC<Omit<CategoryTreeProps, 'expandedItems' | 't
   }
 
   // A recursive renderer component
-  const RecursiveCategoryTree: React.FC<Omit<CategoryTreeProps, 'block'>> = ({ items, level = 0, expandedItems, toggleItemExpanded }) => {
+  function RecursiveCategoryTree({ items, level = 0, expandedItems, toggleItemExpanded }: Omit<CategoryTreeProps, 'block'>) {
     const sortedItems = items?.sort((a, b) => {
       if (a.type === 'Category' && b.type !== 'Category') return -1;
       if (a.type !== 'Category' && b.type === 'Category') return 1;

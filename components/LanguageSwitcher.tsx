@@ -17,7 +17,7 @@ export function LanguageSwitcher() {
   const currentLanguageShort = locale?.toUpperCase() || 'KO'
 
   const handleLanguageChange = (newLocale: string) => {
-    router.push(asPath, asPath, { locale: newLocale })
+    void router.push(asPath, asPath, { locale: newLocale })
     setIsOpen(false)
   }
 

@@ -8,9 +8,8 @@ import {
   getBlockTitle,
   getPageProperty,
   getTextContent,
-  normalizeTitle,
-  idToUuid
-} from 'notion-utils'
+  idToUuid,
+  normalizeTitle} from 'notion-utils'
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   type NotionComponents,
@@ -26,10 +25,10 @@ import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
 import { Loading } from './Loading'
-import { Page404 } from './Page404'
-import { PageHead } from './PageHead'
 import { NotionComments } from './NotionComments'
+import { Page404 } from './Page404'
 import { PageActions } from './PageActions'
+import { PageHead } from './PageHead'
 import { PostHeader } from './PostHeader'
 
 // -----------------------------------------------------------------------------

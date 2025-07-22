@@ -13,12 +13,10 @@ import { CategoryTree } from './CategoryTree'
 
 export function SideNav({ 
   siteMap, 
-  block,
   isMobile = false,
   isMobileMenuOpen = false
 }: { 
   siteMap: types.SiteMap
-  block?: any
   isMobile?: boolean
   isMobileMenuOpen?: boolean
 }) {
@@ -68,7 +66,7 @@ export function SideNav({
 
   return (
     <aside className={asideClasses} style={!isMobile ? { margin: '1rem 0 1rem 1rem' } : {}}>
-      <CategoryTree items={filteredNavigationTree} block={block} />
+      <CategoryTree items={filteredNavigationTree} />
     </aside>
   )
 }

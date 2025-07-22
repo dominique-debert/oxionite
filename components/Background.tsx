@@ -86,7 +86,7 @@ interface BackgroundProps {
 }
 
 // A component that renders a blurred, scrolling background.
-export default function Background({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }: BackgroundProps) {
+function Background({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }: BackgroundProps) {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
   const backgroundSource = imageUrl || '/default_background.webp'

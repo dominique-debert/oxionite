@@ -57,9 +57,27 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
   return posts
 }
 
+// Format date
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return ''
+  try {
+    // Handles both 'YYYY-MM-DD' and 'Month DD, YYYY' formats
+    const date = new Date(dateString)
+    // Check if the date is valid
+    if (Number.isNaN(date.getTime())) {
+      throw new Error('Invalid date')
+    }
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}.${month}.${day}`
+  } catch (err) {
+    console.error(`Invalid date string: ${dateString}`, err)
+    return dateString // Return original string on error
+  }
+}
 
-
-export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
+export function CategoryPage({ pageProps }: CategoryPageProps) {
   const { siteMap, pageId, isMobile = false } = pageProps
   const router = useRouter()
   const [currentPage, setCurrentPage] = React.useState(1)
@@ -114,20 +132,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
   const endIndex = startIndex + POSTS_PER_PAGE
   const currentPosts = allPosts.slice(startIndex, endIndex)
   
-  // Format date
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return ''
-    try {
-      const date = new Date(dateString)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}.${month}.${day}`
-    } catch {
-      return dateString
-    }
-  }
-
   // Generate page numbers for pagination
   const getPageNumbers = () => {
     const siblingCount = 2; // Number of pages on each side of the current page, creating a block of 5

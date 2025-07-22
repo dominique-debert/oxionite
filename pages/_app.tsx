@@ -131,9 +131,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const pageCover = pageBlockForCover?.format?.page_cover
   const notionImageUrl = pageBlockForCover ? mapImageUrl(pageCover, pageBlockForCover) : undefined
 
-  // Extract block from recordMap for search functionality
-  const keys = Object.keys(recordMap?.block || {})
-  const block = keys[0] ? recordMap?.block?.[keys[0]]?.value : undefined
 
   // Get page info to determine layout style
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
@@ -154,13 +151,11 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   }, [])
 
   const showTOC = React.useMemo(() => {
-    if (!block || !recordMap?.block) return false
+    if (!pageInfo || !recordMap) return false
 
-    const isBlogPost =
-      !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
-    const isSubPage = !pageInfo && block?.type === 'page'
+    const isBlogPost = pageInfo.type === 'Post'
 
-    if (!isBlogPost && !isSubPage) return false
+    if (!isBlogPost) return false
 
     let headerCount = 0
     for (const blockWrapper of Object.values(recordMap.block)) {
@@ -173,7 +168,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     const minTableOfContentsItems = 3
     // Also check screen width
     return headerCount >= minTableOfContentsItems && !isMobile && screenWidth >= 1300
-  }, [block, recordMap, pageInfo, isMobile, screenWidth])
+  }, [pageInfo, recordMap, isMobile, screenWidth])
 
 
   
@@ -262,7 +257,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       {siteMap && (
         <SideNav
           siteMap={siteMap}
-          block={block}
           isMobile={isMobile}
           isMobileMenuOpen={isMobileMenuOpen}
         />
