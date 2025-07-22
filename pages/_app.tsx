@@ -1,6 +1,5 @@
 // used for rendering equations (optional)
 import 'katex/dist/katex.min.css'
-
 // core styles shared by all of react-notion-x (required)
 import 'react-notion-x/src/styles.css'
 // global styles shared across the entire site
@@ -14,11 +13,16 @@ import '../styles/prism-theme.css'
 import '../styles/glass-theme.css'
 
 import type { AppProps } from 'next/app'
-import { useRouter } from 'next/router'
 import * as Fathom from 'fathom-client'
+import { useRouter } from 'next/router'
 import { posthog } from 'posthog-js'
 import * as React from 'react'
 
+import type * as types from '@/lib/types'
+import Background from '@/components/Background'
+import { Footer } from '@/components/Footer'
+import { SideNav } from '@/components/SideNav'
+import { TopNav } from '@/components/TopNav'
 import { bootstrap } from '@/lib/bootstrap-client'
 import {
   fathomConfig,
@@ -27,11 +31,6 @@ import {
   posthogConfig,
   posthogId
 } from '@/lib/config'
-import * as types from '@/lib/types'
-import { SideNav } from '@/components/SideNav'
-import { TopNav } from '@/components/TopNav'
-import Background from '@/components/Background'
-import { Footer } from '@/components/Footer'
 import { mapImageUrl } from '@/lib/map-image-url'
 
 if (typeof window !== 'undefined') {
@@ -146,7 +145,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const isSubPage = !pageInfo && block?.type === 'page'
 
   // Determine the cover image URL to pass to the Background component
-  let coverImageUrl: string | undefined = undefined
+  let coverImageUrl: string | undefined
   if ((isPost || isCategoryPage) && pageInfo?.coverImage) {
     coverImageUrl = pageInfo.coverImage
   } else if (isSubPage && block?.format?.page_cover) {
@@ -310,7 +309,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
             flex: 1,
             overflow: 'auto',
             paddingTop: '88px', /* Add padding to prevent content overlap */
-            paddingRight: paddingRight
+            paddingRight
           }}
         >
           <div

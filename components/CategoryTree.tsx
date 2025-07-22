@@ -1,13 +1,14 @@
 'use client'
 
-import React, { useState, useCallback, useEffect } from 'react'
-import { CSSTransition, TransitionGroup } from 'react-transition-group'
-import Link from 'next/link'
-import { useRouter } from 'next/router'
 import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
 import { IoChevronForward } from '@react-icons/all-files/io5/IoChevronForward'
-import type { PageInfo } from '@/lib/types'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import React, { useCallback, useEffect,useState } from 'react'
+import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import styles from 'styles/components/CategoryTree.module.css'
+
+import type { PageInfo } from '@/lib/types'
 
 interface CategoryTreeProps {
   items: PageInfo[]
@@ -95,14 +96,14 @@ export const CategoryTree: React.FC<Omit<CategoryTreeProps, 'expandedItems' | 't
     if (items && !hasInitialized) {
       const initialExpandedState: Record<string, boolean> = {}
       const setInitialState = (currentItems: PageInfo[]) => {
-        currentItems.forEach(item => {
+        for (const item of currentItems) {
           const hasChildren = item.children && item.children.length > 0
           // Expand if it's a category with children that are not posts
           if (item.type === 'Category' && hasChildren && !item.children.some(child => child.type === 'Post')) {
             initialExpandedState[item.pageId] = true
             setInitialState(item.children) // Recurse
           }
-        })
+        }
       }
       setInitialState(items)
       setExpandedItems(initialExpandedState)

@@ -1,5 +1,4 @@
 import cs from 'classnames'
-
 import styles from 'styles/components/common.module.css'
 
 export function LoadingIcon(props: any) {

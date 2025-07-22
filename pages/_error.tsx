@@ -1,10 +1,11 @@
-import * as React from 'react'
-import { ErrorPage } from 'components/ErrorPage'
-import type { PageProps } from '@/lib/types'
-import site from 'site.config'
 import type { NextPageContext } from 'next'
+import { ErrorPage } from 'components/ErrorPage'
+import * as React from 'react'
+import site from 'site.config'
 
-const CustomErrorPage = ({ statusCode }: { statusCode: number }) => {
+import type { PageProps } from '@/lib/types'
+
+function CustomErrorPage({ statusCode }: { statusCode: number }) {
   return <ErrorPage site={site} statusCode={statusCode} />
 }
 

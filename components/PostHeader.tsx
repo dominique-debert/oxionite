@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
 import Image from 'next/image'
-import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
-import { PageAuthor } from './PageAuthor'
 import { type PageBlock } from 'notion-types'
+import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
+import React, { useState } from 'react'
+
 import { mapImageUrl } from '@/lib/map-image-url'
+
+import { PageAuthor } from './PageAuthor'
 
 interface PostHeaderProps {
   block: any

@@ -1,8 +1,8 @@
 import * as React from 'react'
+import styles from 'styles/components/common.module.css'
 
 import * as config from '@/lib/config'
 
-import styles from 'styles/components/common.module.css'
 import { PageSocial } from './PageSocial'
 
 export function FooterImpl() {

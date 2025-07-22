@@ -1,6 +1,6 @@
-import * as React from 'react'
-import { useRouter } from 'next/router'
 import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
+import { useRouter } from 'next/router'
+import * as React from 'react'
 
 export function LanguageSwitcher() {
   const router = useRouter()

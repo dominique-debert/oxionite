@@ -1,12 +1,12 @@
+import type { ExtendedRecordMap } from 'notion-types'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { getBlockTitle } from 'notion-utils'
-import type { ExtendedRecordMap } from 'notion-types'
 
 import type * as types from '../../lib/types'
-import { search } from '../../lib/notion'
-import { getSiteMap } from '../../lib/get-site-map'
 import { buildPageUrl } from '../../lib/build-page-url'
 import { getPageBreadcrumb } from '../../lib/get-page-breadcrumb'
+import { getSiteMap } from '../../lib/get-site-map'
+import { search } from '../../lib/notion'
 
 export default async function searchNotion(
   req: NextApiRequest,

@@ -1,23 +1,20 @@
-import React, { useState, useMemo } from 'react'
-import type { PageProps, PageInfo, ExtendedRecordMap } from '@/lib/types'
-import { PageHead } from '../../components/PageHead'
-import { NotionPage } from '../../components/NotionPage'
+import React, { useMemo,useState } from 'react'
+import styles from 'styles/pages/home.module.css'
 
+import type { ExtendedRecordMap,PageInfo, PageProps } from '@/lib/types'
+
+import { NotionPage } from '../../components/NotionPage'
+import { PageHead } from '../../components/PageHead'
+import Categories from './Categories'
 import Hero from './Hero'
 import HomeNav from './HomeNav'
 import RecentPosts from './RecentPosts'
-import Categories from './Categories'
 import { Tags } from './Tags'
-import styles from 'styles/pages/home.module.css'
 
-export const Home: React.FC<PageProps & { 
-  setBackgroundAsset: (asset: { type: 'image' | 'video'; src: string } | null) => void; 
-  isHeroPaused: boolean;
-  setIsHeroPaused: (isPaused: boolean) => void;
-}> = ({
-  setBackgroundAsset,
-  isHeroPaused,
-  setIsHeroPaused,
+export const Home: React.FC<PageProps> = ({
+  setBackgroundAsset = () => {},
+  isHeroPaused = false,
+  setIsHeroPaused = () => {},
   site,
   siteMap,
   homeRecordMaps,

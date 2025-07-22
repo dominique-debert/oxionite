@@ -1,6 +1,6 @@
-import type { ExtendedRecordMap } from 'notion-types'
-import type { ParsedUrlQuery } from 'querystring'
-import type { Block } from 'notion-types'
+import type { ParsedUrlQuery } from 'node:querystring'
+
+import { type  Block,type ExtendedRecordMap  } from 'notion-types'
 
 export * from 'notion-types'
 
@@ -75,6 +75,13 @@ export interface PageInfo {
   children: PageInfo[]
   translations: PageInfo[]
   canonicalPageUrl?: string
+
+  // For social images
+  author?: string
+  authorImage?: string
+  image?: string
+  imageObjectPosition?: string
+  detail?: string
 }
 
 /**

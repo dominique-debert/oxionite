@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import type { Site } from '@/lib/types'
+import React, { useCallback,useEffect, useRef, useState } from 'react'
 import siteConfig from 'site.config'
 import styles from 'styles/pages/home.module.css'
+
+import type { Site } from '@/lib/types'
 
 const IMAGE_DURATION = 3000 // 3 seconds
 
@@ -188,7 +189,7 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
     if (startPos) {
       const deltaX = endPos.x - startPos.x
       const deltaY = endPos.y - startPos.y
-      movedDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+      movedDistance = Math.hypot(deltaX, deltaY)
     }
 
     // It's a click, not a hold or scroll.

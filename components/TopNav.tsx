@@ -1,22 +1,23 @@
-import React from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/router'
-import { createPortal } from 'react-dom'
-import { IoMoonSharp } from '@react-icons/all-files/io5/IoMoonSharp'
-import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
-import { IoSearchOutline } from '@react-icons/all-files/io5/IoSearchOutline'
 import { IoCloseCircleOutline } from '@react-icons/all-files/io5/IoCloseCircleOutline'
 import { IoMenuOutline } from '@react-icons/all-files/io5/IoMenuOutline'
+import { IoMoonSharp } from '@react-icons/all-files/io5/IoMoonSharp'
+import { IoSearchOutline } from '@react-icons/all-files/io5/IoSearchOutline'
+import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { getBlockTitle, parsePageId } from 'notion-utils'
+import React from 'react'
+import { createPortal } from 'react-dom'
 
-import * as types from '@/lib/types'
-import { useDarkMode } from '@/lib/use-dark-mode'
+import type * as types from '@/lib/types'
 import { isSearchEnabled } from '@/lib/config'
 import { useI18n } from '@/lib/i18n'
-import { PageSocial } from './PageSocial'
-import { LanguageSwitcher } from './LanguageSwitcher'
-import siteConfig from '../site.config'
+import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SearchModal.module.css'
+
+import siteConfig from '../site.config'
+import { LanguageSwitcher } from './LanguageSwitcher'
+import { PageSocial } from './PageSocial'
 
 function ToggleThemeButton() {
   const [hasMounted, setHasMounted] = React.useState(false)
@@ -99,8 +100,8 @@ function SearchButton() {
         const data = (await response.json()) as NotionSearchResponse
         setResults(data.results || [])
       }
-    } catch (error) {
-      console.error('Search error:', error)
+    } catch (err) {
+      console.error('Search error:', err)
     } finally {
       setIsLoading(false)
     }
@@ -265,7 +266,7 @@ export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopN
 
           subPageCrumbs.push({
             title: subPageTitle,
-            href: href
+            href
           })
         }
       }

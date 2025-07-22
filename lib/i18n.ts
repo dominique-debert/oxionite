@@ -78,13 +78,13 @@ const translations = {
   en: enTexts
 } as const
 
-export function getTexts(locale: string = 'ko'): LocaleTexts {
+export function getTexts(locale = 'ko'): LocaleTexts {
   if (locale === 'ko' || locale === 'en') {
     return translations[locale]
   }
   return translations.ko
 }
 
-export function useI18n(locale: string = 'ko') {
+export function useI18n(locale = 'ko') {
   return getTexts(locale)
 } 

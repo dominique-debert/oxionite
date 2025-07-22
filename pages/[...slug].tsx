@@ -1,15 +1,16 @@
+import { type ParsedUrlQuery } from 'node:querystring'
+
 import { type GetServerSideProps } from 'next'
-import { type ParsedUrlQuery } from 'querystring'
 import { useRouter } from 'next/router'
 import { parsePageId } from 'notion-utils'
 
-import { NotionPage } from '@/components/NotionPage'
 import { CategoryPage } from '@/components/CategoryPage'
 import { Loading } from '@/components/Loading'
+import { NotionPage } from '@/components/NotionPage'
 import { PagePrivate } from '@/components/PagePrivate'
 import { getSiteMap } from '@/lib/get-site-map'
 import { getPage } from '@/lib/notion'
-import { type PageProps, type PageInfo } from '@/lib/types'
+import { type PageInfo,type PageProps } from '@/lib/types'
 
 interface SlugParams extends ParsedUrlQuery {
   slug: string[]
@@ -60,7 +61,7 @@ export const getServerSideProps: GetServerSideProps<
     }
 
     // Determine the actual page ID to render.
-    const finalSlug = slugParts[slugParts.length - 1]
+    const finalSlug = slugParts.at(-1)
     const pageIdToRender = parsePageId(finalSlug) || topLevelPageId
 
     // Fetch the content for the page we are actually going to render.

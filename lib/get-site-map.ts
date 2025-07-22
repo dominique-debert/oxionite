@@ -1,11 +1,11 @@
-import pMemoize from 'p-memoize'
-import { getPageProperty, idToUuid } from 'notion-utils'
 import type { ExtendedRecordMap, PageBlock } from 'notion-types'
+import { getPageProperty, idToUuid } from 'notion-utils'
+import pMemoize from 'p-memoize'
 
-import type { SiteMap, PageInfo, CanonicalPageMap } from './types'
+import type { CanonicalPageMap,PageInfo, SiteMap } from './types'
 import * as config from './config'
-import { notion } from './notion-api'
 import { mapImageUrl } from './map-image-url'
+import { notion } from './notion-api'
 
 /**
  * The main function to fetch all data from Notion and build the site map.
@@ -214,8 +214,8 @@ async function getAllPagesFromDatabase(
     console.log('DEBUG: Processed', Object.keys(pageInfoMap).length, 'valid pages')
     return pageInfoMap
     
-  } catch (error) {
-    console.error('ERROR: Failed to fetch from Notion database:', error)
+  } catch (err) {
+    console.error('ERROR: Failed to fetch from Notion database:', err)
     return {}
   }
 }

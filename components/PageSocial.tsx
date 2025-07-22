@@ -1,20 +1,20 @@
 import type * as React from 'react'
 import cs from 'classnames'
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaMastodon,
+  FaThreads,
+  FaTiktok,
+  FaXTwitter,
+  FaYoutube,
+} from 'react-icons/fa6'
+import { MdOutgoingMail } from 'react-icons/md'
+import { TbBrandGithubFilled } from 'react-icons/tb'
+import styles from 'styles/components/PageSocial.module.css'
 
 import * as config from '@/lib/config'
-import {
-  FaLinkedinIn,
-  FaYoutube,
-  FaInstagram,
-  FaTiktok,
-  FaFacebookF,
-  FaThreads,
-  FaXTwitter,
-  FaMastodon,
-} from 'react-icons/fa6'
-import { TbBrandGithubFilled } from 'react-icons/tb'
-import { MdOutgoingMail } from 'react-icons/md'
-import styles from 'styles/components/PageSocial.module.css'
 
 type SocialPlatform = 'twitter' | 'github' | 'linkedin' | 'newsletter' | 'youtube' | 'instagram' | 'tiktok' | 'facebook' | 'threads' | 'mastodon';
 

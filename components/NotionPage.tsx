@@ -1,37 +1,36 @@
-import React from 'react'
+import cs from 'classnames'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-
 import {
   formatDate,
   getBlockTitle,
   getPageProperty,
-  normalizeTitle
+  getTextContent,
+  normalizeTitle,
+  idToUuid
 } from 'notion-utils'
-import { getTextContent } from 'notion-utils'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   type NotionComponents,
-  NotionRenderer,
-  Search,
-  useNotionContext
+  NotionRenderer
 } from 'react-notion-x'
-
-import { Loading } from './Loading'
-import { PageHead } from './PageHead'
-import { Page404 } from './Page404'
-import { PostHeader } from './PostHeader'
-
 import styles from 'styles/components/common.module.css'
 
+import type * as types from '@/lib/types'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
-import * as types from '@/lib/types'
-import cs from 'classnames'
+
+import { Loading } from './Loading'
+import { Page404 } from './Page404'
+import { PageHead } from './PageHead'
+import { NotionComments } from './NotionComments'
+import { PageActions } from './PageActions'
+import { PostHeader } from './PostHeader'
 
 // -----------------------------------------------------------------------------
 // dynamic imports for optional components
@@ -41,67 +40,67 @@ const Code2 = dynamic(() =>
   import('react-notion-x/build/third-party/code').then(async (m) => {
     // additional prism syntaxes
     await Promise.all([
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-markup-templating'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-markup'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-bash'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-c'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-cpp'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-csharp'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-docker'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-java'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-js-templates'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-coffeescript'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-diff'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-git'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-go'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-graphql'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-handlebars'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-less'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-makefile'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-markdown'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-objectivec'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-ocaml'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-python'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-reason'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-rust'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-sass'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-scss'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-solidity'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-sql'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-stylus'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-swift'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-wasm'),
-      // @ts-ignore
+      // @ts-expect-error component is not typed correctly
       import('prismjs/components/prism-yaml')
     ])
     return m.Code
@@ -136,10 +135,11 @@ const Modal2 = dynamic(
 const Tweet = dynamic(() => import('react-tweet').then((m) => m.Tweet))
 
 // Empty header component to hide the default notion header
-const EmptyHeader = () => null
+function EmptyHeader() {
+  return null
+}
 
-
-
+// Custom property value for last edited time
 const propertyLastEditedTimeValue = (
   { block, pageHeader }: any,
   defaultFn: () => React.ReactNode
@@ -181,7 +181,9 @@ const propertyTextValue = (
   return defaultFn()
 }
 
-export const NotionPage = ({
+
+
+export function NotionPage({
   site,
   recordMap,
   error,
@@ -189,12 +191,13 @@ export const NotionPage = ({
   siteMap,
   isMobile = false,
   showTOC = false
-}: types.PageProps) => {
+}: types.PageProps) {
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
 
-  const [hasMounted, setHasMounted] = React.useState(false)
-  React.useEffect(() => {
+  const [isShowingComments, setIsShowingComments] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
+  useEffect(() => {
     setHasMounted(true)
   }, [])
 
@@ -214,47 +217,42 @@ export const NotionPage = ({
   }
 
   const title = getBlockTitle(block, recordMap) || site.name
-
   const pageInfo = siteMap?.pageInfoMap?.[pageId]
-
-  // A top-level page is a "blog post" if it's a page in a collection.
   const isBlogPost =
     !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
-  
-  // A sub-page is any page that is not a category and doesn't have pageInfo from the site map.
   const isSubPage = !pageInfo && block?.type === 'page'
-
-  // Table of contents settings - count actual headers
   const minTableOfContentsItems = 3
-  
   const showTableOfContents = showTOC
+  const tweetId = getPageProperty<string>('Tweet', block, recordMap)
 
-  // Create page URL mapper for proper navigation
-  const siteMapPageUrl = React.useMemo(() => {
+  const siteMapPageUrl = useMemo(() => {
     const searchParams = new URLSearchParams()
     const { slug } = router.query
-
-    // Use the current full URL path as the base path for sub-pages.
     const basePath = Array.isArray(slug) ? slug.join('/') : ''
-
-    return site
-      ? mapPageUrl(site, recordMap, searchParams, basePath)
-      : undefined
+    return mapPageUrl(site, recordMap, searchParams, basePath)
   }, [site, recordMap, router.query])
 
-  console.log('NotionPage debug:', {
-    pageId,
-    rootNotionPageId: site.rootNotionPageId,
-    recordMapKeys: Object.keys(recordMap?.block || {}),
-    hasRecordMap: !!recordMap,
-    blockId: block?.id,
-    blockType: block?.type,
-    isBlogPost,
-    minTableOfContentsItems,
-    showTableOfContents
-  })
+  const memoizedActions = useMemo(
+    () => (tweetId ? <PageActions tweet={tweetId} /> : null),
+    [tweetId]
+  )
 
+  const memoizedComments = useMemo(
+    () => <NotionComments recordMap={recordMap} />,
+    [recordMap]
+  )
 
+  const NotionPageRenderer = useMemo(
+    () =>
+      dynamic(
+        () =>
+          import('react-notion-x').then((notion) => notion.NotionRenderer),
+        {
+          ssr: true
+        }
+      ),
+    []
+  )
 
   return (
     <>
@@ -278,7 +276,7 @@ export const NotionPage = ({
               />
             )}
             
-            <NotionRenderer
+            <NotionPageRenderer
               bodyClassName={cs(
                 styles.notion,
                 pageId === site.rootNotionPageId && 'index-page',
@@ -316,7 +314,19 @@ export const NotionPage = ({
               }}
             />
             
-            
+                        {isBlogPost && (
+              <div className={styles.pageActions}>
+                {memoizedActions}
+                <button
+                  onClick={() => setIsShowingComments(!isShowingComments)}
+                  className={styles.pageActionsButton}
+                >
+                  {isShowingComments ? 'Hide Comments' : 'Show Comments'}
+                </button>
+              </div>
+            )}
+
+            {isShowingComments && memoizedComments}
           </div>
         </div>
       </div>

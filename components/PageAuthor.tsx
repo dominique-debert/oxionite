@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
 import Image from 'next/image'
+import React, { useState } from 'react'
 import siteConfig from 'site.config'
+
 import styles from '@/styles/components/PageAuthor.module.css'
 
-export const PageAuthor = ({ authorName }: { authorName: string }) => {
+export function PageAuthor({ authorName }: { authorName: string }) {
   const author = siteConfig.authors?.find((a) => a.name === authorName)
   const [isImageError, setIsImageError] = useState(false)
 

@@ -1,16 +1,17 @@
 'use client'
 
-import * as React from 'react'
-import { useRouter } from 'next/router'
 import cs from 'classnames'
+import { useRouter } from 'next/router'
+import * as React from 'react'
 
 import type * as types from '@/lib/types'
-import { CategoryTree } from './CategoryTree'
 import { useI18n } from '@/lib/i18n'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SideNav.module.css'
 
-export const SideNav = ({ 
+import { CategoryTree } from './CategoryTree'
+
+export function SideNav({ 
   siteMap, 
   block,
   isMobile = false,
@@ -20,7 +21,7 @@ export const SideNav = ({
   block?: any
   isMobile?: boolean
   isMobileMenuOpen?: boolean
-}) => {
+}) {
   const router = useRouter()
   const { locale } = router
   const { isDarkMode } = useDarkMode()

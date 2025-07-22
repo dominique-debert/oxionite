@@ -1,7 +1,8 @@
-import React from 'react'
-import type { PageInfo } from '@/lib/types'
-import styles from 'styles/pages/home.module.css'
 import cs from 'classnames'
+import React from 'react'
+import styles from 'styles/pages/home.module.css'
+
+import type { PageInfo } from '@/lib/types'
 
 interface HomeNavProps {
   homePages: PageInfo[]

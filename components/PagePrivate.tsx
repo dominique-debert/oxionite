@@ -1,5 +1,6 @@
-import { PageHead } from '@/components/PageHead'
 import * as React from 'react'
+
+import { PageHead } from '@/components/PageHead'
 
 export function PagePrivate() {
   return (

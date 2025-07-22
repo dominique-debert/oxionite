@@ -1,7 +1,8 @@
-import React from 'react'
 import Link from 'next/link'
-import type { SiteMap } from '@/lib/types'
+import React from 'react'
 import styles from 'styles/pages/home.module.css'
+
+import type { SiteMap } from '@/lib/types'
 
 interface RecentPostsProps {
   siteMap?: SiteMap

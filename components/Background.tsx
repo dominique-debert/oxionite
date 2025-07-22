@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+
 import { useDarkMode } from '@/lib/use-dark-mode'
 
 // --- Configuration ---
@@ -44,7 +45,7 @@ const getAverageLuminance = (imgSrc: string): Promise<number> => {
     const img = new Image()
     img.crossOrigin = 'Anonymous'
     img.src = imgSrc
-    img.onload = () => {
+    img.addEventListener('load', () => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (!ctx) {
@@ -69,7 +70,7 @@ const getAverageLuminance = (imgSrc: string): Promise<number> => {
       } else {
         resolve(128) // Fallback on error
       }
-    }
+    })
     img.onerror = () => {
       console.error(`Failed to load image: ${imgSrc}`)
       resolve(128) // Medium gray on error
@@ -130,8 +131,8 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgr
       if (isPaused) {
         videoElement.pause()
       } else {
-        videoElement.play().catch(error => {
-          console.error('Background video play failed:', error)
+        videoElement.play().catch(err => {
+          console.error('Background video play failed:', err)
         })
       }
     }

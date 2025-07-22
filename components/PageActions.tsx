@@ -1,6 +1,5 @@
 import { AiOutlineRetweet } from '@react-icons/all-files/ai/AiOutlineRetweet'
 import { IoHeartOutline } from '@react-icons/all-files/io5/IoHeartOutline'
-
 import styles from 'styles/components/common.module.css'
 
 /**

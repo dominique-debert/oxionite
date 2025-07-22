@@ -1,10 +1,10 @@
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import * as React from 'react'
 
-import * as types from '@/lib/types'
-import { mapImageUrl } from '@/lib/map-image-url'
+import type * as types from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
+import { mapImageUrl } from '@/lib/map-image-url'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
 interface CategoryPageProps {
@@ -45,9 +45,9 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
     
     // Recursively collect posts from children
     if (pageInfo.children && pageInfo.children.length > 0) {
-      pageInfo.children.forEach(child => {
+      for (const child of pageInfo.children) {
         collectPosts(child)
-      })
+      }
     }
   }
   
@@ -123,7 +123,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ pageProps }) => {
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       return `${year}.${month}.${day}`
-    } catch (error) {
+    } catch {
       return dateString
     }
   }

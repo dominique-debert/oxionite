@@ -1,9 +1,9 @@
 import { type GetServerSideProps } from 'next'
-
-import type { PageProps, PageInfo, ExtendedRecordMap } from '@/lib/types'
 import { Home } from 'pages/_home/Home'
-import { getSiteMap } from '@/lib/get-site-map'
+
+import type { ExtendedRecordMap,PageInfo, PageProps } from '@/lib/types'
 import { site } from '@/lib/config'
+import { getSiteMap } from '@/lib/get-site-map'
 import { getPage } from '@/lib/notion'
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (
@@ -39,18 +39,18 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
 
     return {
       props: {
-        site: site,
-        siteMap: siteMap,
+        site,
+        siteMap,
         pageId: 'home', // Add pageId for TopNav to render
         homeRecordMaps
       }
     }
-  } catch (error) {
-    console.error('Error in getServerSideProps for locale:', locale, error)
+  } catch (err) {
+    console.error('Error in getServerSideProps for locale:', locale, err)
 
     return {
       props: {
-        site: site,
+        site,
         siteMap: undefined,
         pageId: 'home' // Add pageId for TopNav to render
       }

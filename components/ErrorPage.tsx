@@ -1,8 +1,10 @@
 import * as React from 'react'
-import { PageHead } from './PageHead'
 import styles from 'styles/components/common.module.css'
-import * as config from '@/lib/config'
+
 import type { Site } from '@/lib/types'
+import * as config from '@/lib/config'
+
+import { PageHead } from './PageHead'
 
 export const ErrorPage: React.FC<{ statusCode: number, site: Site }> = ({ statusCode, site }) => {
   const title = statusCode === 404 ? 'Page Not Found' : 'Error'
