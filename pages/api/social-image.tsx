@@ -270,13 +270,11 @@ export async function getNotionPageInfo({
     parentPageId: null,
     childrenPageIds: [],
     language: null,
-    translationOf: [],
     public: true,
     description: null,
     date: null,
     children: [],
     status: getPageProperty<string>('status', block, recordMap) || getPageProperty<string>('Status', block, recordMap) || 'draft',
-    translations: []
   }
 
   return {
