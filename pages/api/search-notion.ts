@@ -57,7 +57,7 @@ export default async function searchNotion(
       }
     })
     .filter(Boolean)
-    .filter((result) => result.type === 'Post' || result.type === 'Category')
+    .filter((result) => result && (result.type === 'Post' || result.type === 'Category'))
 
   console.log(`>>> lambda search-notion (${augmentedResults.length} results)`)
 

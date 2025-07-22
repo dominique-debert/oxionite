@@ -24,7 +24,7 @@ const getNavigationLinkPages = pMemoize(
 
     if (navigationStyle !== 'default' && navigationLinkPageIds.length) {
       return pMap(
-        navigationLinkPageIds,
+        navigationLinkPageIds as string[],
         async (navigationLinkPageId) =>
           notion.getPage(navigationLinkPageId, {
             chunkLimit: 1,

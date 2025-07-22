@@ -1,6 +1,6 @@
 import { type GetServerSideProps } from 'next'
 
-import type { ExtendedRecordMap,PageInfo, PageProps } from '@/lib/types'
+import type { ExtendedRecordMap, PageProps } from '@/lib/types'
 import { Home } from '@/components/home/Home'
 import { site } from '@/lib/config'
 import { getSiteMap } from '@/lib/get-site-map'
