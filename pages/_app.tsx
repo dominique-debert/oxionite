@@ -31,6 +31,7 @@ import * as types from '@/lib/types'
 import { SideNav } from '@/components/SideNav'
 import { TopNav } from '@/components/TopNav'
 import Background from '@/components/Background'
+import { Footer } from '@/components/Footer'
 import { mapImageUrl } from '@/lib/map-image-url'
 
 if (typeof window !== 'undefined') {
@@ -232,21 +233,31 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   console.log('DEBUG: Rendering main layout - isMobile:', isMobile, 'isMobileMenuOpen:', isMobileMenuOpen)
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      height: '100vh',
-      overflow: 'hidden'
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        height: '100vh',
+        overflow: 'hidden'
+      }}
+    >
       <Background
-        imageUrl={router.pathname === '/' && backgroundAsset?.type === 'image' ? backgroundAsset.src : notionImageUrl}
-        videoUrl={router.pathname === '/' && backgroundAsset?.type === 'video' ? backgroundAsset.src : undefined}
+        imageUrl={
+          router.pathname === '/' && backgroundAsset?.type === 'image'
+            ? backgroundAsset.src
+            : notionImageUrl
+        }
+        videoUrl={
+          router.pathname === '/' && backgroundAsset?.type === 'video'
+            ? backgroundAsset.src
+            : undefined
+        }
         scrollProgress={scrollProgress}
         isPaused={isHeroPaused}
       />
 
       {/* Mobile Menu Overlay */}
       {isMobile && isMobileMenuOpen && (
-        <div 
+        <div
           style={{
             position: 'fixed',
             top: 0,
@@ -265,46 +276,63 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
 
       {/* Render our SideNav component when siteMap is available */}
       {siteMap && (
-        <SideNav 
-          siteMap={siteMap} 
-          block={block} 
+        <SideNav
+          siteMap={siteMap}
+          block={block}
           isMobile={isMobile}
           isMobileMenuOpen={isMobileMenuOpen}
         />
       )}
 
-      <main style={{ 
-        flex: 1, 
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        overflow: 'hidden',
-        position: 'relative' /* Set position context for TopNav */
-      }}>
+      <main
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          overflow: 'hidden',
+          position: 'relative' /* Set position context for TopNav */
+        }}
+      >
         {/* TopNav is now positioned absolutely within this main container */}
         {siteMap && pageProps.pageId && (
-          <TopNav 
-            pageProps={pageProps} 
+          <TopNav
+            pageProps={pageProps}
             isMobile={isMobile}
             onToggleMobileMenu={toggleMobileMenu}
           />
         )}
-        
-        <div ref={scrollRef} onScroll={handleScroll} style={{ 
-          flex: 1,
-          overflow: 'auto',
-          paddingTop: '88px', /* Add padding to prevent content overlap */
-          paddingRight: paddingRight
-        }}>
+
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          style={{
+            flex: 1,
+            overflow: 'auto',
+            paddingTop: '88px', /* Add padding to prevent content overlap */
+            paddingRight: paddingRight
+          }}
+        >
           <div
             className='glass-content-panel'
             style={{
               display: isCategory ? 'flex' : 'block',
-              justifyContent: isCategory && (pageInfo as any)?.postsCount === 0 ? 'stretch' : 'center'
+              justifyContent:
+                isCategory && (pageInfo as any)?.postsCount === 0
+                  ? 'stretch'
+                  : 'center'
             }}
           >
-            <Component {...pageProps} isMobile={isMobile} showTOC={showTOC} setBackgroundAsset={setBackgroundAsset} isHeroPaused={isHeroPaused} setIsHeroPaused={setIsHeroPaused} />
+            <Component
+              {...pageProps}
+              isMobile={isMobile}
+              showTOC={showTOC}
+              setBackgroundAsset={setBackgroundAsset}
+              isHeroPaused={isHeroPaused}
+              setIsHeroPaused={setIsHeroPaused}
+            />
           </div>
+          <Footer />
         </div>
       </main>
     </div>

@@ -12,7 +12,7 @@ export interface PageError {
 }
 
 export interface PageProps {
-  site: Site
+  site: Site | null
   recordMap?: ExtendedRecordMap
   pageId?: string
   error?: any
@@ -22,6 +22,9 @@ export interface PageProps {
   isPrivate?: boolean
   topLevelPageInfo?: PageInfo | null
   showTOC?: boolean
+  setBackgroundAsset?: (asset: { type: 'image' | 'video'; src: string } | null) => void
+  isHeroPaused?: boolean
+  setIsHeroPaused?: (isPaused: boolean) => void
 }
 
 export interface Params extends ParsedUrlQuery {

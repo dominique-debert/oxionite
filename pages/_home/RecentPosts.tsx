@@ -12,11 +12,6 @@ const RecentPosts: React.FC<RecentPostsProps> = ({ siteMap }) => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap)
       .filter((page) => page.type === 'Post')
-      .sort((a, b) => {
-        const dateA = new Date(a.published || a.lastUpdated || 0)
-        const dateB = new Date(b.published || b.lastUpdated || 0)
-        return dateB.getTime() - dateA.getTime()
-      })
       .slice(0, 6)
   }, [siteMap])
 
@@ -33,7 +28,6 @@ const RecentPosts: React.FC<RecentPostsProps> = ({ siteMap }) => {
               <div className={styles.postMeta}>
                 <time className={styles.postDate}>
                   {new Date(
-                    post.published || post.lastUpdated || ''
                   ).toLocaleDateString()}
                 </time>
               </div>

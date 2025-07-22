@@ -7,6 +7,7 @@ export async function pageAcl({
 }: PageProps): Promise<PageProps | undefined> {
   if (!site) {
     return {
+      site: null,
       error: {
         statusCode: 404,
         message: 'Unable to resolve notion site'
@@ -16,9 +17,10 @@ export async function pageAcl({
 
   if (!recordMap) {
     return {
+      site,
       error: {
         statusCode: 404,
-        message: `Unable to resolve page for domain "${site.domain}". Notion page "${pageId}" not found.`
+        message: `Unable to resolve page for domain "${site?.domain}". Notion page "${pageId}" not found.`
       }
     }
   }
@@ -28,6 +30,7 @@ export async function pageAcl({
 
   if (!rootKey) {
     return {
+      site,
       error: {
         statusCode: 404,
         message: `Unable to resolve page for domain "${site.domain}". Notion page "${pageId}" invalid data.`
@@ -45,6 +48,7 @@ export async function pageAcl({
   ) {
     if (process.env.NODE_ENV) {
       return {
+        site,
         error: {
           statusCode: 404,
           message: `Notion page "${pageId}" doesn't belong to the Notion workspace owned by "${site.domain}".`

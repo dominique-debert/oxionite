@@ -76,6 +76,7 @@ export async function resolveNotionPage(
       } else {
         // note: we're purposefully not caching URI to pageId mappings for 404s
         return {
+          site,
           error: {
             message: `Not found "${rawPageId}"`,
             statusCode: 404
@@ -84,10 +85,19 @@ export async function resolveNotionPage(
       }
     }
   } else {
-    pageId = site.rootNotionPageId
+    pageId = site.rootNotionPageId ?? undefined
 
-    console.log(site)
-    recordMap = await getPage(pageId)
+    if (pageId) {
+      recordMap = await getPage(pageId)
+    } else {
+      return {
+        site,
+        error: {
+          message: 'No root page ID configured for this site',
+          statusCode: 404
+        }
+      }
+    }
   }
 
   const props: PageProps = { site, recordMap, pageId }
