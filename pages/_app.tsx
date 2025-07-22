@@ -118,14 +118,11 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   // Extract siteMap and recordMap for the SideNav component
   const { siteMap, recordMap, pageId } = pageProps
 
-  // Get the page cover image from the Notion data
-  const pageBlockForCover = pageId ? recordMap?.block?.[pageId]?.value : undefined
-  const pageCover = pageBlockForCover?.format?.page_cover
-  const notionImageUrl = pageBlockForCover ? mapImageUrl(pageCover, pageBlockForCover) : undefined
+  const block = pageId && recordMap ? recordMap.block[pageId]?.value : undefined
 
-  // Extract block from recordMap for search functionality
-  const keys = Object.keys(recordMap?.block || {})
-  const block = keys[0] ? recordMap?.block?.[keys[0]]?.value : undefined
+  // Get the page cover image from the Notion data
+  const pageCover = block?.format?.page_cover
+  const notionImageUrl = block ? mapImageUrl(pageCover, block) : undefined
 
   // Get page info to determine layout style
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null

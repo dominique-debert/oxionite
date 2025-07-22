@@ -4,7 +4,7 @@ import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
 import { IoChevronForward } from '@react-icons/all-files/io5/IoChevronForward'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useCallback, useEffect,useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import styles from 'styles/components/CategoryTree.module.css'
 
@@ -111,7 +111,9 @@ function RecursiveCategoryTree({ items, level = 0, expandedItems, toggleItemExpa
 
   return (
     <div className={styles.recursiveContainer}>
-      {sortedItems?.map((item) => {
+      {sortedItems
+        ?.filter((item) => item.public !== false) // Render only public items
+        .map((item) => {
         const hasChildren = item.children && item.children.length > 0
         const isExpanded = !!expandedItems[item.pageId]
 

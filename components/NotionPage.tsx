@@ -234,7 +234,13 @@ export function NotionPage({
   }
 
   const keys = Object.keys(recordMap.block)
-  const block = recordMap.block[keys[0]]?.value
+  const firstKey = keys[0]
+
+  if (!firstKey) {
+    return <Page404 site={site} />
+  }
+
+  const block = recordMap.block[firstKey]?.value
 
   if (!block) {
     return <Page404 site={site} />
@@ -244,6 +250,7 @@ export function NotionPage({
 
   const memoizedActions = React.useMemo(
     () => (tweetId ? <PageActions tweet={tweetId} /> : null),
+    
     [tweetId]
   )
 

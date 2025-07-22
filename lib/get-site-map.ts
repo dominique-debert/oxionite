@@ -87,9 +87,8 @@ async function getAllPagesFromDatabase(
           block,
           collectionRecordMap
         ) as PageInfo['type']) || 'Page'
-      const status =
-        getPageProperty<string>('Status', block, collectionRecordMap) || 'Draft'
-      const isPublic = status === 'Public'
+      const status = getPageProperty<string>('Status', block, collectionRecordMap) || 'Draft'
+      const isPublic = status.toLowerCase() === 'public'
       const slug = getPageProperty<string>('Slug', block, collectionRecordMap)
       const language = getPageProperty<string>(
         'Language',
@@ -195,7 +194,7 @@ function buildNavigationTree(
 ): PageInfo[] {
   const publicPageInfoMap: Record<string, PageInfo> = Object.fromEntries(
     Object.entries(pageInfoMap).filter(([, pageInfo]) => {
-      return pageInfo.public !== false
+      return pageInfo.status === 'Public'
     })
   )
 

@@ -54,9 +54,7 @@ export function SideNav({
     return filterNavigationItems(siteMap.navigationTree, locale)
   }, [siteMap?.navigationTree, locale])
 
-  if (!siteMap?.navigationTree || filteredNavigationTree.length === 0) {
-    return null
-  }
+
 
   const asideClasses = cs(
     styles.sideNav,
