@@ -3,10 +3,14 @@ import styles from 'styles/components/common.module.css'
 
 import type { Site } from '@/lib/types'
 
-
 import { PageHead } from './PageHead'
 
-export function ErrorPage({ statusCode, site }: { statusCode: number; site: Site }) {
+interface ErrorPageProps {
+  statusCode: number
+  site: Site
+}
+
+export function ErrorPage({ statusCode, site }: ErrorPageProps) {
   const title = statusCode === 404 ? 'Page Not Found' : 'Error'
 
   return (

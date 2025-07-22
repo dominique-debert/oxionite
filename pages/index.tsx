@@ -1,7 +1,7 @@
 import { type GetServerSideProps } from 'next'
-import { Home } from 'pages/_home/Home'
 
 import type { ExtendedRecordMap,PageInfo, PageProps } from '@/lib/types'
+import { Home } from '@/components/home/Home'
 import { site } from '@/lib/config'
 import { getSiteMap } from '@/lib/get-site-map'
 import { getPage } from '@/lib/notion'

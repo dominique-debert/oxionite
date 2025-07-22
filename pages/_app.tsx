@@ -13,10 +13,9 @@ import '../styles/prism-theme.css'
 import '../styles/glass-theme.css'
 
 import type { AppProps } from 'next/app'
-
-import { useRouter } from 'next/router'
 import * as Fathom from 'fathom-client'
-
+import { useRouter } from 'next/router'
+import { posthog } from 'posthog-js'
 import * as React from 'react'
 
 import type * as types from '@/lib/types'
@@ -28,7 +27,8 @@ import { bootstrap } from '@/lib/bootstrap-client'
 import {
   fathomConfig,
   fathomId,
-
+  posthogConfig,
+  posthogId
 } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 
@@ -102,10 +102,18 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       if (fathomId) {
         Fathom.trackPageview()
       }
+
+      if (posthogId) {
+        posthog.capture('$pageview')
+      }
     }
 
     if (fathomId) {
       Fathom.load(fathomId, fathomConfig)
+    }
+
+    if (posthogId) {
+      posthog.init(posthogId, posthogConfig)
     }
 
     router.events.on('routeChangeComplete', onRouteChangeComplete)
@@ -118,16 +126,15 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   // Extract siteMap and recordMap for the SideNav component
   const { siteMap, recordMap, pageId } = pageProps
 
-  const block = pageId && recordMap ? recordMap.block[pageId]?.value : undefined
-
   // Get the page cover image from the Notion data
-  const pageCover = block?.format?.page_cover
-  const notionImageUrl = block ? mapImageUrl(pageCover, block) : undefined
+  const pageBlockForCover = pageId ? recordMap?.block?.[pageId]?.value : undefined
+  const pageCover = pageBlockForCover?.format?.page_cover
+  const notionImageUrl = pageBlockForCover ? mapImageUrl(pageCover, pageBlockForCover) : undefined
+
 
   // Get page info to determine layout style
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
 
-  // Calculate TOC display in real-time for applying container padding
   const isCategory = pageInfo?.type === 'Category'
 
   // Calculate TOC display in real-time for applying container padding
@@ -144,17 +151,15 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   }, [])
 
   const showTOC = React.useMemo(() => {
-    if (!block || !recordMap?.block) return false
+    if (!pageInfo || !recordMap) return false
 
-    const isBlogPost =
-      !!(pageInfo && block?.type === 'page' && block?.parent_table === 'collection')
-    const isSubPage = !pageInfo && block?.type === 'page'
+    const isBlogPost = pageInfo.type === 'Post'
 
-    if (!isBlogPost && !isSubPage) return false
+    if (!isBlogPost) return false
 
     let headerCount = 0
     for (const blockWrapper of Object.values(recordMap.block)) {
-      const blockData = blockWrapper?.value
+      const blockData = (blockWrapper as any)?.value
       if (blockData?.type === 'header' || blockData?.type === 'sub_header' || blockData?.type === 'sub_sub_header') {
         headerCount++
       }
@@ -163,7 +168,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     const minTableOfContentsItems = 3
     // Also check screen width
     return headerCount >= minTableOfContentsItems && !isMobile && screenWidth >= 1300
-  }, [block, recordMap, pageInfo, isMobile, screenWidth])
+  }, [pageInfo, recordMap, isMobile, screenWidth])
 
 
   
@@ -252,7 +257,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       {siteMap && (
         <SideNav
           siteMap={siteMap}
-          block={block}
           isMobile={isMobile}
           isMobileMenuOpen={isMobileMenuOpen}
         />

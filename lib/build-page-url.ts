@@ -22,8 +22,9 @@ export const buildPageUrl = (pageId: string, siteMap: SiteMap): string => {
     path.unshift(pageInfo.slug)
 
     // Check if the current page is a top-level page in the navigation tree
+    const idInLoop = currentPageId
     const isTopLevel = siteMap.navigationTree.some(
-      (item) => item.pageId === currentPageId
+      (item) => item.pageId === idInLoop
     )
     if (isTopLevel) {
       // We've reached the top of the hierarchy for this branch

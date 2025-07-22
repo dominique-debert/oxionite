@@ -1,8 +1,12 @@
+import type { ExtendedRecordMap } from 'notion-types'
 import React from 'react'
 import { NotionRenderer } from 'react-notion-x'
-import type { ExtendedRecordMap } from 'notion-types'
 
-export function NotionComments({ recordMap }: { recordMap: ExtendedRecordMap }) {
+interface NotionCommentsProps {
+  recordMap: ExtendedRecordMap
+}
+
+export function NotionComments({ recordMap }: NotionCommentsProps) {
   if (!recordMap) {
     return null
   }

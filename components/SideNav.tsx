@@ -5,7 +5,6 @@ import { useRouter } from 'next/router'
 import * as React from 'react'
 
 import type * as types from '@/lib/types'
-import { useI18n } from '@/lib/i18n'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SideNav.module.css'
 
@@ -33,19 +32,17 @@ function filterNavigationItems(items: types.PageInfo[], currentLocale: string): 
 
 export function SideNav({ 
   siteMap, 
-  block,
   isMobile = false,
   isMobileMenuOpen = false
 }: { 
   siteMap: types.SiteMap
-  block?: any
   isMobile?: boolean
   isMobileMenuOpen?: boolean
 }) {
   const router = useRouter()
   const { locale } = router
   const { isDarkMode } = useDarkMode()
-  const t = useI18n(locale || 'ko')
+
 
   const filteredNavigationTree = React.useMemo(() => {
     if (!siteMap?.navigationTree || !locale) {
@@ -66,7 +63,7 @@ export function SideNav({
 
   return (
     <aside className={asideClasses} style={!isMobile ? { margin: '1rem 0 1rem 1rem' } : {}}>
-      <CategoryTree items={filteredNavigationTree} block={block} />
+      <CategoryTree items={filteredNavigationTree} />
     </aside>
   )
 }

@@ -40,7 +40,7 @@ const mapRange = (
 }
 
 // Gets the average luminance of an image by sampling it
-const getAverageLuminance = async (imgSrc: string): Promise<number> => {
+const getAverageLuminance = (imgSrc: string): Promise<number> => {
   return new Promise((resolve) => {
     const img = new Image()
     img.crossOrigin = 'Anonymous'
@@ -49,8 +49,7 @@ const getAverageLuminance = async (imgSrc: string): Promise<number> => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (!ctx) {
-        resolve(128) // Fallback to medium gray
-        return
+        return resolve(128) // Fallback to medium gray
       }
       canvas.width = 1
       canvas.height = 1
@@ -72,10 +71,10 @@ const getAverageLuminance = async (imgSrc: string): Promise<number> => {
         resolve(128) // Fallback on error
       }
     })
-    img.onerror = () => {
+    img.addEventListener('error', () => {
       console.error(`Failed to load image: ${imgSrc}`)
       resolve(128) // Medium gray on error
-    }
+    })
   })
 }
 
@@ -94,32 +93,37 @@ function Background({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }
   const backgroundRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const calculateAndSetOpacity = React.useCallback(async () => {
-    const luminance = await getAverageLuminance(backgroundSource)
-
-    let newOpacity: number
-    if (isDarkMode) {
-      newOpacity = mapRange(
-        luminance, 0, 255,
-        DARK_MODE_OPACITY_RANGE.min, DARK_MODE_OPACITY_RANGE.max
-      )
-    } else {
-      newOpacity = mapRange(
-        luminance, 0, 255,
-        LIGHT_MODE_OPACITY_RANGE.max, LIGHT_MODE_OPACITY_RANGE.min
-      )
-    }
-    setOverlayOpacity(newOpacity)
-  }, [backgroundSource, isDarkMode])
-
   useEffect(() => {
     if (videoUrl) {
       setOverlayOpacity(0.4)
       return
     }
 
+    let isMounted = true
+
+    const calculateAndSetOpacity = async () => {
+      const luminance = await getAverageLuminance(backgroundSource)
+      if (!isMounted) return
+
+      let newOpacity: number
+      if (isDarkMode) {
+        newOpacity = mapRange(
+          luminance, 0, 255,
+          DARK_MODE_OPACITY_RANGE.min, DARK_MODE_OPACITY_RANGE.max
+        )
+      } else {
+        newOpacity = mapRange(
+          luminance, 0, 255,
+          LIGHT_MODE_OPACITY_RANGE.max, LIGHT_MODE_OPACITY_RANGE.min
+        )
+      }
+      setOverlayOpacity(newOpacity)
+    }
+
     void calculateAndSetOpacity()
-  }, [calculateAndSetOpacity, videoUrl])
+
+    return () => { isMounted = false }
+  }, [backgroundSource, isDarkMode, videoUrl])
 
   useEffect(() => {
     const videoElement = videoRef.current

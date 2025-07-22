@@ -20,7 +20,7 @@ export function PostHeader({
   recordMap, 
   isBlogPost,
   isMobile = false,
-  variant = 'full'
+  variant = 'full' // Default to 'full'
 }: PostHeaderProps) {
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
 
