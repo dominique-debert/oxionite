@@ -8,7 +8,7 @@ interface RecentPostsProps {
   siteMap?: SiteMap
 }
 
-const RecentPosts: React.FC<RecentPostsProps> = ({ siteMap }) => {
+export default function RecentPosts({ siteMap }: RecentPostsProps) {
   const recentPosts = React.useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap)
@@ -38,6 +38,4 @@ const RecentPosts: React.FC<RecentPostsProps> = ({ siteMap }) => {
       ))}
     </section>
   )
-}
-
-export default RecentPosts 
+} 

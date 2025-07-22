@@ -71,10 +71,10 @@ const getAverageLuminance = (imgSrc: string): Promise<number> => {
         resolve(128) // Fallback on error
       }
     })
-    img.onerror = () => {
+    img.addEventListener('error', () => {
       console.error(`Failed to load image: ${imgSrc}`)
       resolve(128) // Medium gray on error
-    }
+    })
   })
 }
 
@@ -86,7 +86,7 @@ interface BackgroundProps {
 }
 
 // A component that renders a blurred, scrolling background.
-const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }) => {
+export default function Background({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }: BackgroundProps) {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
   const backgroundSource = imageUrl || '/default_background.webp'
@@ -120,7 +120,7 @@ const Background: React.FC<BackgroundProps> = ({ imageUrl, videoUrl, scrollProgr
       setOverlayOpacity(newOpacity)
     }
 
-    calculateAndSetOpacity()
+    void calculateAndSetOpacity()
 
     return () => { isMounted = false }
   }, [backgroundSource, isDarkMode, videoUrl])

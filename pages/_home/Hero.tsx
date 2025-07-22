@@ -3,7 +3,7 @@ import React, { useCallback,useEffect, useRef, useState } from 'react'
 import siteConfig from 'site.config'
 import styles from 'styles/pages/home.module.css'
 
-import type { Site } from '@/lib/types'
+
 
 const IMAGE_DURATION = 3000 // 3 seconds
 
@@ -15,14 +15,12 @@ interface HeroAsset {
 }
 
 interface HeroProps {
-  site: Site
-  isMobile: boolean
   onAssetChange: (asset: HeroAsset | null) => void
   isPaused: boolean
   setIsPaused: (isPaused: boolean) => void
 }
 
-const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, setIsPaused }) => {
+export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps) {
   const [isVisuallyPaused, setIsVisuallyPaused] = useState(false)
   const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -150,7 +148,7 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [currentIndex, heroAssets, onAssetChange, goToNext])
+  }, [currentIndex, heroAssets, onAssetChange, goToNext, isPaused])
 
   useEffect(() => {
     const asset = heroAssets?.[currentIndex]
@@ -283,4 +281,3 @@ const Hero: React.FC<HeroProps> = ({ site, isMobile, onAssetChange, isPaused, se
   )
 }
 
-export default Hero

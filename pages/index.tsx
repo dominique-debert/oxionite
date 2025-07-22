@@ -29,12 +29,12 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
       const recordMapPromises = homePageIds.map((id) => getPage(id))
       const recordMaps = await Promise.all(recordMapPromises)
       
-      recordMaps.forEach((recordMap: ExtendedRecordMap, index: number) => {
+      for (const [index, recordMap] of recordMaps.entries()) {
         const pageId = homePageIds[index]
         if (pageId) {
           homeRecordMaps[pageId] = recordMap
         }
-      })
+      }
     }
 
     return {

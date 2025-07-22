@@ -10,7 +10,7 @@ interface HomeNavProps {
   onNavClick: (tab: string, pageId?: string) => void
 }
 
-const HomeNav: React.FC<HomeNavProps> = ({ homePages, activeTab, onNavClick }) => {
+export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavProps) {
   const navItems = ['Recent Posts', 'Categories', 'Tags']
 
   return (
@@ -37,4 +37,4 @@ const HomeNav: React.FC<HomeNavProps> = ({ homePages, activeTab, onNavClick }) =
   )
 }
 
-export default HomeNav 
+ 

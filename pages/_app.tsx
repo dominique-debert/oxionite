@@ -27,7 +27,6 @@ import { bootstrap } from '@/lib/bootstrap-client'
 import {
   fathomConfig,
   fathomId,
-  isServer,
   posthogConfig,
   posthogId
 } from '@/lib/config'
@@ -139,20 +138,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   // Get page info to determine layout style
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
 
-  // Determine page type for cover image logic
-  const isPost = pageInfo?.type === 'Post'
-  const isCategoryPage = pageInfo?.type === 'Category'
-  const isSubPage = !pageInfo && block?.type === 'page'
-
-  // Determine the cover image URL to pass to the Background component
-  let coverImageUrl: string | undefined
-  if ((isPost || isCategoryPage) && pageInfo?.coverImage) {
-    coverImageUrl = pageInfo.coverImage
-  } else if (isSubPage && block?.format?.page_cover) {
-    // For sub-pages, we need to construct the URL from the block data
-    coverImageUrl = mapImageUrl(block.format.page_cover, block)
-  }
-
   const isCategory = pageInfo?.type === 'Category'
 
   // Calculate TOC display in real-time for applying container padding
@@ -178,12 +163,12 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     if (!isBlogPost && !isSubPage) return false
 
     let headerCount = 0
-    Object.values(recordMap.block).forEach((blockWrapper: any) => {
-      const blockData = blockWrapper?.value
+    for (const blockWrapper of Object.values(recordMap.block)) {
+      const blockData = (blockWrapper as any)?.value
       if (blockData?.type === 'header' || blockData?.type === 'sub_header' || blockData?.type === 'sub_sub_header') {
         headerCount++
       }
-    })
+    }
 
     const minTableOfContentsItems = 3
     // Also check screen width

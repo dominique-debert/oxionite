@@ -1,5 +1,4 @@
 import type { GetServerSideProps } from 'next'
-import { type ExtendedRecordMap } from 'notion-types'
 import {
   getBlockParentPage,
   getBlockTitle,

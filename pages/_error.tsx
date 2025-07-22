@@ -3,8 +3,6 @@ import { ErrorPage } from 'components/ErrorPage'
 import * as React from 'react'
 import site from 'site.config'
 
-import type { PageProps } from '@/lib/types'
-
 function CustomErrorPage({ statusCode }: { statusCode: number }) {
   return <ErrorPage site={site} statusCode={statusCode} />
 }
