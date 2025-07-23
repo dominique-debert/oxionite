@@ -45,6 +45,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const [scrollProgress, setScrollProgress] = React.useState(0)
   const [backgroundAsset, setBackgroundAsset] = React.useState<{ type: 'image' | 'video'; src: string } | null>(null)
   const [isHeroPaused, setIsHeroPaused] = React.useState(false)
+  const [heroStream, setHeroStream] = React.useState<MediaStream | null>(null)
 
   const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
@@ -203,7 +204,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           height: '100vh',
           overflow: 'hidden'
         }}>
-          <Component {...pageProps} isMobile={isMobile} setBackgroundAsset={setBackgroundAsset} isHeroPaused={isHeroPaused} setIsHeroPaused={setIsHeroPaused} />
+          <Component {...pageProps} isMobile={isMobile} setBackgroundAsset={setBackgroundAsset} isHeroPaused={isHeroPaused} setIsHeroPaused={setIsHeroPaused} setHeroStream={setHeroStream} />
         </main>
       </div>
     )
@@ -232,6 +233,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         }
         scrollProgress={scrollProgress}
         isPaused={isHeroPaused}
+        heroStream={heroStream}
       />
 
       {/* Mobile Menu Overlay */}
@@ -308,6 +310,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
               setBackgroundAsset={setBackgroundAsset}
               isHeroPaused={isHeroPaused}
               setIsHeroPaused={setIsHeroPaused}
+              setHeroStream={setHeroStream}
             />
           </div>
           <Footer />

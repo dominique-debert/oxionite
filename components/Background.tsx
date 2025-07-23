@@ -83,10 +83,17 @@ interface BackgroundProps {
   videoUrl?: string
   scrollProgress?: number
   isPaused?: boolean
+  heroStream?: MediaStream | null
 }
 
 // A component that renders a blurred, scrolling background.
-function Background({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }: BackgroundProps) {
+function Background({
+  imageUrl,
+  videoUrl,
+  scrollProgress = 0,
+  isPaused = false,
+  heroStream = null
+}: BackgroundProps) {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
   const backgroundSource = imageUrl || '/default_background.webp'
@@ -127,16 +134,37 @@ function Background({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }
 
   useEffect(() => {
     const videoElement = videoRef.current
-    if (videoUrl && videoElement) {
-      if (isPaused) {
-        videoElement.pause()
-      } else {
-        videoElement.play().catch(err => {
-          console.error('Background video play failed:', err)
+    if (!videoElement) return
+
+    if (heroStream) {
+      // If a stream is provided, use it as the source.
+      // The playback (play/pause) is controlled by the source stream from Hero.
+      if (videoElement.srcObject !== heroStream) {
+        videoElement.srcObject = heroStream
+        videoElement.play().catch((err) => {
+          // Autoplay might be blocked, but we can ignore the error
+          // as user interaction on the Hero component will trigger playback.
+          console.log('Background stream play initially blocked:', err)
         })
       }
+    } else {
+      // Fallback to using videoUrl if no stream is available.
+      videoElement.srcObject = null // Clear any previous stream
+      if (videoUrl && videoElement.src !== videoUrl) {
+        videoElement.src = videoUrl
+      }
+
+      if (videoUrl) {
+        if (isPaused) {
+          videoElement.pause()
+        } else {
+          videoElement.play().catch((err) => {
+            console.error('Background video play failed:', err)
+          })
+        }
+      }
     }
-  }, [isPaused, videoUrl])
+  }, [heroStream, videoUrl, isPaused])
 
   useEffect(() => {
     const element = videoUrl ? videoRef.current : backgroundRef.current
@@ -177,14 +205,14 @@ function Background({ imageUrl, videoUrl, scrollProgress = 0, isPaused = false }
         overflow: 'hidden'
       }}
     >
-      {videoUrl ? (
+      {videoUrl || heroStream ? (
         <video
           ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
-          src={videoUrl}
+          src={!heroStream ? videoUrl : undefined}
           style={backgroundStyle}
         />
       ) : (

@@ -134,6 +134,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     // Start the animation loop
     if (asset.type === 'video' && video) {
       video.currentTime = 0
+      video.play().catch(err => console.error("Hero video play failed on new asset:", err));
       const onCanPlay = () => {
         // Only start playing if not paused from the beginning
         animationFrameRef.current = requestAnimationFrame(animate)

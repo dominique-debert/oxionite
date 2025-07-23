@@ -137,33 +137,15 @@
   z-index: 2;
 }
 
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .heroContainer {
-    aspect-ratio: unset;
-    height: calc(100vh - 88px - 2.5rem); /* Full height minus TopNav and margin */
-    max-width: 100%;
-  }
-  
-  .heroOverlay {
-    padding: 1.5rem;
-  }
-
-  .heroTextShadow {
-    bottom: -10rem; 
-    right: -20rem;
-    width: 250%; 
-    height: 250%; 
-    filter: blur(3rem); 
-  }
-}
-
 .homeNotionContainer {
   display: flex;
   flex-direction: column;
   gap: 2rem;
   padding-right: 34rem;
 }
+
+
+
 
 .mainContent {
   padding: 2rem 0;
@@ -321,3 +303,28 @@
   text-align: center;
 }
 
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .heroContainer {
+    aspect-ratio: unset;
+    height: calc(100vh - 88px - 2.5rem); /* Full height minus TopNav and margin */
+    max-width: 100%;
+  }
+  
+  .heroOverlay {
+    padding: 1.5rem;
+  }
+
+  .heroTextShadow {
+    bottom: -10rem; 
+    right: -20rem;
+    width: 250%; 
+    height: 250%; 
+    filter: blur(3rem); 
+  }
+
+  .homeNotionContainer {
+    padding-right: 2rem;
+  }
+}
