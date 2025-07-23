@@ -136,7 +136,6 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
       video.currentTime = 0
       const onCanPlay = () => {
         // Only start playing if not paused from the beginning
-        if (!isPaused) video.play().catch(err => console.error("Hero video play failed:", err))
         animationFrameRef.current = requestAnimationFrame(animate)
       }
       if (video.readyState >= video.HAVE_ENOUGH_DATA) {
@@ -272,6 +271,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
                 src={asset.src}
                 playsInline
                 muted
+                autoPlay
                 preload="auto"
               />
             ) : (
