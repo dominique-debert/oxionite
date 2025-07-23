@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import siteConfig from 'site.config'
 import styles from 'styles/components/home.module.css'
@@ -13,19 +12,19 @@ interface HeroAsset {
 }
 
 interface HeroProps {
-  onAssetChange: (asset: HeroAsset | null) => void
+  onAssetChange: (asset: HTMLImageElement | HTMLVideoElement | null) => void
   isPaused: boolean
   setIsPaused: (isPaused: boolean) => void
-  setHeroStream: (stream: MediaStream | null) => void
 }
 
-export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStream }: HeroProps) {
+export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps) {
   const [isVisuallyPaused, setIsVisuallyPaused] = useState(false)
   const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [progress, setProgress] = useState(0)
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const imageRef = useRef<HTMLImageElement>(null)
   const animationFrameRef = useRef<number | null>(null)
   const startTimeRef = useRef<number>(0)
   const pauseStartTimeRef = useRef<number>(0)
@@ -73,43 +72,27 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
     }
   }, [])
 
-  // Effect to capture and propagate the video stream
-  useEffect(() => {
-    const asset = heroAssets?.[currentIndex]
-    const video = videoRef.current
-
-    if (asset?.type === 'video' && video) {
-      // Check if the browser supports captureStream
-      if (typeof video.captureStream === 'function') {
-        const stream = video.captureStream()
-        setHeroStream(stream)
-      } else {
-        // Fallback or log for browsers that don't support it
-        console.warn('video.captureStream() is not supported in this browser.')
-        setHeroStream(null)
-      }
-    } else {
-      // Clean up the stream if the asset is not a video or component unmounts
-      setHeroStream(null)
-    }
-
-    // Cleanup function to be called when the component or dependency unmounts
-    return () => {
-      setHeroStream(null)
-    }
-  }, [currentIndex, heroAssets, setHeroStream])
-
-  // --- PROBLEM AREA START ---
-  // This effect should ONLY run when the asset (currentIndex) changes.
-  // It sets up the animation for the NEW asset.
-  // It should NOT re-run when isPaused changes.
+  // This effect runs when the slide changes to manage animations and report the active element.
   useEffect(() => {
     if (!heroAssets || heroAssets.length === 0) {
       onAssetChange(null)
       return
     }
 
-    onAssetChange(heroAssets[currentIndex] || null)
+    const asset = heroAssets[currentIndex]
+    if (!asset) {
+      onAssetChange(null)
+      return
+    }
+
+    // Pass the active DOM element up to the parent.
+    // This runs after the render pass, so the refs should be correctly set.
+    if (asset.type === 'video') {
+      onAssetChange(videoRef.current)
+    } else {
+      onAssetChange(imageRef.current)
+    }
+
     // Reset all timing and progress for the new slide
     setProgress(0)
     startTimeRef.current = 0
@@ -120,14 +103,9 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
       cancelAnimationFrame(animationFrameRef.current)
     }
 
-    const asset = heroAssets[currentIndex]
-    if (!asset) return
-
     const video = videoRef.current
 
     const animate = () => {
-      // If paused (by hold or visibility), just loop without updating progress.
-      // The pause duration is calculated in the `isPaused` effect.
       if (pauseStartTimeRef.current > 0) {
         animationFrameRef.current = requestAnimationFrame(animate)
         return
@@ -142,7 +120,6 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
         return
       }
       
-      // Mark the start time on the very first frame of a new animation
       if (startTimeRef.current === 0) {
         startTimeRef.current = performance.now()
       }
@@ -158,12 +135,12 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
       }
     }
 
-    // Start the animation loop
     if (asset.type === 'video' && video) {
       video.currentTime = 0
-      video.play().catch(err => console.error("Hero video play failed on new asset:", err));
       const onCanPlay = () => {
-        // Only start playing if not paused from the beginning
+        if (!isPaused) {
+          video.play().catch(err => console.error("Hero video play failed:", err))
+        }
         animationFrameRef.current = requestAnimationFrame(animate)
       }
       if (video.readyState >= video.HAVE_ENOUGH_DATA) {
@@ -180,19 +157,14 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  // ❗️ FIX: Removed `isPaused` from the dependency array.
-  // Now this effect only re-runs when the slide changes.
-  }, [currentIndex, heroAssets, onAssetChange, goToNext]) 
-  // --- PROBLEM AREA END ---
+  }, [currentIndex, heroAssets, onAssetChange, goToNext])
 
   // This effect correctly handles the PAUSE/RESUME logic
-  // by manipulating the timing refs without resetting the animation.
   useEffect(() => {
     const asset = heroAssets?.[currentIndex]
     if (!asset) return
 
     if (isPaused) {
-      // If we are not already in a paused state, record the time.
       if (pauseStartTimeRef.current === 0) { 
         pauseStartTimeRef.current = performance.now()
         if (asset.type === 'video' && videoRef.current && !videoRef.current.paused) {
@@ -200,11 +172,8 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
         }
       }
     } else { // Resuming
-      // If we are resuming from a paused state...
       if (pauseStartTimeRef.current > 0) {
-        // ...add the duration of the just-ended pause to the total.
         totalPauseDurationRef.current += performance.now() - pauseStartTimeRef.current
-        // Reset the pause start time.
         pauseStartTimeRef.current = 0
         if (asset.type === 'video' && videoRef.current && videoRef.current.paused) {
           videoRef.current.play().catch(err => console.error("Hero video play failed:", err))
@@ -214,7 +183,6 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
   }, [isPaused, currentIndex, heroAssets])
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    // Only respond to main button (e.g., left-click)
     if (e.button !== 0) return;
     pointerDownTimeRef.current = Date.now()
     pointerStartPosRef.current = { x: e.clientX, y: e.clientY }
@@ -222,7 +190,6 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    // Only respond to main button
     if (e.button !== 0) return;
     const pressDuration = Date.now() - pointerDownTimeRef.current
     const startPos = pointerStartPosRef.current
@@ -235,7 +202,6 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
       movedDistance = Math.hypot(deltaX, deltaY)
     }
 
-    // It's a click, not a hold or scroll.
     if (pressDuration < 200 && movedDistance < 20) {
       const { clientX, currentTarget } = e
       const { left, width } = currentTarget.getBoundingClientRect()
@@ -248,7 +214,6 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
       }
     }
 
-    // Always end the hold on pointer up, this will resume playback if it was a hold.
     setIsHeld(false)
   }
 
@@ -303,13 +268,13 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStre
                 preload="auto"
               />
             ) : (
-              <Image
+              <img
+                ref={index === currentIndex ? imageRef : null}
                 className={styles.heroMedia}
                 src={asset.src}
                 alt={asset.title || 'Hero Image'}
-                fill
-                style={{ objectFit: 'cover' }}
-                priority={index === 0}
+                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                loading={index === 0 ? 'eager' : 'lazy'}
               />
             )}
           </div>

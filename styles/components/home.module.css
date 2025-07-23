@@ -144,9 +144,6 @@
   padding-right: 34rem;
 }
 
-
-
-
 .mainContent {
   padding: 2rem 0;
 }
@@ -323,8 +320,7 @@
     height: 250%; 
     filter: blur(3rem); 
   }
-
   .homeNotionContainer {
-    padding-right: 2rem;
+    padding-right: 0;
   }
 }

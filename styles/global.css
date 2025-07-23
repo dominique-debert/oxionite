@@ -8,8 +8,8 @@ a {
 }
 
 body.light-mode {
-  --border-color: rgba(255, 255, 255, 0.2);
-  --bg-color: rgba(255, 255, 255, 0.0) !important; /* Add transparency */
+  --border-color: rgba(0, 0, 0, 0.2);
+  --bg-color: transparent !important; /* Add transparency */
 
   /* Text Colors */
   --primary-text-color: rgb(50, 48, 44);
@@ -20,20 +20,20 @@ body.light-mode {
   --default-bg-color: rgba(255, 255, 255, 0.3);
   --primary-highlight-color: #1459C2;
   --hover-bg-color: rgba(0, 0, 0, 0.04);
-  --button-bg-color: rgba(255, 255, 255, 0.3);
+  --button-bg-color: rgba(255, 255, 255, 0.05);
   --secondary-bg-color: rgba(0, 0, 0, 0.1);
 
   /* Border Colors */
-  --hover-border-color: rgba(255, 255, 255, 0.1);
+  --hover-border-color: rgba(0, 0, 0, 0.1);
 
   /* Shadow Colors */
-  --shadow-color: rgba(0, 0, 0, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.1);
   --shadow-bg-color: rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode {
   --border-color: rgba(255, 255, 255, 0.2);
-  --bg-color: rgba(26, 26, 26, 0.0) !important; /* Add transparency */
+  --bg-color: transparent !important; /* Add transparency */
 
   /* Text Colors */
   --primary-text-color: rgba(255, 255, 255, 0.9);
@@ -44,7 +44,7 @@ body.dark-mode {
   --default-bg-color: rgba(0, 0, 0, 0.3);
   --primary-highlight-color: #1459C2;
   --hover-bg-color: rgba(255, 255, 255, 0.06);
-  --button-bg-color: rgba(0, 0, 0, 0.3);
+  --button-bg-color: rgba(0, 0, 0, 0.05);
   --secondary-bg-color: rgba(255, 255, 255, 0.1);
 
   /* Border Colors */

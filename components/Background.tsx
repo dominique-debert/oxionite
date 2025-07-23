@@ -1,30 +1,14 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { useDarkMode } from '@/lib/use-dark-mode'
 
 // --- Configuration ---
-// Adjust these values to control the overlay opacity range.
-
-// In Dark Mode, how much should the black overlay appear based on the background's brightness?
-// min: Opacity for the darkest backgrounds (luminance: 0)
-// max: Opacity for the brightest backgrounds (luminance: 255)
 const DARK_MODE_OPACITY_RANGE = { min: 0.2, max: 0.9 }
-
-// In Light Mode, how much should the white overlay appear based on the background's darkness?
-// min: Opacity for the brightest backgrounds (luminance: 255)
-// max: Opacity for the darkest backgrounds (luminance: 0)
 const LIGHT_MODE_OPACITY_RANGE = { min: 0.2, max: 0.7 }
-
-// How much to zoom the background. 1.5 means 150% zoom.
 const BACKGROUND_ZOOM = 1.5
+const BACKGROUND_VISIBLE_START = 0.25
+const BACKGROUND_VISIBLE_END = 0.75
 
-// Defines the visible portion of the background image during scroll.
-// 0.0 is the very top, 1.0 is the very bottom.
-// To avoid blurred edges, we can restrict this range, e.g., from 0.1 to 0.9.
-const BACKGROUND_VISIBLE_START = 0.25 // Start scrolling from 10% down the image
-const BACKGROUND_VISIBLE_END = 0.75   // End scrolling at 90% down the image
-
-// Helper to map a value from one range to another
 const mapRange = (
   value: number,
   inMin: number,
@@ -39,7 +23,6 @@ const mapRange = (
   return Math.max(Math.min(result, B), A)
 }
 
-// Gets the average luminance of an image by sampling it
 const getAverageLuminance = (imgSrc: string): Promise<number> => {
   return new Promise((resolve) => {
     const img = new Image()
@@ -58,13 +41,10 @@ const getAverageLuminance = (imgSrc: string): Promise<number> => {
       const imageData = ctx.getImageData(0, 0, 1, 1).data
       if (imageData && imageData.length >= 3) {
         const [r, g, b] = imageData
-        // The `possibly 'undefined'` error suggests a strict tsconfig setting (`noUncheckedIndexedAccess`).
-        // Adding an explicit check to assure the compiler that these values are numbers.
         if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
           const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
           resolve(luminance)
         } else {
-          // This should be unreachable, but it acts as a safeguard.
           resolve(128)
         }
       } else {
@@ -79,82 +59,99 @@ const getAverageLuminance = (imgSrc: string): Promise<number> => {
 }
 
 interface BackgroundProps {
-  imageUrl?: string | null
-  videoUrl?: string | null
+  source: HTMLImageElement | HTMLVideoElement | string | null
   scrollProgress?: number
-  isPaused?: boolean
-  heroStream?: MediaStream | null
-  pendingHeroStream?: MediaStream | null
-  commitHeroStream?: () => void
 }
 
-const DEFAULT_BACKGROUND_IMAGE = '/default_background.webp'
-
-export function Background({
-  heroStream,
-  scrollProgress = 0,
-  isPaused = false,
-}: BackgroundProps) {
+function Background({ source, scrollProgress = 0 }: BackgroundProps) {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const backgroundRef = useRef<HTMLDivElement>(null)
-  const backgroundSource = useMemo(() => DEFAULT_BACKGROUND_IMAGE, [])
+  const animationFrameRef = useRef<number | null>(null)
 
+  const isElementSource = source instanceof Element
+
+  // --- Opacity Calculation ---
   useEffect(() => {
-    const video = videoRef.current
-    if (video) {
-      if (heroStream) {
-        if (video.srcObject !== heroStream) {
-          video.srcObject = heroStream
-          video.play().catch((error) => console.error('Error playing video:', error))
+    if (typeof source === 'string') {
+      let isMounted = true
+      const calculateAndSetOpacity = async () => {
+        const luminance = await getAverageLuminance(source)
+        if (!isMounted) return
+
+        let newOpacity: number
+        if (isDarkMode) {
+          newOpacity = mapRange(luminance, 0, 255, DARK_MODE_OPACITY_RANGE.min, DARK_MODE_OPACITY_RANGE.max)
+        } else {
+          newOpacity = mapRange(luminance, 0, 255, LIGHT_MODE_OPACITY_RANGE.max, LIGHT_MODE_OPACITY_RANGE.min)
         }
-      } else {
-        video.srcObject = null
+        setOverlayOpacity(newOpacity)
       }
+      void calculateAndSetOpacity()
+      return () => { isMounted = false }
+    } else {
+      setOverlayOpacity(0.4) // Default for video/element-based backgrounds
     }
-  }, [heroStream])
+  }, [source, isDarkMode])
 
+  // --- Canvas Drawing Logic (for Hero) ---
   useEffect(() => {
-    const video = videoRef.current
-    if (video) {
-      if (isPaused) {
-        video.pause()
-      } else {
-        video.play().catch((e) => console.error('Error playing background video:', e))
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
+
+    if (!isElementSource || !ctx || !source) {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
       }
-    }
-  }, [isPaused])
-
-  useEffect(() => {
-    let isMounted = true
-
-    const calculateAndSetOpacity = async () => {
-      const luminance = await getAverageLuminance(backgroundSource)
-      if (!isMounted) return
-
-      let newOpacity: number
-      if (isDarkMode) {
-        newOpacity = mapRange(
-          luminance, 0, 255,
-          DARK_MODE_OPACITY_RANGE.min, DARK_MODE_OPACITY_RANGE.max
-        )
-      } else {
-        newOpacity = mapRange(
-          luminance, 0, 255,
-          LIGHT_MODE_OPACITY_RANGE.max, LIGHT_MODE_OPACITY_RANGE.min
-        )
-      }
-      setOverlayOpacity(newOpacity)
+      return
     }
 
-    void calculateAndSetOpacity()
+    const draw = () => {
+      if (!canvas || !source || !ctx) return
 
-    return () => { isMounted = false }
-  }, [backgroundSource, isDarkMode])
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
 
+      const mediaWidth = source instanceof HTMLVideoElement ? source.videoWidth : source.naturalWidth
+      const mediaHeight = source instanceof HTMLVideoElement ? source.videoHeight : source.naturalHeight
+
+      if (mediaWidth > 0 && mediaHeight > 0) {
+        const canvasAspectRatio = canvas.width / canvas.height
+        const mediaAspectRatio = mediaWidth / mediaHeight
+        let drawWidth, drawHeight, x, y
+
+        if (canvasAspectRatio > mediaAspectRatio) {
+          drawWidth = canvas.width
+          drawHeight = canvas.width / mediaAspectRatio
+        } else {
+          drawHeight = canvas.height
+          drawWidth = canvas.height * mediaAspectRatio
+        }
+
+        x = (canvas.width - drawWidth) / 2
+        y = (canvas.height - drawHeight) / 2
+
+        ctx.drawImage(source, x, y, drawWidth, drawHeight)
+      }
+
+      animationFrameRef.current = requestAnimationFrame(draw)
+    }
+
+    draw()
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+    }
+  }, [isElementSource, source])
+
+  // --- Zoom and Scroll-panning Logic (for both Canvas and Div) ---
   useEffect(() => {
-    const element = backgroundRef.current
+    const element = isElementSource ? canvasRef.current : backgroundRef.current
     if (element) {
       const vh = window.innerHeight
       const movableDistance = vh * (BACKGROUND_ZOOM - 1)
@@ -165,21 +162,28 @@ export function Background({
       const startTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_START
       const endTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_END
 
-      const newTranslateY = startTranslateY + scrollProgress * (endTranslateY - startTranslateY)
+      // Invert the scroll direction
+      const newTranslateY = (endTranslateY + scrollProgress * (startTranslateY - endTranslateY)) * -1
 
       element.style.transform = `scale(${BACKGROUND_ZOOM}) translateY(${newTranslateY}px)`
     }
-  }, [scrollProgress])
+  }, [scrollProgress, isElementSource, source])
 
-  const backgroundStyle: React.CSSProperties = {
+  const baseStyle: React.CSSProperties = {
     position: 'absolute',
     left: 0,
     top: 0,
     width: '100%',
     height: '100vh',
-    objectFit: 'cover',
-    filter: 'blur(40px)',
     transition: 'transform 0.3s ease-out'
+  }
+
+  const blurredStyle: React.CSSProperties = {
+    ...baseStyle,
+    objectFit: 'cover',
+    // @ts-ignore
+    filter: 'blur(40px)',
+    WebkitFilter: 'blur(40px)' // For iOS Safari
   }
 
   return (
@@ -191,32 +195,20 @@ export function Background({
         zIndex: -1,
         overflow: 'hidden'
       }}
-      className='glass-background'
     >
-      {/* This video element shows the active stream */}
-      {heroStream && (
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={backgroundStyle}
-        />
-      )}
-
-      {!heroStream && (
+      {isElementSource ? (
+        <canvas ref={canvasRef} style={blurredStyle} />
+      ) : (
         <div
           ref={backgroundRef}
           style={{
-            ...backgroundStyle,
-            backgroundImage: `url(${backgroundSource})`,
+            ...blurredStyle,
+            backgroundImage: `url(${source || '/default_background.webp'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}
         />
       )}
-      {/* The dark/light mode overlay */}
       <div
         style={{
           position: 'absolute',
@@ -235,3 +227,4 @@ export function Background({
 }
 
 export default Background
+

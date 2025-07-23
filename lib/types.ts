@@ -22,7 +22,7 @@ export interface PageProps {
   isPrivate?: boolean
   topLevelPageInfo?: PageInfo | null
   showTOC?: boolean
-  setBackgroundAsset?: (asset: { type: 'image' | 'video'; src: string } | null) => void
+  setBackgroundAsset?: (asset: HTMLImageElement | HTMLVideoElement | string | null) => void
   isHeroPaused?: boolean
   setIsHeroPaused?: (isPaused: boolean) => void
   heroStream?: MediaStream | null

@@ -4,7 +4,7 @@
   padding: 6px 12px;
   border-radius: 9999px;
   background-color: var(--default-bg-color);
-  border: 1px solid var(--default-border-color);
+  border: 1px solid var(--border-color);
   transition: all 0.2s ease-in-out;
   margin-right: 8px;
   text-decoration: none; /* Remove underline from links */
