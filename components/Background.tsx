@@ -163,7 +163,7 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
       const endTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_END
 
       // Invert the scroll direction
-      const newTranslateY = endTranslateY + scrollProgress * (startTranslateY - endTranslateY)
+      const newTranslateY = (endTranslateY + scrollProgress * (startTranslateY - endTranslateY)) * -1
 
       element.style.transform = `scale(${BACKGROUND_ZOOM}) translateY(${newTranslateY}px)`
     }
