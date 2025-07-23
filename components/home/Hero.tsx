@@ -1,9 +1,7 @@
 import Image from 'next/image'
-import React, { useCallback,useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import siteConfig from 'site.config'
 import styles from 'styles/components/home.module.css'
-
-
 
 const IMAGE_DURATION = 3000 // 3 seconds
 
@@ -25,7 +23,6 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
   const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [progress, setProgress] = useState(0)
-
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const animationFrameRef = useRef<number | null>(null)
@@ -75,6 +72,10 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     }
   }, [])
 
+  // --- PROBLEM AREA START ---
+  // This effect should ONLY run when the asset (currentIndex) changes.
+  // It sets up the animation for the NEW asset.
+  // It should NOT re-run when isPaused changes.
   useEffect(() => {
     if (!heroAssets || heroAssets.length === 0) {
       onAssetChange(null)
@@ -82,6 +83,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     }
 
     onAssetChange(heroAssets[currentIndex] || null)
+    // Reset all timing and progress for the new slide
     setProgress(0)
     startTimeRef.current = 0
     totalPauseDurationRef.current = 0
@@ -97,8 +99,9 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     const video = videoRef.current
 
     const animate = () => {
+      // If paused (by hold or visibility), just loop without updating progress.
+      // The pause duration is calculated in the `isPaused` effect.
       if (pauseStartTimeRef.current > 0) {
-        // If we are paused, simply request the next frame and do nothing.
         animationFrameRef.current = requestAnimationFrame(animate)
         return
       }
@@ -111,7 +114,8 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
         animationFrameRef.current = requestAnimationFrame(animate)
         return
       }
-
+      
+      // Mark the start time on the very first frame of a new animation
       if (startTimeRef.current === 0) {
         startTimeRef.current = performance.now()
       }
@@ -131,6 +135,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     if (asset.type === 'video' && video) {
       video.currentTime = 0
       const onCanPlay = () => {
+        // Only start playing if not paused from the beginning
         if (!isPaused) video.play().catch(err => console.error("Hero video play failed:", err))
         animationFrameRef.current = requestAnimationFrame(animate)
       }
@@ -148,24 +153,33 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [currentIndex, heroAssets, onAssetChange, goToNext, isPaused])
+  // ❗️ FIX: Removed `isPaused` from the dependency array.
+  // Now this effect only re-runs when the slide changes.
+  }, [currentIndex, heroAssets, onAssetChange, goToNext]) 
+  // --- PROBLEM AREA END ---
 
+  // This effect correctly handles the PAUSE/RESUME logic
+  // by manipulating the timing refs without resetting the animation.
   useEffect(() => {
     const asset = heroAssets?.[currentIndex]
     if (!asset) return
 
     if (isPaused) {
-      if (pauseStartTimeRef.current === 0) { // Ensure we only set this once
+      // If we are not already in a paused state, record the time.
+      if (pauseStartTimeRef.current === 0) { 
         pauseStartTimeRef.current = performance.now()
-        if (asset.type === 'video' && videoRef.current) {
+        if (asset.type === 'video' && videoRef.current && !videoRef.current.paused) {
           videoRef.current.pause()
         }
       }
-    } else {
+    } else { // Resuming
+      // If we are resuming from a paused state...
       if (pauseStartTimeRef.current > 0) {
+        // ...add the duration of the just-ended pause to the total.
         totalPauseDurationRef.current += performance.now() - pauseStartTimeRef.current
+        // Reset the pause start time.
         pauseStartTimeRef.current = 0
-        if (asset.type === 'video' && videoRef.current) {
+        if (asset.type === 'video' && videoRef.current && videoRef.current.paused) {
           videoRef.current.play().catch(err => console.error("Hero video play failed:", err))
         }
       }
@@ -173,12 +187,16 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
   }, [isPaused, currentIndex, heroAssets])
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    // Only respond to main button (e.g., left-click)
+    if (e.button !== 0) return;
     pointerDownTimeRef.current = Date.now()
     pointerStartPosRef.current = { x: e.clientX, y: e.clientY }
     setIsHeld(true)
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
+    // Only respond to main button
+    if (e.button !== 0) return;
     const pressDuration = Date.now() - pointerDownTimeRef.current
     const startPos = pointerStartPosRef.current
     const endPos = { x: e.clientX, y: e.clientY }
@@ -261,8 +279,8 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
                 className={styles.heroMedia}
                 src={asset.src}
                 alt={asset.title || 'Hero Image'}
-                layout="fill"
-                objectFit="cover"
+                fill
+                style={{ objectFit: 'cover' }}
                 priority={index === 0}
               />
             )}
@@ -280,4 +298,3 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     </div>
   )
 }
-
