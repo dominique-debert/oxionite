@@ -61,7 +61,6 @@ const getAverageLuminance = (imgSrc: string): Promise<number> => {
 interface BackgroundProps {
   source: HTMLImageElement | HTMLVideoElement | string | null
   scrollProgress?: number
-  isPaused?: boolean
 }
 
 function Background({ source, scrollProgress = 0 }: BackgroundProps) {
@@ -114,7 +113,6 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
 
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
-      ctx.filter = 'blur(40px)'
 
       const mediaWidth = source instanceof HTMLVideoElement ? source.videoWidth : source.naturalWidth
       const mediaHeight = source instanceof HTMLVideoElement ? source.videoHeight : source.naturalHeight
@@ -158,29 +156,34 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
       const vh = window.innerHeight
       const movableDistance = vh * (BACKGROUND_ZOOM - 1)
 
-      const fullRangeTop = -movableDistance / 2
-      const fullRangeBottom = movableDistance / 2
+      const fullRangeTop = movableDistance / 2
+      const fullRangeBottom = -movableDistance / 2
 
       const startTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_START
       const endTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_END
 
-      const newTranslateY = startTranslateY + scrollProgress * (endTranslateY - startTranslateY)
+      // Invert the scroll direction
+      const newTranslateY = endTranslateY + scrollProgress * (startTranslateY - endTranslateY)
 
       element.style.transform = `scale(${BACKGROUND_ZOOM}) translateY(${newTranslateY}px)`
     }
   }, [scrollProgress, isElementSource, source])
 
-  const backgroundStyle: React.CSSProperties = {
+  const baseStyle: React.CSSProperties = {
     position: 'absolute',
     left: 0,
     top: 0,
     width: '100%',
     height: '100vh',
+    transition: 'transform 0.3s ease-out'
+  }
+
+  const blurredStyle: React.CSSProperties = {
+    ...baseStyle,
     objectFit: 'cover',
     // @ts-ignore
     filter: 'blur(40px)',
-    WebkitFilter: 'blur(40px)', // For iOS Safari
-    transition: 'transform 0.3s ease-out'
+    WebkitFilter: 'blur(40px)' // For iOS Safari
   }
 
   return (
@@ -194,12 +197,12 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
       }}
     >
       {isElementSource ? (
-        <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+        <canvas ref={canvasRef} style={blurredStyle} />
       ) : (
         <div
           ref={backgroundRef}
           style={{
-            ...backgroundStyle,
+            ...blurredStyle,
             backgroundImage: `url(${source || '/default_background.webp'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
@@ -224,3 +227,4 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
 }
 
 export default Background
+
