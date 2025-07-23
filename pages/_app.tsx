@@ -43,7 +43,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const [mounted, setMounted] = React.useState(false)
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = React.useState(0)
-  const [backgroundAsset, setBackgroundAsset] = React.useState<{ type: 'image' | 'video'; src: string } | null>(null)
+  const [backgroundAsset, setBackgroundAsset] = React.useState<HTMLImageElement | HTMLVideoElement | string | null>(null)
   const [isHeroPaused, setIsHeroPaused] = React.useState(false)
 
   const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
@@ -220,15 +220,8 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       }}
     >
       <Background
-        imageUrl={
-          router.pathname === '/' && backgroundAsset?.type === 'image'
-            ? backgroundAsset.src
-            : notionImageUrl
-        }
-        videoUrl={
-          router.pathname === '/' && backgroundAsset?.type === 'video'
-            ? backgroundAsset.src
-            : undefined
+        source={
+          router.pathname === '/' ? backgroundAsset : notionImageUrl
         }
         scrollProgress={scrollProgress}
         isPaused={isHeroPaused}
