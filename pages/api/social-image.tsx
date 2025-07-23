@@ -54,6 +54,7 @@ export default async function OGImage(
         }}
       >
         {pageInfo.image && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={pageInfo.image}
             style={{
@@ -139,6 +140,7 @@ export default async function OGImage(
               zIndex: '5'
             }}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={pageInfo.authorImage}
               style={{

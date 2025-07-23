@@ -1,10 +1,16 @@
 import { config } from '@fisch0920/config/eslint'
+import nextPlugin from '@next/eslint-plugin-next'
 
 export default [
   ...config,
   {
     files: ['**/*.ts', '**/*.tsx'],
+    plugins: {
+      '@next/next': nextPlugin
+    },
     rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
       'react/prop-types': 'off',
       'unicorn/no-array-reduce': 'off',
       'unicorn/filename-case': 'off',

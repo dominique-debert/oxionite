@@ -263,6 +263,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
                 preload="auto"
               />
             ) : (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 ref={index === currentIndex ? imageRef : null}
                 className={styles.heroMedia}

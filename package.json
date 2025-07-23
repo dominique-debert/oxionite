@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0",
     "deploy": "vercel deploy",
     "deps:upgrade": "[ -z $GITHUB_ACTIONS ] && pnpm up -L notion-client notion-types notion-utils react-notion-x || echo 'Skipping deps:update on CI'",
     "deps:link": "[ -z $GITHUB_ACTIONS ] && run-s deps:link:* || echo 'Skipping deps:update on CI'",
@@ -62,6 +62,7 @@
   "devDependencies": {
     "@fisch0920/config": "^1.1.2",
     "@next/bundle-analyzer": "^15.3.3",
+    "@next/eslint-plugin-next": "^15.4.3",
     "@types/node": "^22.15.30",
     "@types/prismjs": "^1.26.5",
     "@types/react": "^19.1.6",

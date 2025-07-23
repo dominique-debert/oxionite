@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import styles from 'styles/components/common.module.css'
 
 import type * as types from '@/lib/types'
@@ -26,10 +27,12 @@ export function Page404({ site, pageId, error }: Partial<types.PageProps>) {
             )
           )}
 
-          <img
+          <Image
             src='/404.png'
             alt='404 Not Found'
             className={styles.errorImage}
+            width={400}
+            height={300}
           />
         </main>
       </div>
