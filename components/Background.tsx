@@ -64,14 +64,16 @@ interface BackgroundProps {
   isPaused?: boolean
 }
 
-function Background({ source, scrollProgress = 0, isPaused = false }: BackgroundProps) {
+function Background({ source, scrollProgress = 0 }: BackgroundProps) {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const backgroundRef = useRef<HTMLDivElement>(null)
   const animationFrameRef = useRef<number | null>(null)
 
   const isElementSource = source instanceof Element
 
+  // --- Opacity Calculation ---
   useEffect(() => {
     if (typeof source === 'string') {
       let isMounted = true
@@ -94,6 +96,7 @@ function Background({ source, scrollProgress = 0, isPaused = false }: Background
     }
   }, [source, isDarkMode])
 
+  // --- Canvas Drawing Logic (for Hero) ---
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
@@ -101,52 +104,39 @@ function Background({ source, scrollProgress = 0, isPaused = false }: Background
     if (!isElementSource || !ctx || !source) {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
       }
       return
     }
 
     const draw = () => {
-      if (!canvas || !source) return
-
-      const vh = window.innerHeight
-      const movableDistance = vh * (BACKGROUND_ZOOM - 1)
-      const fullRangeTop = movableDistance / 2
-      const fullRangeBottom = -movableDistance / 2
-      const startTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_START
-      const endTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_END
-      const newTranslateY = startTranslateY + scrollProgress * (endTranslateY - startTranslateY)
+      if (!canvas || !source || !ctx) return
 
       canvas.width = window.innerWidth
-      canvas.height = vh
-
+      canvas.height = window.innerHeight
       ctx.filter = 'blur(40px)'
-      ctx.save()
-      ctx.translate(0, newTranslateY)
-      ctx.scale(BACKGROUND_ZOOM, BACKGROUND_ZOOM)
-      
-      const mediaWidth = source instanceof HTMLVideoElement ? source.videoWidth : source.naturalWidth;
-      const mediaHeight = source instanceof HTMLVideoElement ? source.videoHeight : source.naturalHeight;
+
+      const mediaWidth = source instanceof HTMLVideoElement ? source.videoWidth : source.naturalWidth
+      const mediaHeight = source instanceof HTMLVideoElement ? source.videoHeight : source.naturalHeight
 
       if (mediaWidth > 0 && mediaHeight > 0) {
-        const canvasAspectRatio = canvas.width / canvas.height;
-        const mediaAspectRatio = mediaWidth / mediaHeight;
-        let drawWidth, drawHeight, x, y;
+        const canvasAspectRatio = canvas.width / canvas.height
+        const mediaAspectRatio = mediaWidth / mediaHeight
+        let drawWidth, drawHeight, x, y
 
         if (canvasAspectRatio > mediaAspectRatio) {
-            drawWidth = canvas.width;
-            drawHeight = canvas.width / mediaAspectRatio;
+          drawWidth = canvas.width
+          drawHeight = canvas.width / mediaAspectRatio
         } else {
-            drawHeight = canvas.height;
-            drawWidth = canvas.height * mediaAspectRatio;
+          drawHeight = canvas.height
+          drawWidth = canvas.height * mediaAspectRatio
         }
 
-        x = (canvas.width - drawWidth) / 2;
-        y = (canvas.height - drawHeight) / 2;
+        x = (canvas.width - drawWidth) / 2
+        y = (canvas.height - drawHeight) / 2
 
-        ctx.drawImage(source, x, y, drawWidth, drawHeight);
+        ctx.drawImage(source, x, y, drawWidth, drawHeight)
       }
-
-      ctx.restore()
 
       animationFrameRef.current = requestAnimationFrame(draw)
     }
@@ -156,9 +146,29 @@ function Background({ source, scrollProgress = 0, isPaused = false }: Background
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
       }
     }
-  }, [isElementSource, source, scrollProgress])
+  }, [isElementSource, source])
+
+  // --- Zoom and Scroll-panning Logic (for both Canvas and Div) ---
+  useEffect(() => {
+    const element = isElementSource ? canvasRef.current : backgroundRef.current
+    if (element) {
+      const vh = window.innerHeight
+      const movableDistance = vh * (BACKGROUND_ZOOM - 1)
+
+      const fullRangeTop = -movableDistance / 2
+      const fullRangeBottom = movableDistance / 2
+
+      const startTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_START
+      const endTranslateY = fullRangeTop + (fullRangeBottom - fullRangeTop) * BACKGROUND_VISIBLE_END
+
+      const newTranslateY = startTranslateY + scrollProgress * (endTranslateY - startTranslateY)
+
+      element.style.transform = `scale(${BACKGROUND_ZOOM}) translateY(${newTranslateY}px)`
+    }
+  }, [scrollProgress, isElementSource, source])
 
   const backgroundStyle: React.CSSProperties = {
     position: 'absolute',
@@ -167,7 +177,9 @@ function Background({ source, scrollProgress = 0, isPaused = false }: Background
     width: '100%',
     height: '100vh',
     objectFit: 'cover',
+    // @ts-ignore
     filter: 'blur(40px)',
+    WebkitFilter: 'blur(40px)', // For iOS Safari
     transition: 'transform 0.3s ease-out'
   }
 
@@ -182,9 +194,10 @@ function Background({ source, scrollProgress = 0, isPaused = false }: Background
       }}
     >
       {isElementSource ? (
-        <canvas ref={canvasRef} />
+        <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
       ) : (
         <div
+          ref={backgroundRef}
           style={{
             ...backgroundStyle,
             backgroundImage: `url(${source || '/default_background.webp'})`,

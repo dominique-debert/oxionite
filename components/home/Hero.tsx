@@ -138,6 +138,9 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     if (asset.type === 'video' && video) {
       video.currentTime = 0
       const onCanPlay = () => {
+        if (!isPaused) {
+          video.play().catch(err => console.error("Hero video play failed:", err))
+        }
         animationFrameRef.current = requestAnimationFrame(animate)
       }
       if (video.readyState >= video.HAVE_ENOUGH_DATA) {
