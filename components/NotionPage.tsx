@@ -1,6 +1,6 @@
 import cs from 'classnames'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
+import Image, { type ImageProps } from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import {
@@ -289,7 +289,7 @@ export function NotionPage({
               {...(site.domain ? { rootDomain: site.domain || undefined } : {})}
               {...(siteMapPageUrl && { mapPageUrl: siteMapPageUrl })}
               components={{
-                nextImage: Image,
+                nextImage: (props: ImageProps) => (<Image {...props} priority/>),
                 nextLink: Link,
                 Code: Code2,
                 Collection: Collection2,
