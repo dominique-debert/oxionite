@@ -12,9 +12,10 @@ import RecentPosts from './RecentPosts'
 import { Tags } from './Tags'
 
 export function Home({
-  setBackgroundAsset = () => {},
-  isHeroPaused = false,
-  setIsHeroPaused = () => {},
+  setBackgroundAsset,
+  isHeroPaused,
+  setIsHeroPaused,
+  setHeroStream,
   site,
   siteMap,
   homeRecordMaps,
@@ -81,10 +82,12 @@ export function Home({
       />
 
       <div className={styles.homeContainer}>
-        <Hero 
-          onAssetChange={setBackgroundAsset} 
-          isPaused={isHeroPaused} 
-          setIsPaused={setIsHeroPaused} 
+        <Hero
+          onAssetChange={setBackgroundAsset || (() => {})}
+          isPaused={isHeroPaused || false}
+          setIsPaused={setIsHeroPaused || (() => {})}
+
+          setHeroStream={setHeroStream || (() => {})}
         />
         <HomeNav
           homePages={homePages}

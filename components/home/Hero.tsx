@@ -16,9 +16,10 @@ interface HeroProps {
   onAssetChange: (asset: HeroAsset | null) => void
   isPaused: boolean
   setIsPaused: (isPaused: boolean) => void
+  setHeroStream: (stream: MediaStream | null) => void
 }
 
-export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps) {
+export default function Hero({ onAssetChange, isPaused, setIsPaused, setHeroStream }: HeroProps) {
   const [isVisuallyPaused, setIsVisuallyPaused] = useState(false)
   const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -71,6 +72,32 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
       }
     }
   }, [])
+
+  // Effect to capture and propagate the video stream
+  useEffect(() => {
+    const asset = heroAssets?.[currentIndex]
+    const video = videoRef.current
+
+    if (asset?.type === 'video' && video) {
+      // Check if the browser supports captureStream
+      if (typeof video.captureStream === 'function') {
+        const stream = video.captureStream()
+        setHeroStream(stream)
+      } else {
+        // Fallback or log for browsers that don't support it
+        console.warn('video.captureStream() is not supported in this browser.')
+        setHeroStream(null)
+      }
+    } else {
+      // Clean up the stream if the asset is not a video or component unmounts
+      setHeroStream(null)
+    }
+
+    // Cleanup function to be called when the component or dependency unmounts
+    return () => {
+      setHeroStream(null)
+    }
+  }, [currentIndex, heroAssets, setHeroStream])
 
   // --- PROBLEM AREA START ---
   // This effect should ONLY run when the asset (currentIndex) changes.

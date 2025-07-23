@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useMemo } from 'react'
 
 import { useDarkMode } from '@/lib/use-dark-mode'
 
@@ -79,33 +79,54 @@ const getAverageLuminance = (imgSrc: string): Promise<number> => {
 }
 
 interface BackgroundProps {
-  imageUrl?: string
-  videoUrl?: string
+  imageUrl?: string | null
+  videoUrl?: string | null
   scrollProgress?: number
   isPaused?: boolean
   heroStream?: MediaStream | null
+  pendingHeroStream?: MediaStream | null
+  commitHeroStream?: () => void
 }
 
-// A component that renders a blurred, scrolling background.
-function Background({
-  imageUrl,
-  videoUrl,
+const DEFAULT_BACKGROUND_IMAGE = '/default_background.webp'
+
+export function Background({
+  heroStream,
   scrollProgress = 0,
   isPaused = false,
-  heroStream = null
 }: BackgroundProps) {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
-  const backgroundSource = imageUrl || '/default_background.webp'
-  const backgroundRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const backgroundRef = useRef<HTMLDivElement>(null)
+  const backgroundSource = useMemo(() => DEFAULT_BACKGROUND_IMAGE, [])
 
   useEffect(() => {
-    if (videoUrl) {
-      setOverlayOpacity(0.4)
-      return
+    const video = videoRef.current
+    if (video) {
+      if (heroStream) {
+        if (video.srcObject !== heroStream) {
+          video.srcObject = heroStream
+          video.play().catch((error) => console.error('Error playing video:', error))
+        }
+      } else {
+        video.srcObject = null
+      }
     }
+  }, [heroStream])
 
+  useEffect(() => {
+    const video = videoRef.current
+    if (video) {
+      if (isPaused) {
+        video.pause()
+      } else {
+        video.play().catch((e) => console.error('Error playing background video:', e))
+      }
+    }
+  }, [isPaused])
+
+  useEffect(() => {
     let isMounted = true
 
     const calculateAndSetOpacity = async () => {
@@ -130,44 +151,10 @@ function Background({
     void calculateAndSetOpacity()
 
     return () => { isMounted = false }
-  }, [backgroundSource, isDarkMode, videoUrl])
+  }, [backgroundSource, isDarkMode])
 
   useEffect(() => {
-    const videoElement = videoRef.current
-    if (!videoElement) return
-
-    if (heroStream) {
-      // If a stream is provided, use it as the source.
-      // The playback (play/pause) is controlled by the source stream from Hero.
-      if (videoElement.srcObject !== heroStream) {
-        videoElement.srcObject = heroStream
-        videoElement.play().catch((err) => {
-          // Autoplay might be blocked, but we can ignore the error
-          // as user interaction on the Hero component will trigger playback.
-          console.log('Background stream play initially blocked:', err)
-        })
-      }
-    } else {
-      // Fallback to using videoUrl if no stream is available.
-      videoElement.srcObject = null // Clear any previous stream
-      if (videoUrl && videoElement.src !== videoUrl) {
-        videoElement.src = videoUrl
-      }
-
-      if (videoUrl) {
-        if (isPaused) {
-          videoElement.pause()
-        } else {
-          videoElement.play().catch((err) => {
-            console.error('Background video play failed:', err)
-          })
-        }
-      }
-    }
-  }, [heroStream, videoUrl, isPaused])
-
-  useEffect(() => {
-    const element = videoUrl ? videoRef.current : backgroundRef.current
+    const element = backgroundRef.current
     if (element) {
       const vh = window.innerHeight
       const movableDistance = vh * (BACKGROUND_ZOOM - 1)
@@ -182,7 +169,7 @@ function Background({
 
       element.style.transform = `scale(${BACKGROUND_ZOOM}) translateY(${newTranslateY}px)`
     }
-  }, [scrollProgress, videoUrl])
+  }, [scrollProgress])
 
   const backgroundStyle: React.CSSProperties = {
     position: 'absolute',
@@ -204,18 +191,21 @@ function Background({
         zIndex: -1,
         overflow: 'hidden'
       }}
+      className='glass-background'
     >
-      {videoUrl || heroStream ? (
+      {/* This video element shows the active stream */}
+      {heroStream && (
         <video
           ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
-          src={!heroStream ? videoUrl : undefined}
           style={backgroundStyle}
         />
-      ) : (
+      )}
+
+      {!heroStream && (
         <div
           ref={backgroundRef}
           style={{

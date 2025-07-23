@@ -12,7 +12,7 @@ export interface PageError {
 }
 
 export interface PageProps {
-  site: Site | null
+  site?: Site
   recordMap?: ExtendedRecordMap
   pageId?: string
   error?: any
@@ -25,6 +25,8 @@ export interface PageProps {
   setBackgroundAsset?: (asset: { type: 'image' | 'video'; src: string } | null) => void
   isHeroPaused?: boolean
   setIsHeroPaused?: (isPaused: boolean) => void
+  heroStream?: MediaStream | null
+  setHeroStream?: (stream: MediaStream | null) => void
 }
 
 export interface Params extends ParsedUrlQuery {
