@@ -5,7 +5,7 @@ import type { PageProps } from './types'
 import * as acl from './acl'
 import { environment, pageUrlAdditions, pageUrlOverrides, site } from './config'
 import { db } from './db'
-import { getSiteMap } from './get-site-map'
+import { getCachedSiteMap } from './site-cache'
 import { getPage } from './notion'
 
 export async function resolveNotionPage(
@@ -52,7 +52,7 @@ export async function resolveNotionPage(
     } else {
       // handle mapping of user-friendly canonical page paths to Notion page IDs
       // e.g., /developer-x-entrepreneur versus /71201624b204481f862630ea25ce62fe
-      const siteMap = await getSiteMap()
+      const siteMap = await getCachedSiteMap()
       pageId = siteMap?.canonicalPageMap[rawPageId]
 
       if (pageId) {

@@ -3,7 +3,7 @@ import { type GetServerSideProps } from 'next'
 import type { ExtendedRecordMap, PageProps } from '@/lib/types'
 import { Home } from '@/components/home/Home'
 import { site } from '@/lib/config'
-import { getSiteMap } from '@/lib/get-site-map'
+import { getCachedSiteMap } from '@/lib/site-cache'
 import { getPage } from '@/lib/notion'
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (
@@ -15,7 +15,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
     console.log(`DEBUG: Fetching home page for locale: ${locale}`)
     
     // Get the site map with all pages and navigation tree
-    const siteMap = await getSiteMap()
+    const siteMap = await getCachedSiteMap()
     
     // Find all pages with type 'Home'
     const homePages = []

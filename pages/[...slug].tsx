@@ -8,7 +8,7 @@ import { CategoryPage } from '@/components/CategoryPage'
 import { Loading } from '@/components/Loading'
 import { NotionPage } from '@/components/NotionPage'
 import { PagePrivate } from '@/components/PagePrivate'
-import { getSiteMap } from '@/lib/get-site-map'
+import { getCachedSiteMap } from '@/lib/site-cache'
 import { getPage } from '@/lib/notion'
 import { type PageInfo,type PageProps } from '@/lib/types'
 
@@ -25,7 +25,7 @@ export const getServerSideProps: GetServerSideProps<
   const locale = context.locale || 'ko' // Fallback to default locale
 
   try {
-    const siteMap = await getSiteMap()
+    const siteMap = await getCachedSiteMap()
 
     // Find the top-level page info based on the first part of the URL slug.
     let topLevelPageId: string | null = null
