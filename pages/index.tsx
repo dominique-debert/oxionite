@@ -3,8 +3,8 @@ import { type GetServerSideProps } from 'next'
 import type { ExtendedRecordMap, PageProps } from '@/lib/types'
 import { Home } from '@/components/home/Home'
 import { site } from '@/lib/config'
-import { getCachedSiteMap } from '@/lib/site-cache'
 import { getPage } from '@/lib/notion'
+import { getCachedSiteMap } from '@/lib/site-cache'
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (
   context

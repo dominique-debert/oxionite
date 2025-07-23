@@ -5,7 +5,7 @@ let siteMapCache: SiteMap | null = null
 let lastUpdated = 0
 let cacheUpdatePromise: Promise<SiteMap> | null = null
 
-const CACHE_DURATION_MS = 60000 // 60 seconds
+const CACHE_DURATION_MS = 60_000 // 60 seconds
 
 async function fetchAndCacheSiteMap(): Promise<SiteMap> {
   console.log('DEBUG: Cache empty or stale. Fetching fresh data...')
@@ -27,12 +27,14 @@ export async function getCachedSiteMap(): Promise<SiteMap> {
 
   if (cacheUpdatePromise) {
     console.log('DEBUG: Update already in progress. Waiting for it to complete.')
+    // eslint-disable-next-line no-return-await
     return await cacheUpdatePromise
   }
 
   if (siteMapCache && isCacheStale) {
     console.log('DEBUG: Returning stale data and revalidating in background.')
     // Don't await, let it run in the background
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     fetchAndCacheSiteMap()
     return siteMapCache
   }

@@ -5,8 +5,8 @@ import type { PageProps } from './types'
 import * as acl from './acl'
 import { environment, pageUrlAdditions, pageUrlOverrides, site } from './config'
 import { db } from './db'
-import { getCachedSiteMap } from './site-cache'
 import { getPage } from './notion'
+import { getCachedSiteMap } from './site-cache'
 
 export async function resolveNotionPage(
   domain: string,

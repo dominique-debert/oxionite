@@ -8,8 +8,8 @@ import { CategoryPage } from '@/components/CategoryPage'
 import { Loading } from '@/components/Loading'
 import { NotionPage } from '@/components/NotionPage'
 import { PagePrivate } from '@/components/PagePrivate'
-import { getCachedSiteMap } from '@/lib/site-cache'
 import { getPage } from '@/lib/notion'
+import { getCachedSiteMap } from '@/lib/site-cache'
 import { type PageInfo,type PageProps } from '@/lib/types'
 
 interface SlugParams extends ParsedUrlQuery {
