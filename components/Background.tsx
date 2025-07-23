@@ -120,7 +120,7 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
       if (mediaWidth > 0 && mediaHeight > 0) {
         const canvasAspectRatio = canvas.width / canvas.height
         const mediaAspectRatio = mediaWidth / mediaHeight
-        let drawWidth, drawHeight, x, y
+        let drawWidth = 0, drawHeight = 0, x = 0, y = 0
 
         if (canvasAspectRatio > mediaAspectRatio) {
           drawWidth = canvas.width
@@ -181,7 +181,6 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
   const blurredStyle: React.CSSProperties = {
     ...baseStyle,
     objectFit: 'cover',
-    // @ts-ignore
     filter: 'blur(40px)',
     WebkitFilter: 'blur(40px)' // For iOS Safari
   }

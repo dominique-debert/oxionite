@@ -15,7 +15,6 @@ export function Home({
   setBackgroundAsset,
   isHeroPaused,
   setIsHeroPaused,
-  setHeroStream,
   site,
   siteMap,
   homeRecordMaps,
@@ -86,8 +85,6 @@ export function Home({
           onAssetChange={setBackgroundAsset || (() => {})}
           isPaused={isHeroPaused || false}
           setIsPaused={setIsHeroPaused || (() => {})}
-
-          setHeroStream={setHeroStream || (() => {})}
         />
         <HomeNav
           homePages={homePages}

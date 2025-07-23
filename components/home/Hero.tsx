@@ -4,12 +4,7 @@ import styles from 'styles/components/home.module.css'
 
 const IMAGE_DURATION = 3000 // 3 seconds
 
-interface HeroAsset {
-  type: 'image' | 'video'
-  src: string
-  title?: string
-  description?: string
-}
+
 
 interface HeroProps {
   onAssetChange: (asset: HTMLImageElement | HTMLVideoElement | null) => void
@@ -157,7 +152,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [currentIndex, heroAssets, onAssetChange, goToNext])
+  }, [currentIndex, heroAssets, onAssetChange, goToNext, isPaused])
 
   // This effect correctly handles the PAUSE/RESUME logic
   useEffect(() => {
@@ -180,7 +175,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
         }
       }
     }
-  }, [isPaused, currentIndex, heroAssets])
+  }, [isPaused, currentIndex, heroAssets, videoRef])
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;

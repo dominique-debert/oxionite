@@ -7,7 +7,7 @@ export async function pageAcl({
 }: PageProps): Promise<PageProps | undefined> {
   if (!site) {
     return {
-      site: null,
+      site: undefined,
       error: {
         statusCode: 404,
         message: 'Unable to resolve notion site'
