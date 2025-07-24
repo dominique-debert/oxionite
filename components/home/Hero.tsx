@@ -67,6 +67,11 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     }
   }, [])
 
+  const isPausedRef = useRef(isPaused)
+  useEffect(() => {
+    isPausedRef.current = isPaused
+  }, [isPaused])
+
   // This effect runs when the slide changes to manage animations and report the active element.
   useEffect(() => {
     if (!heroAssets || heroAssets.length === 0) {
@@ -133,7 +138,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     if (asset.type === 'video' && video) {
       video.currentTime = 0
       const onCanPlay = () => {
-        if (!isPaused) {
+        if (!isPausedRef.current) {
           video.play().catch(err => console.error("Hero video play failed:", err))
         }
         animationFrameRef.current = requestAnimationFrame(animate)
@@ -152,7 +157,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [currentIndex, heroAssets, onAssetChange, goToNext, isPaused])
+  }, [currentIndex, heroAssets, onAssetChange, goToNext])
 
   // This effect correctly handles the PAUSE/RESUME logic
   useEffect(() => {
