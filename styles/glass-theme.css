@@ -3,7 +3,7 @@
 
 /* The main navigation bar with the glass effect */
 .glass-nav {
-  position: absolute; /* Changed from sticky to float over content */
+  position: relative; /* Allow z-index without breaking flow */
   top: 1rem; /* Position from the top of the main container */
   left: 1rem; /* Position from the left */
   right: 1rem; /* Position from the right */
@@ -161,7 +161,7 @@
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 0 32px 0 var(--shadow-color);
   transition: all 0.3s ease;
-  width: 320px; /* Fixed width for desktop */
+  width: var(--sidenav-width); /* Fixed width for desktop */
   flex-shrink: 0;
 }
 

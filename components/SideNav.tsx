@@ -62,7 +62,7 @@ export function SideNav({
   )
 
   return (
-    <aside className={asideClasses} style={!isMobile ? { margin: '1rem 0 1rem 1rem' } : {}}>
+    <aside className={asideClasses}>
       <CategoryTree items={filteredNavigationTree} />
     </aside>
   )

@@ -1,3 +1,7 @@
+:root {
+  --sidenav-width: 320px;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -54,6 +58,7 @@ body.dark-mode {
   --shadow-color: rgba(0, 0, 0, 0.3);
   --shadow-bg-color: rgba(255, 255, 255, 0.2);
 }
+
 
 body,
 html {

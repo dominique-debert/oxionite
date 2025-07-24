@@ -4,27 +4,6 @@
   }
 }
 
-.container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  padding: 2vmin;
-
-  font-size: 16px;
-  line-height: 1.5;
-  color: rgb(55, 53, 47);
-  caret-color: rgb(55, 53, 47);
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica,
-    'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji', 'Segoe UI Symbol';
-  background-color: var(--bg-color);
-}
-
 .loadingIcon {
   animation: spinner 0.6s linear infinite;
   display: block;
@@ -33,18 +12,13 @@
   color: rgba(55, 53, 47, 0.4);
 }
 
-.main {
-  flex-grow: 1;
-  min-width: 0; /* Prevent content from overflowing the container */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
 .errorImage {
   max-width: 100%;
   width: 640px;
+}
+
+.contentWithSideNav {
+  margin-left: calc(var(--sidenav-width) + 32px);
 }
 
 .footer {
@@ -52,19 +26,18 @@
   width: 100%;
   color: var(--primary-text-color);
   padding: 8px 0;
-  overflow: hidden; /* Prevent horizontal scrollbar */
 }
 
+/* This pseudo-element creates the full-width background */
 .footer::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100vw;
   height: 100%;
   background-color: var(--default-bg-color);
   z-index: -1;
+  width: 100vw;
+  left: calc(-1 * var(--main-content-margin-left, 0px));
 }
 
 .footerContent {
@@ -203,92 +176,6 @@
   background: #e5f2e8;
 }
 
-@media (max-width: 1360px) {
-  .githubCorner {
-    display: none;
-  }
-}
-
-.githubCorner:hover .octoArm {
-  animation: octocat-wave 560ms ease-in-out;
-}
-
-@keyframes octocat-wave {
-  0%,
-  100% {
-    transform: rotate(0);
-  }
-  20%,
-  60% {
-    transform: rotate(-25deg);
-  }
-  40%,
-  80% {
-    transform: rotate(10deg);
-  }
-}
-
-@media (max-width: 500px) {
-  .githubCorner:hover .octoArm {
-    animation: none;
-  }
-
-  .githubCorner .octoArm {
-    animation: octocat-wave 560ms ease-in-out;
-  }
-}
-
 .hidden {
   visibility: hidden;
-}
-
-.notion.index-page :global(.notion-header) {
-  display: none;
-}
-
-/* New layout styles for centered content with sidebar */
-.pageContainer {
-  display: flex !important;
-  justify-content: center !important;
-  width: 100% !important;
-  max-width: 100vw !important;
-  margin: 0 auto !important;
-  padding: 0 1rem !important;
-  overflow-x: hidden !important;
-  box-sizing: border-box !important;
-  background-color: yellow !important; /* Temporary debugging */
-  min-height: 500px !important; /* Temporary debugging */
-}
-
-.contentWrapper {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start !important;
-  gap: 1.5rem !important;
-  width: 100% !important;
-  max-width: 1200px !important;
-  margin: 0 auto !important;
-  box-sizing: border-box !important;
-  background-color: orange !important; /* Temporary debugging */
-  min-height: 400px !important; /* Temporary debugging */
-}
-
-.notionContent {
-  flex: 1 !important;
-  min-width: 0 !important; /* Allows content to shrink when needed */
-  max-width: 100% !important;
-  overflow-x: hidden !important;
-  background-color: lightgreen !important; /* Temporary debugging */
-  min-height: 300px !important; /* Temporary debugging */
-}
-
-.asideContent {
-  flex: 0 0 250px !important; /* Fixed width sidebar - reduced from 300px */
-  min-height: 100px !important; /* Changed from 100vh for debugging */
-  position: static !important; /* Changed from sticky for debugging */
-  top: 2rem !important;
-  padding-top: 2rem !important;
-  overflow-x: hidden !important;
-  background-color: lightblue !important; /* Temporary red background for debugging */
-  border: 5px solid red !important; /* Temporary border for debugging */
 }

@@ -7,11 +7,10 @@
 
 /* Desktop styles */
 .desktop {
-  position: relative;
-  left: 0;
-  transform: translateX(0);
-  transition: none;
-  height: 100vh - 1rem; /* Added this back, it's important */
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  height: calc(100vh - 2rem);
 }
 
 /* Mobile styles */
