@@ -153,7 +153,8 @@ export const site: Site = {
   name,
   rootNotionPageId,
   rootNotionSpaceId,
-  description
+  description,
+  isr: getSiteConfig('isr')
 }
 
 export const fathomId = isDev ? undefined : process.env.NEXT_PUBLIC_FATHOM_ID

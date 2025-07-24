@@ -45,7 +45,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         pageId: 'home', // Add pageId for TopNav to render
         homeRecordMaps
       },
-      revalidate: 60
+      revalidate: site.isr?.revalidate ?? 60
     }
   } catch (err) {
     console.error('Error in getServerSideProps for locale:', locale, err)
@@ -56,7 +56,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         siteMap: undefined,
         pageId: 'home' // Add pageId for TopNav to render
       },
-      revalidate: 60
+      revalidate: site.isr?.revalidate ?? 60
     }
   }
 }

@@ -37,6 +37,10 @@ export interface SiteConfig {
 
   navigationStyle?: types.NavigationStyle
   navigationLinks?: Array<NavigationLink>
+
+  isr?: {
+    revalidate: number
+  }
 }
 
 export interface NavigationLink {

@@ -113,7 +113,7 @@ export default siteConfig({
 
   // whether to use the default notion navigation style or a custom one with links to
   // important pages. To use `navigationLinks`, set `navigationStyle` to `custom`.
-  navigationStyle: 'default'
+  navigationStyle: 'default',
   // navigationStyle: 'custom',
   // navigationLinks: [
   //   {
@@ -124,5 +124,13 @@ export default siteConfig({
   //     title: 'Contact',
   //     pageId: '6a29ebcb935a4f0689fe661ab5f3b8d1'
   //   }
-  // ]
+  // ],
+
+  //   }
+  // ],
+
+  // Incremental Static Regeneration (ISR) configuration (optional)
+  isr: {
+    revalidate: 60 // revalidate time in seconds
+  }
 })

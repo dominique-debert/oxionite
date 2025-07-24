@@ -50,6 +50,11 @@ export type Site = {
   // opengraph metadata
   description?: string
   image?: string
+
+  // Incremental Static Regeneration (ISR) configuration
+  isr?: {
+    revalidate: number
+  }
 }
 
 /**

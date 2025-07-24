@@ -8,6 +8,7 @@ import { CategoryPage } from '@/components/CategoryPage'
 import { Loading } from '@/components/Loading'
 import { NotionPage } from '@/components/NotionPage'
 import { PagePrivate } from '@/components/PagePrivate'
+import { site } from '@/lib/config'
 import { getPage } from '@/lib/notion'
 import { getCachedSiteMap } from '@/lib/site-cache'
 import { type PageInfo,type PageProps } from '@/lib/types'
@@ -75,7 +76,7 @@ export const getStaticProps: GetStaticProps<
       )
       return {
         notFound: true,
-        revalidate: 60
+        revalidate: site.isr?.revalidate ?? 60
       }
     }
 
@@ -88,7 +89,7 @@ export const getStaticProps: GetStaticProps<
           pageId: topLevelPageId,
           isPrivate: true
         },
-        revalidate: 60
+        revalidate: site.isr?.revalidate ?? 60
       }
     }
 
@@ -108,7 +109,7 @@ export const getStaticProps: GetStaticProps<
         // Pass the top-level page info to be used for breadcrumbs
         topLevelPageInfo: topLevelPageInfo || null
       },
-      revalidate: 60
+      revalidate: site.isr?.revalidate ?? 60
     }
   } catch (err) {
     console.error('page error', locale, slugParts.join('/'), err)
