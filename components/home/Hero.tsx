@@ -1,10 +1,9 @@
+import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import siteConfig from 'site.config'
 import styles from 'styles/components/home.module.css'
 
 const IMAGE_DURATION = 3000 // 3 seconds
-
-
 
 interface HeroProps {
   onAssetChange: (asset: HTMLImageElement | HTMLVideoElement | null) => void
@@ -13,6 +12,7 @@ interface HeroProps {
 }
 
 export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps) {
+  const { locale } = useRouter()
   const [isVisuallyPaused, setIsVisuallyPaused] = useState(false)
   const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -285,8 +285,8 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
       <div className={styles.heroOverlay}>
         <div className={styles.heroTextContainer}>
           <div className={styles.heroTextShadow} />
-          {currentAsset.title && <h2 className={styles.heroTitle}>{currentAsset.title}</h2>}
-          {currentAsset.description && <p className={styles.heroDescription}>{currentAsset.description}</p>}
+          {currentAsset.content[locale || 'ko']?.title && <h2 className={styles.heroTitle}>{currentAsset.content[locale || 'ko']?.title}</h2>}
+          {currentAsset.content[locale || 'ko']?.description && <p className={styles.heroDescription}>{currentAsset.content[locale || 'ko']?.description}</p>}
         </div>
       </div>
     </div>

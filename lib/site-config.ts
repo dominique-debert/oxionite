@@ -18,6 +18,7 @@ export interface SiteConfig {
     src: string
     title?: string
     description?: string
+    content?: any
   }>
 
   socials?: Record<string, string>
