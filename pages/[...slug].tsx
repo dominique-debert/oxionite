@@ -1,6 +1,6 @@
 import { type ParsedUrlQuery } from 'node:querystring'
 
-import { type GetServerSideProps } from 'next'
+import { type GetStaticPaths,type GetStaticProps } from 'next'
 import { useRouter } from 'next/router'
 import { parsePageId } from 'notion-utils'
 
@@ -16,7 +16,37 @@ interface SlugParams extends ParsedUrlQuery {
   slug: string[]
 }
 
-export const getServerSideProps: GetServerSideProps<
+export const getStaticPaths: GetStaticPaths = async () => {
+  try {
+    const siteMap = await getCachedSiteMap()
+    const paths = Object.entries(siteMap.pageInfoMap)
+      .map(([, pageInfo]) => {
+        if (pageInfo.public && pageInfo.slug) {
+          return {
+            params: {
+              slug: [pageInfo.slug]
+            },
+            locale: pageInfo.language
+          }
+        }
+        return null
+      })
+      .filter((p): p is { params: { slug: string[] }; locale: string } => !!p)
+    return {
+      paths,
+      fallback: 'blocking'
+    }
+  } catch (err) {
+    console.error('Error in getStaticPaths', err)
+    // Return an empty paths array and let fallback handle it
+    return {
+      paths: [],
+      fallback: 'blocking'
+    }
+  }
+}
+
+export const getStaticProps: GetStaticProps<
   PageProps,
   SlugParams
 > = async (context) => {
@@ -44,7 +74,8 @@ export const getServerSideProps: GetServerSideProps<
         `DEBUG: Top-level page not found for locale='${locale}' slug='${topLevelSlug}'`
       )
       return {
-        notFound: true
+        notFound: true,
+        revalidate: 60
       }
     }
 
@@ -56,7 +87,8 @@ export const getServerSideProps: GetServerSideProps<
           siteMap,
           pageId: topLevelPageId,
           isPrivate: true
-        }
+        },
+        revalidate: 60
       }
     }
 
@@ -75,7 +107,8 @@ export const getServerSideProps: GetServerSideProps<
         siteMap,
         // Pass the top-level page info to be used for breadcrumbs
         topLevelPageInfo: topLevelPageInfo || null
-      }
+      },
+      revalidate: 60
     }
   } catch (err) {
     console.error('page error', locale, slugParts.join('/'), err)
