@@ -22,7 +22,7 @@ interface PostItem {
   coverImageBlock?: types.Block // Add block for mapImageUrl
 }
 
-const POSTS_PER_PAGE = 20
+const POSTS_PER_PAGE = 5
 
 // Utility function to get all posts from a category recursively (same logic as CategoryTree)
 const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] => {
@@ -204,7 +204,8 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
       width: '100%',
       maxWidth: '800px',
       margin: '0 auto',
-      padding: '2rem'
+      padding: '2rem',
+      marginBottom: '1rem'
     }}>
       {/* Category Header */}
       <div style={{
