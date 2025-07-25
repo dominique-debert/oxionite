@@ -1,17 +1,9 @@
-// used for rendering equations (optional)
 import 'katex/dist/katex.min.css'
-// core styles shared by all of react-notion-x (required)
 import 'react-notion-x/src/styles.css'
-// global styles shared across the entire site
-import '../styles/global.css'
-// this might be better for dark mode
-// import 'prismjs/themes/prism-okaidia.css'
-// global style overrides for notion
-import '../styles/notion.css'
-// global style overrides for prism theme (optional)
-import '../styles/prism-theme.css'
-import '../styles/glass-theme.css'
-import styles from 'styles/components/common.module.css'
+import 'styles/glass-theme.css'
+import 'styles/global.css'
+import 'styles/notion.css'
+import 'styles/prism-theme.css'
 
 import type { AppProps } from 'next/app'
 import cs from 'classnames'
@@ -19,6 +11,7 @@ import * as Fathom from 'fathom-client'
 import { useRouter } from 'next/router'
 import { posthog } from 'posthog-js'
 import * as React from 'react'
+import styles from 'styles/components/common.module.css'
 
 import type * as types from '@/lib/types'
 import Background from '@/components/Background'
@@ -180,8 +173,8 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: !isMobile ? 'var(--sidenav-width)' : 0,
+            top: 16,
+            left: !isMobile ? 'calc(var(--sidenav-width) + 32px)' : 0,
             right: 0,
             zIndex: 1000
           }}

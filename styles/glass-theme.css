@@ -4,10 +4,10 @@
 /* The main navigation bar with the glass effect */
 .glass-nav {
   position: relative; /* Allow z-index without breaking flow */
-  top: 1rem; /* Position from the top of the main container */
   left: 1rem; /* Position from the left */
   right: 1rem; /* Position from the right */
   z-index: 10; /* Ensure it's above the scrolling content */
+  margin-right: 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
