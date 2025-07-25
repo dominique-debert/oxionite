@@ -28,6 +28,10 @@
   max-width: 800px;
 }
 
+.mobile .notion-page-content-inner {
+  margin-left: 0;
+}
+
 
 .notion-frame {
   padding: 0;

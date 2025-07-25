@@ -1,9 +1,11 @@
+import cs from 'classnames'
 import Image from 'next/image'
 import { type PageBlock } from 'notion-types'
 import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
 import React, { useState } from 'react'
 
 import { mapImageUrl } from '@/lib/map-image-url'
+import styles from 'styles/components/PostHeader.module.css'
 
 import { PageAuthor } from './PageAuthor'
 
@@ -70,22 +72,9 @@ export function PostHeader({
   const coverPosition = pageBlock.format?.page_cover_position || 0.5
 
   return (
-    <div style={{
-      maxWidth: 'var(--notion-max-width, 800px)',
-      paddingLeft: isMobile ? '2.5rem' : '1rem',
-      paddingRight: '1rem',
-      paddingTop: '2rem',
-      width: '100%'
-    }}>
+    <div className={cs(styles.header, isMobile && styles.mobile)}>
       {/* Title */}
-      <h1 style={{
-        fontSize: '3rem',
-        fontWeight: '700',
-        lineHeight: '1.2',
-        margin: '0 0 1.5rem 0',
-        color: 'var(--fg-color, #000)',
-        wordBreak: 'keep-all'
-      }}>
+      <h1 className={styles.title}>
         {title}
       </h1>
 
@@ -94,34 +83,22 @@ export function PostHeader({
         <>
           {/* Author and Published Date Row */}
           {(authors.length > 0 || formattedPublished) && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap', // Allow wrapping on smaller screens
-              marginBottom: '1.5rem',
-              fontSize: '1rem',
-              gap: '0.5rem'
-            }}>
+            <div className={styles.metadataRow}>
               {authors.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                <div className={styles.authorList}>
                   {authors.map((authorName) => (
                     <PageAuthor key={authorName} authorName={authorName} />
                   ))}
                 </div>
               )}
-              {authors.length > 0 && formattedPublished && <span style={{ color: 'var(--secondary-text-color)', fontWeight: '400' }}>•</span>}
-              {formattedPublished && <span style={{ color: 'var(--secondary-text-color)', fontWeight: '400' }}>{formattedPublished}</span>}
+              {authors.length > 0 && formattedPublished && <span className={styles.separator}>•</span>}
+              {formattedPublished && <span className={styles.publishedDate}>{formattedPublished}</span>}
             </div>
           )}
 
           {/* Tags */}
           {tags.length > 0 && (
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-              marginBottom: '2rem'
-            }}>
+            <div className={styles.tagContainer}>
               {tags.map((tag, index) => (
                 <span
                   key={index}
@@ -137,29 +114,23 @@ export function PostHeader({
 
       {/* Cover Image */}
       {coverImageUrl && (
-        <div style={{
-          position: 'relative',
-          width: '100%',
-          marginBottom: '2rem',
-          // Dynamically set aspect ratio from image dimensions
-          aspectRatio: imageAspectRatio ? `${imageAspectRatio}` : undefined,
-          // Hide container until aspect ratio is known to prevent layout shift
-          opacity: imageAspectRatio ? 1 : 0,
-          transition: 'opacity 0.3s ease-in-out',
-          // Apply styles only when the image is visible
-          borderRadius: imageAspectRatio ? '12px' : '0',
-          boxShadow: imageAspectRatio
-            ? '0 10px 30px rgba(0, 0, 0, 0.1)'
-            : 'none',
-          overflow: 'hidden'
-        }}>
+        <div 
+          className={styles.coverImageContainer}
+          style={{
+            aspectRatio: imageAspectRatio ? `${imageAspectRatio}` : undefined,
+            opacity: imageAspectRatio ? 1 : 0,
+            borderRadius: imageAspectRatio ? '12px' : '0',
+            boxShadow: imageAspectRatio
+              ? '0 10px 30px rgba(0, 0, 0, 0.1)'
+              : 'none',
+          }}
+        >
           <Image
             src={coverImageUrl}
             alt={title || 'Cover image'}
             fill
+            className={styles.coverImage}
             style={{
-              // Container has the correct aspect ratio, so 'cover' will fill it perfectly.
-              objectFit: 'cover',
               objectPosition: `center ${(1 - coverPosition) * 100}%`
             }}
             onLoadingComplete={({ naturalWidth, naturalHeight }) => {

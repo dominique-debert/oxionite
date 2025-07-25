@@ -253,7 +253,7 @@ export function NotionPage({
         title={title}
       />
 
-      <div className="notion-page">
+      <div className={cs('notion-page', isMobile && 'mobile')}>
         <div className='notion-viewport'>
           <div className={cs(styles.main, styles.hasSideNav)}>
             {/* Show our custom header for both top-level posts and sub-pages */}

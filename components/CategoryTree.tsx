@@ -61,7 +61,7 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   return (
             <div
       className={styles.categoryItemContainer}
-      style={{ paddingLeft: `${level * 12}px` }}
+      style={{ paddingLeft: `${level * 16}px` }}
     >
       {isCategory ? (
         <button 
@@ -143,7 +143,10 @@ export function CategoryTree({
               {hasChildren && isExpanded && (
                 <div 
                   className={styles.line} 
-                  style={{ left: `${level * 12 + 11}px` }}
+                  style={{ 
+                    left: `${level * 16+ 11.49}px`, // 12px per level + 11.49px offset
+                    top: '32px', 
+                  }}
                 />
               )}
               {hasChildren && (
