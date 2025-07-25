@@ -86,7 +86,9 @@ export function PostHeader({
             <div className={styles.metadataRow}>
               {authors.length > 0 && (
                 <div className={styles.authorList}>
-                  {authors.map((authorName) => (
+                  {authors
+                    .filter((name) => name && name.trim() !== '')
+                    .map((authorName) => (
                     <PageAuthor key={authorName} authorName={authorName} />
                   ))}
                 </div>
