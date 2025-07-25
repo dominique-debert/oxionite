@@ -181,8 +181,8 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
   const blurredStyle: React.CSSProperties = {
     ...baseStyle,
     objectFit: 'cover',
-    filter: 'blur(40px)',
-    WebkitFilter: 'blur(40px)' // For iOS Safari
+    filter: 'blur(var(--blur-bg-size))',
+    WebkitFilter: 'blur(var(--blur-bg-size))' // For iOS Safari
   }
 
   return (

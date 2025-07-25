@@ -1,5 +1,12 @@
 :root {
   --sidenav-width: 320px;
+  --blur-size: 16px;
+  --blur-bg-size: 48px;
+}
+
+.mboidle {
+  --blur-size: 8px;
+  --blur-bg-size: 24px;
 }
 
 * {

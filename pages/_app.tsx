@@ -94,6 +94,16 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     }
   }, [router.events])
 
+  React.useEffect(() => {
+    if (mounted) {
+      if (isMobile) {
+        document.body.classList.add('mboidle')
+      } else {
+        document.body.classList.remove('mboidle')
+      }
+    }
+  }, [isMobile, mounted])
+
   const { siteMap, recordMap, pageId } = pageProps
   const pageBlockForCover = pageId ? recordMap?.block?.[pageId]?.value : undefined
   const pageCover = pageBlockForCover?.format?.page_cover

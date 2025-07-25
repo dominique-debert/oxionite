@@ -15,8 +15,8 @@
   border-radius: 9999px;
   border: 0.5px solid var(--border-color);
   background-color: var(--default-bg-color);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(var(--blur-size));
+  -webkit-backdrop-filter: blur(var(--blur-size));
   box-shadow: 0 0 32px 0 var(--shadow-color);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
@@ -32,8 +32,8 @@
   border-radius: 9999px;
   border: 1px solid var(--border-color); /* Start with a transparent border */
   background-color: var(--button-bg-color);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(var(--blur-size));
+  -webkit-backdrop-filter: blur(var(--blur-size));
   transition: background-color 0.3s ease, border-color 0.3s ease;
   color: var(--text-color-primary);
   margin: 0 0.25rem;
@@ -117,8 +117,8 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background-color: var(--default-bg-color);
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(var(--blur-size)) !important;
+  -webkit-backdrop-filter: blur(var(--blur-size)) !important;
   box-shadow: 0 0 32px 0 var(--shadow-color);
   padding: 0.5rem;
   z-index: 1001;
@@ -128,8 +128,8 @@
 .dark-mode .language-switcher-menu {
   background-color: var(--default-bg-color);
   border-color: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(var(--blur-size)) !important;
+  -webkit-backdrop-filter: blur(var(--blur-size)) !important;
 }
 
 .language-switcher-menu a {
@@ -157,8 +157,8 @@
   border-radius: 32px;
   border: 0.5px solid var(--border-color);
   background-color: var(--default-bg-color);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(var(--blur-size));
+  -webkit-backdrop-filter: blur(var(--blur-size));
   box-shadow: 0 0 32px 0 var(--shadow-color);
   transition: all 0.3s ease;
   width: var(--sidenav-width); /* Fixed width for desktop */
@@ -205,7 +205,18 @@
   border-color: rgba(0, 122, 255, 0.5);
 }
 
-/* Mobile SideNav positioning */
+/* Mobile Settings */
+
+.mobile .glass-nav {
+  position: fixed;
+  top: 120px; /* Height of the TopNav */
+  left: 1.5rem;
+  right: 1.5rem;
+  transform: translateX(-110%);
+  opacity: 0;
+  z-index: 1003;
+}
+
 .mobile .glass-sidenav {
   border-radius: 24px;
   position: fixed;
@@ -214,7 +225,7 @@
   right: 1.5rem;
   transform: translateX(-110%);
   opacity: 0;
-  z-index: 998;
+  z-index: 1003;
 }
 
 .mobile.mobile-open .glass-sidenav {
