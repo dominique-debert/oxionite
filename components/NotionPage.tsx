@@ -308,12 +308,6 @@ export function NotionPage({
                         {isBlogPost && (
               <div className={styles.pageActions}>
                 {memoizedActions}
-                <button
-                  onClick={() => setIsShowingComments(!isShowingComments)}
-                  className={styles.pageActionsButton}
-                >
-                  {isShowingComments ? 'Hide Comments' : 'Show Comments'}
-                </button>
               </div>
             )}
 

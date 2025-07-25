@@ -3,9 +3,9 @@ import Image from 'next/image'
 import { type PageBlock } from 'notion-types'
 import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
 import React, { useState } from 'react'
+import styles from 'styles/components/PostHeader.module.css'
 
 import { mapImageUrl } from '@/lib/map-image-url'
-import styles from 'styles/components/PostHeader.module.css'
 
 import { PageAuthor } from './PageAuthor'
 
