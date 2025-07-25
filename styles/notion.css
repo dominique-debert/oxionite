@@ -58,7 +58,7 @@
   max-width: 320px;
   overflow-y: auto; /* Enable vertical scrolling when content exceeds max height */
   position: sticky;
-  top: 60px; /* PostHeader 하단에서 고정 - 필요에 따라 조정 가능 */
+  top: 120px; /* PostHeader 하단에서 고정 - 필요에 따라 조정 가능 */
   margin-top: -480px; /* PostHeader 높이만큼 위로 올려서 sticky 시작점 조정 */
   margin-left: 1rem; /* TOC를 오른쪽으로 이동 */
 }
@@ -695,6 +695,17 @@ span.notion-default_background {
 .notion-simple-table-header-cell {
   background-color: var(--default-bg-color);
 }
+
+/* 
+  Override react-notion-x's default behavior. 
+  The library hides the TOC at 1300px, but we want it visible down to 1200px.
+*/
+@media (min-width: 1200px) and (max-width: 1300px) {
+  .notion-aside {
+    display: flex !important; /* Force display between 1200px and 1300px */
+  }
+}
+
 
 .notion-hr {
   border-color: var(--secondary-bg-color);

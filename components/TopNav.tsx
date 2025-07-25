@@ -231,10 +231,11 @@ function findPagePath(
 interface TopNavProps {
   pageProps: types.PageProps
   isMobile?: boolean
+  isSideNavCollapsed?: boolean
   onToggleMobileMenu?: () => void
 }
 
-export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopNavProps) {
+export function TopNav({ pageProps, isMobile = false, isSideNavCollapsed = false, onToggleMobileMenu }: TopNavProps) {
   const { siteMap, pageId, recordMap, topLevelPageInfo } = pageProps
   const router = useRouter()
 
@@ -282,7 +283,7 @@ export function TopNav({ pageProps, isMobile = false, onToggleMobileMenu }: TopN
           minWidth: 0
         }}
       >
-        {isMobile && onToggleMobileMenu && (
+        {isSideNavCollapsed && onToggleMobileMenu && (
           <MobileMenuButton onToggle={onToggleMobileMenu} />
         )}
         <div className="glass-breadcrumb">

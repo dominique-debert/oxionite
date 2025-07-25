@@ -30,15 +30,17 @@ function filterNavigationItems(items: types.PageInfo[], currentLocale: string): 
     })
 }
 
+interface SideNavProps {
+  siteMap: types.SiteMap
+  isCollapsed?: boolean
+  isMobileMenuOpen?: boolean
+}
+
 export function SideNav({ 
   siteMap, 
-  isMobile = false,
+  isCollapsed = false,
   isMobileMenuOpen = false
-}: { 
-  siteMap: types.SiteMap
-  isMobile?: boolean
-  isMobileMenuOpen?: boolean
-}) {
+}: SideNavProps) {
   const router = useRouter()
   const { locale } = router
   const { isDarkMode } = useDarkMode()
@@ -57,8 +59,8 @@ export function SideNav({
     styles.sideNav,
     'glass-sidenav',
     isDarkMode && styles.darkMode,
-    isMobile ? styles.mobile : styles.desktop,
-    isMobile && isMobileMenuOpen && styles.mobileOpen
+    isCollapsed ? styles.mobile : styles.desktop,
+    isCollapsed && isMobileMenuOpen && styles.mobileOpen
   )
 
   return (

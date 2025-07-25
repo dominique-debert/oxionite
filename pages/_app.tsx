@@ -35,6 +35,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isMobile, setIsMobile] = React.useState(false)
+  const [showDesktopSideNav, setShowDesktopSideNav] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [scrollProgress, setScrollProgress] = React.useState(0)
   const [backgroundAsset, setBackgroundAsset] = React.useState<HTMLImageElement | HTMLVideoElement | string | null>(null)
@@ -64,10 +65,21 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       }
     }
     setMounted(true)
+    const checkShowSideNav = () => {
+      setShowDesktopSideNav(window.innerWidth >= 1500)
+    }
+
     checkIsMobile()
-    window.addEventListener('resize', checkIsMobile)
+    checkShowSideNav()
+
+    const handleResize = () => {
+      checkIsMobile()
+      checkShowSideNav()
+    }
+
+    window.addEventListener('resize', handleResize)
     return () => {
-      window.removeEventListener('resize', checkIsMobile)
+      window.removeEventListener('resize', handleResize)
     }
   }, [])
 
@@ -130,10 +142,10 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       }
     }
     const minTableOfContentsItems = 3
-    return headerCount >= minTableOfContentsItems && !isMobile && screenWidth >= 1300
+    return headerCount >= minTableOfContentsItems && !isMobile && screenWidth >= 1200
   }, [pageInfo, recordMap, isMobile, screenWidth])
 
-  const paddingRight = showTOC ? '34rem' : '0'
+  const paddingRight = showTOC ? '32rem' : '0'
 
   const toggleMobileMenu = React.useCallback(() => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -175,7 +187,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
       {siteMap && (
         <SideNav
           siteMap={siteMap}
-          isMobile={isMobile}
+          isCollapsed={!showDesktopSideNav}
           isMobileMenuOpen={isMobileMenuOpen}
         />
       )}
@@ -184,7 +196,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           style={{
             position: 'fixed',
             top: 16,
-            left: !isMobile ? 'calc(var(--sidenav-width) + 32px)' : 0,
+            left: showDesktopSideNav ? 'calc(var(--sidenav-width) + 32px)' : 0,
             right: 0,
             zIndex: 1000
           }}
@@ -192,6 +204,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           <TopNav
             pageProps={pageProps}
             isMobile={isMobile}
+            isSideNavCollapsed={!showDesktopSideNav}
             onToggleMobileMenu={toggleMobileMenu}
           />
         </div>
@@ -199,9 +212,9 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
 
       {/* Layer 2: The main content container, which handles layout and scrolling */}
       <div
-        className={cs(!isMobile && styles.contentWithSideNav)}
+        className={cs(showDesktopSideNav && styles.contentWithSideNav)}
         style={{
-          '--main-content-margin-left': !isMobile ? 'calc(var(--sidenav-width) + 32px)' : '0px',
+          '--main-content-margin-left': showDesktopSideNav ? 'calc(var(--sidenav-width) + 32px)' : '0px',
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
