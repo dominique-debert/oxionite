@@ -16,6 +16,7 @@ export interface SiteConfig {
   heroAssets?: Array<{
     type: 'image' | 'video'
     src: string
+    url?: string
     title?: string
     description?: string
     content?: any

@@ -39,6 +39,7 @@
     "classnames": "^2.5.1",
     "expiry-map": "^2.0.0",
     "fathom-client": "^3.4.1",
+    "framer-motion": "^12.23.9",
     "ky": "^1.8.1",
     "lqip-modern": "^2.2.1",
     "next": "^15.3.3",

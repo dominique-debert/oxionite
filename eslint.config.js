@@ -22,7 +22,16 @@ export default [
       'jsx-a11y/media-has-caption': 'off',
       'jsx-a11y/interactive-supports-focus': 'off',
       'jsx-a11y/anchor-is-valid': 'off',
-      '@typescript-eslint/naming-convention': 'off'
+      '@typescript-eslint/naming-convention': 'off',
+      'simple-import-sort/imports': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      'react/function-component-definition': 'off',
+      'unicorn/prefer-string-replace-all': 'off',
+      'unicorn/prefer-number-properties': 'off',
+      'unicorn/consistent-function-scoping': 'off',
+      'unicorn/prefer-modern-math-apis': 'off',
+      'unicorn/no-useless-switch-case': 'off',
+      'unicorn/no-array-for-each': 'off'
     }
   }
 ]

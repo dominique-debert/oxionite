@@ -22,65 +22,69 @@ export default siteConfig({
 
   // hero section (optional)
   heroAssets: [
-    {
-      type: 'image',
-      src: '/hero-assets/02-1.jpeg',
-      content: {
-        ko: {
-          title: 'Project A',
-          description: 'AI 기반의 추천 시스템을 개발했습니다.'
-        },
-        en: {
-          title: 'Project A',
-          description: 'AI based recommendation system development.'
-        }
-      }
-    },
-    {
-      type: 'video',                                   // 'image' or 'video'
-      src: '/hero-assets/01-1.mp4',               // Path to the video file in the public folder
-      content: {
-        ko: {
-          title: 'Project A',
-          description: 'AI 기반의 추천 시스템을 개발했습니다.'
-        },
-        en: {
-          title: 'Project A',
-          description: 'AI based recommendation system development.'
-        }
-      }
-    },
-    {
-      type: 'video',
-      src: '/hero-assets/03-1.mov',
-      content: {
-        ko: {
-          title: 'Project C',
-          description: 'Next.js 블로그 엔진을 만들었습니다.'
-        },
-        en: {
-          title: 'Project C',
-          description: 'Next.js blog engine development.'
-        }
-      }
-    },
-    {
-      type: 'image',
-      src: '/hero-assets/05-1.png',
-      content: {
-        ko: {
-          title: 'Project E',
-          description: 'Next.js 블로그 엔진을 만들었습니다.'
-        },
-        en: {
-          title: 'Project E',
-          description: 'Next.js blog engine development.'
-        }
-      }
-    },
+    // {
+    //   type: 'image',
+    //   src: '/hero-assets/02-1.jpeg',
+    //   url: 'https://bit.ly/alemem64',
+    //   content: {
+    //     ko: {
+    //       title: 'Project A',
+    //       description: 'AI 기반의 추천 시스템을 개발했습니다.'
+    //     },
+    //     en: {
+    //       title: 'Project A',
+    //       description: 'AI based recommendation system development.'
+    //     }
+    //   }
+    // },
+    // {
+    //   type: 'video',                                   // 'image' or 'video'
+    //   src: '/hero-assets/01-1.mp4',               // Path to the video file in the public folder
+    //   url: 'https://bit.ly/alemem64',
+    //   content: {
+    //     ko: {
+    //       title: 'Project A',
+    //       description: 'AI 기반의 추천 시스템을 개발했습니다.'
+    //     },
+    //     en: {
+    //       title: 'Project A',
+    //       description: 'AI based recommendation system development.'
+    //     }
+    //   }
+    // },
+    // {
+    //   type: 'video',
+    //   src: '/hero-assets/03-1.mov',
+    //   url: 'https://bit.ly/alemem64',
+    //   content: {
+    //     ko: {
+    //       title: 'Project C',
+    //       description: 'Next.js 블로그 엔진을 만들었습니다.'
+    //     },
+    //     en: {
+    //       title: 'Project C',
+    //       description: 'Next.js blog engine development.'
+    //     }
+    //   }
+    // },
+    // {
+    //   type: 'image',
+    //   src: '/hero-assets/05-1.png',
+    //   content: {
+    //     ko: {
+    //       title: 'Project E',
+    //       description: 'Next.js 블로그 엔진을 만들었습니다.'
+    //     },
+    //     en: {
+    //       title: 'Project E',
+    //       description: 'Next.js blog engine development.'
+    //     }
+    //   }
+    // },
     {
       type: 'video',
       src: '/hero-assets/04-1.mov',
+      url: 'https://bit.ly/alemem64',
       content: {
         ko: {
           title: 'Project D',
