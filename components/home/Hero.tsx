@@ -17,6 +17,11 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
   const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [progress, setProgress] = useState(0)
+  const [restartCounter, setRestartCounter] = useState(0)
+
+  const { heroAssets: initialHeroAssets } = siteConfig
+  const [heroAssets, setHeroAssets] = useState(initialHeroAssets || [])
+  const validationCycleCompleted = useRef(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
@@ -28,17 +33,51 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
   const pointerStartPosRef = useRef<{ x: number; y: number } | null>(null)
   const heroRef = useRef<HTMLDivElement>(null)
 
-  const { heroAssets } = siteConfig
-
   const goToNext = useCallback(() => {
     setProgress(0) // Reset progress immediately
-    setCurrentIndex(prev => (prev + 1) % (heroAssets?.length || 1))
+    if (heroAssets?.length === 1) {
+      setRestartCounter((c) => c + 1)
+      return
+    }
+    setCurrentIndex((prev) => {
+      const nextIndex = (prev + 1) % (heroAssets?.length || 1)
+      if (nextIndex < prev) {
+        validationCycleCompleted.current = true
+      }
+      return nextIndex
+    })
   }, [heroAssets])
 
   const goToPrevious = useCallback(() => {
     setProgress(0) // Reset progress immediately
-    setCurrentIndex(prev => (prev - 1 + (heroAssets?.length || 1)) % (heroAssets?.length || 1))
+    if (heroAssets?.length === 1) {
+      setRestartCounter((c) => c + 1)
+      return
+    }
+    setCurrentIndex((prev) => {
+      const nextIndex = (prev - 1 + (heroAssets?.length || 1)) % (heroAssets?.length || 1)
+      if (nextIndex > prev) {
+        validationCycleCompleted.current = true
+      }
+      return nextIndex
+    })
   }, [heroAssets])
+
+  const handleAssetError = useCallback(
+    (src: string) => {
+      if (validationCycleCompleted.current) return
+
+      setHeroAssets((prevAssets) => {
+        const newAssets = prevAssets.filter((asset) => asset.src !== src)
+        // If the current index is now out of bounds, reset to 0.
+        if (currentIndex >= newAssets.length) {
+          setCurrentIndex(0)
+        }
+        return newAssets
+      })
+    },
+    [currentIndex]
+  )
 
   useEffect(() => {
     setIsPaused(isVisuallyPaused || isHeld)
@@ -111,20 +150,20 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
         return
       }
 
-      const duration = asset.type === 'video' 
-        ? (video?.duration || 0) * 1000 
-        : IMAGE_DURATION
+      const duration =
+        asset.type === 'video' ? (video?.duration || 0) * 1000 : IMAGE_DURATION
 
       if (duration === 0) {
         animationFrameRef.current = requestAnimationFrame(animate)
         return
       }
-      
+
       if (startTimeRef.current === 0) {
         startTimeRef.current = performance.now()
       }
 
-      const elapsedTime = performance.now() - startTimeRef.current - totalPauseDurationRef.current
+      const elapsedTime =
+        performance.now() - startTimeRef.current - totalPauseDurationRef.current
       const currentProgress = Math.min(elapsedTime / duration, 1)
       setProgress(currentProgress)
 
@@ -139,7 +178,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
       video.currentTime = 0
       const onCanPlay = () => {
         if (!isPausedRef.current) {
-          video.play().catch(err => console.error("Hero video play failed:", err))
+          video.play().catch((err) => console.error('Hero video play failed:', err))
         }
         animationFrameRef.current = requestAnimationFrame(animate)
       }
@@ -157,7 +196,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [currentIndex, heroAssets, onAssetChange, goToNext])
+  }, [currentIndex, heroAssets, onAssetChange, goToNext, restartCounter])
 
   // This effect correctly handles the PAUSE/RESUME logic
   useEffect(() => {
@@ -165,36 +204,40 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
     if (!asset) return
 
     if (isPaused) {
-      if (pauseStartTimeRef.current === 0) { 
+      if (pauseStartTimeRef.current === 0) {
         pauseStartTimeRef.current = performance.now()
         if (asset.type === 'video' && videoRef.current && !videoRef.current.paused) {
           videoRef.current.pause()
         }
       }
-    } else { // Resuming
+    } else {
+      // Resuming
       if (pauseStartTimeRef.current > 0) {
-        totalPauseDurationRef.current += performance.now() - pauseStartTimeRef.current
+        totalPauseDurationRef.current +=
+          performance.now() - pauseStartTimeRef.current
         pauseStartTimeRef.current = 0
         if (asset.type === 'video' && videoRef.current && videoRef.current.paused) {
-          videoRef.current.play().catch(err => console.error("Hero video play failed:", err))
+          videoRef.current
+            .play()
+            .catch((err) => console.error('Hero video play failed:', err))
         }
       }
     }
   }, [isPaused, currentIndex, heroAssets, videoRef])
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0) return
     pointerDownTimeRef.current = Date.now()
     pointerStartPosRef.current = { x: e.clientX, y: e.clientY }
     setIsHeld(true)
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0) return
     const pressDuration = Date.now() - pointerDownTimeRef.current
     const startPos = pointerStartPosRef.current
     const endPos = { x: e.clientX, y: e.clientY }
-    
+
     let movedDistance = 0
     if (startPos) {
       const deltaX = endPos.x - startPos.x
@@ -244,7 +287,8 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
             <div
               className={styles.heroProgressIndicator}
               style={{
-                transform: `scaleX(${index === currentIndex ? progress : index < currentIndex ? 1 : 0})`,
+                transform: `scaleX(${index === currentIndex ? progress : index < currentIndex ? 1 : 0
+                  })`
               }}
             />
           </div>
@@ -255,7 +299,8 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
         {heroAssets.map((asset, index) => (
           <div
             key={asset.src}
-            className={`${styles.heroMediaItem} ${index === currentIndex ? styles.active : ''}`}
+            className={`${styles.heroMediaItem} ${index === currentIndex ? styles.active : ''
+              }`}
           >
             {asset.type === 'video' ? (
               <video
@@ -266,6 +311,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
                 muted
                 autoPlay
                 preload="auto"
+                onError={() => handleAssetError(asset.src)}
               />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
@@ -276,6 +322,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
                 alt={asset.title || 'Hero Image'}
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 loading={index === 0 ? 'eager' : 'lazy'}
+                onError={() => handleAssetError(asset.src)}
               />
             )}
           </div>
@@ -285,8 +332,16 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
       <div className={styles.heroOverlay}>
         <div className={styles.heroTextContainer}>
           <div className={styles.heroTextShadow} />
-          {currentAsset.content[locale || 'ko']?.title && <h2 className={styles.heroTitle}>{currentAsset.content[locale || 'ko']?.title}</h2>}
-          {currentAsset.content[locale || 'ko']?.description && <p className={styles.heroDescription}>{currentAsset.content[locale || 'ko']?.description}</p>}
+          {currentAsset.content[locale || 'ko']?.title && (
+            <h2 className={styles.heroTitle}>
+              {currentAsset.content[locale || 'ko']?.title}
+            </h2>
+          )}
+          {currentAsset.content[locale || 'ko']?.description && (
+            <p className={styles.heroDescription}>
+              {currentAsset.content[locale || 'ko']?.description}
+            </p>
+          )}
         </div>
       </div>
     </div>

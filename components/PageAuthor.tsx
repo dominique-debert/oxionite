@@ -5,12 +5,13 @@ import siteConfig from 'site.config'
 import styles from '@/styles/components/PageAuthor.module.css'
 
 export function PageAuthor({ authorName }: { authorName: string }) {
+  const [isImageError, setIsImageError] = useState(false)
+
   if (!authorName || authorName.trim() === '') {
     return null
   }
 
   const author = siteConfig.authors?.find((a) => a.name === authorName)
-  const [isImageError, setIsImageError] = useState(false)
 
   const hasAvatar = author && author.avatar_dir && !isImageError
   const canClick = author && author.home_url

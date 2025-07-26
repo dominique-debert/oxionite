@@ -19,6 +19,7 @@
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
+  transition: all 0.4s ease-in-out;
 }
 
 .heroProgressContainer {

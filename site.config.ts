@@ -65,20 +65,6 @@ export default siteConfig({
       }
     },
     {
-      type: 'video',
-      src: '/hero-assets/04-1.mov',
-      content: {
-        ko: {
-          title: 'Project D',
-          description: 'Next.js 블로그 엔진을 만들었습니다.'
-        },
-        en: {
-          title: 'Project D',
-          description: 'Next.js blog engine development.'
-        }
-      }
-    },
-    {
       type: 'image',
       src: '/hero-assets/05-1.png',
       content: {
@@ -88,6 +74,20 @@ export default siteConfig({
         },
         en: {
           title: 'Project E',
+          description: 'Next.js blog engine development.'
+        }
+      }
+    },
+    {
+      type: 'video',
+      src: '/hero-assets/04-1.mov',
+      content: {
+        ko: {
+          title: 'Project D',
+          description: 'Next.js 블로그 엔진을 만들었습니다.'
+        },
+        en: {
+          title: 'Project D',
           description: 'Next.js blog engine development.'
         }
       }
