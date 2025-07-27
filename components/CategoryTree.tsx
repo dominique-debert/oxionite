@@ -4,7 +4,7 @@ import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
 import { IoChevronForward } from '@react-icons/all-files/io5/IoChevronForward'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import styles from 'styles/components/CategoryTree.module.css'
 
 import type { PageInfo } from '@/lib/types'
@@ -12,7 +12,6 @@ import type { PageInfo } from '@/lib/types'
 interface CategoryTreeProps {
   items: PageInfo[]
   level?: number
-  block?: any // For search functionality
   expandedItems: Record<string, boolean>
   toggleItemExpanded: (id: string) => void
 }
@@ -24,26 +23,16 @@ interface CategoryItemProps {
   toggleExpanded: () => void
 }
 
-// Utility function to count posts recursively
 const countPostsRecursively = (item: PageInfo): number => {
   let count = 0
-  
-  // If this item is a post, count it
   if (item.type === 'Post') {
     count = 1
   }
-  
-  // Recursively count posts in children
   if (item.children && item.children.length > 0) {
-    count += item.children.reduce((total, child) => {
-      return total + countPostsRecursively(child)
-    }, 0)
+    count += item.children.reduce((total, child) => total + countPostsRecursively(child), 0)
   }
-  
   return count
 }
-
-
 
 function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemProps) {
   const isCategory = item.type === 'Category'
@@ -55,26 +44,18 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   const isActive = asPath === pageUrl
 
   const postCount = isCategory ? countPostsRecursively(item) : 0
-
-  const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' ? styles.postItem : ''}`;
+  const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' ? styles.postItem : ''}`
 
   return (
-            <div
-      className={styles.categoryItemContainer}
-      style={{ paddingLeft: `${level * 16}px` }}
-    >
+    <div className={styles.categoryItemContainer} style={{ paddingLeft: `${level * 16}px` }}>
       {isCategory ? (
-        <button 
-          onClick={toggleExpanded} 
-          className={styles.expandButton}
-        >
+        <button onClick={toggleExpanded} className={styles.expandButton}>
           {isExpanded ? <IoChevronDown /> : <IoChevronForward />}
         </button>
       ) : (
         <span className={styles.indentPlaceholder} />
       )}
-
-                    <Link href={pageUrl} className={linkClassName}>
+      <Link href={pageUrl} className={linkClassName} data-page-id={item.pageId}>
         <span className={styles.title}>{item.title}</span>
         {isCategory && <span className={styles.postCount}>{postCount}</span>}
       </Link>
@@ -82,91 +63,60 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   )
 }
 
-// This is the main component that will hold the state
+function RecursiveCategoryTree({ items, level = 0, expandedItems, toggleItemExpanded }: CategoryTreeProps) {
+  const sortedItems = items?.sort((a, b) => {
+    if (a.type === 'Category' && b.type !== 'Category') return -1
+    if (a.type !== 'Category' && b.type === 'Category') return 1
+    return 0
+  })
+
+  return (
+    <div className={styles.recursiveContainer}>
+      {sortedItems?.map((item) => {
+        const hasChildren = item.children && item.children.length > 0
+        const isExpanded = !!expandedItems[item.pageId]
+
+        return (
+          <div key={item.pageId} className={styles.itemWrapper}>
+            <CategoryItem
+              item={item}
+              level={level}
+              isExpanded={isExpanded}
+              toggleExpanded={() => toggleItemExpanded(item.pageId)}
+            />
+            {hasChildren && isExpanded && (
+              <div 
+                className={styles.line} 
+                style={{ 
+                  left: `${level * 16 + 11.49}px`,
+                  top: '32px', 
+                }}
+              />
+            )}
+            {hasChildren && (
+              <div className={`${styles.childrenContainer} ${isExpanded ? styles.expanded : styles.collapsed}`}>
+                <div className={styles.childrenContent}>
+                  <RecursiveCategoryTree
+                    items={item.children!}
+                    level={level + 1}
+                    expandedItems={expandedItems}
+                    toggleItemExpanded={toggleItemExpanded}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function CategoryTree({ 
   items, 
-  level = 0
-}: Omit<CategoryTreeProps, 'expandedItems' | 'toggleItemExpanded' | 'block'>) {
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({}) 
-  const [hasInitialized, setHasInitialized] = useState(false)
-
-  useEffect(() => {
-    if (items && !hasInitialized) {
-      const initialExpandedState: Record<string, boolean> = {}
-      const setInitialState = (currentItems: PageInfo[]) => {
-        for (const item of currentItems) {
-          const hasChildren = item.children && item.children.length > 0
-          // Expand if it's a category with children that are not posts
-          if (item.type === 'Category' && hasChildren && !item.children.some(child => child.type === 'Post')) {
-            initialExpandedState[item.pageId] = true
-            setInitialState(item.children) // Recurse
-          }
-        }
-      }
-      setInitialState(items)
-      setExpandedItems(initialExpandedState)
-      setHasInitialized(true)
-    }
-  }, [items, hasInitialized])
-
-
-
-  const toggleItemExpanded = (id: string) => {
-    setExpandedItems(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }))
-  }
-
-  // A recursive renderer component
-  function RecursiveCategoryTree({ items, level = 0, expandedItems, toggleItemExpanded }: Omit<CategoryTreeProps, 'block'>) {
-    const sortedItems = items?.sort((a, b) => {
-      if (a.type === 'Category' && b.type !== 'Category') return -1;
-      if (a.type !== 'Category' && b.type === 'Category') return 1;
-      return 0;
-    });
-
-    return (
-      <div className={styles.recursiveContainer}>
-        {sortedItems?.map((item) => {
-          const hasChildren = item.children && item.children.length > 0;
-          const isExpanded = !!expandedItems[item.pageId];
-
-          return (
-            <div key={item.pageId} className={styles.itemWrapper}>
-              <CategoryItem
-                item={item}
-                level={level}
-                isExpanded={isExpanded}
-                toggleExpanded={() => toggleItemExpanded(item.pageId)}
-              />
-              {hasChildren && isExpanded && (
-                <div 
-                  className={styles.line} 
-                  style={{ 
-                    left: `${level * 16+ 11.49}px`, // 12px per level + 11.49px offset
-                    top: '32px', 
-                  }}
-                />
-              )}
-              {hasChildren && (
-                <div className={`${styles.childrenContainer} ${isExpanded ? styles.expanded : styles.collapsed}`}>
-                  <div className={styles.childrenContent}>
-                    <RecursiveCategoryTree
-                      items={item.children!}
-                      level={level + 1}
-                      expandedItems={expandedItems}
-                      toggleItemExpanded={toggleItemExpanded}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
+  level = 0,
+  expandedItems,
+  toggleItemExpanded
+}: CategoryTreeProps) {
   return <RecursiveCategoryTree items={items} level={level} expandedItems={expandedItems} toggleItemExpanded={toggleItemExpanded} />
-} 
+}

@@ -152,6 +152,7 @@
 /* --- SideNav Styles --- */
 
 .glass-sidenav {
+  position: relative;
   padding: 1rem;
   border-radius: 32px;
   border: 0.5px solid var(--border-color);
@@ -164,34 +165,37 @@
   flex-shrink: 0;
 }
 
+.sidenav-pill {
+  position: absolute;
+  z-index: 0;
+  background-color: var(--hover-bg-color);
+  border: 1px solid var(--hover-border-color);
+  border-radius: 9999px;
+  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
+
 .dark-mode .glass-sidenav {
   background-color: var(--default-bg-color);
   border-color: var(--border-color);
 }
 
 .sidenav-item {
+  position: relative;
+  z-index: 1;
   display: block;
   padding: 0.5rem 0.75rem; /* Reduced padding */
   border-radius: 9999px;
-  color: var(--text-color-primary);
+  color: var(--primary-text-color);
   text-decoration: none;
   transition: background-color 0.2s ease, border-color 0.2s ease;
   border: 1px solid transparent;
-}
-
-.sidenav-item:hover {
-  background-color: var(--hover-bg-color);
-  border-color: var(--hover-border-color);
 }
 
 .dark-mode .sidenav-item {
   color: var(--primary-text-color);
 }
 
-.dark-mode .sidenav-item:hover {
-  background-color: var(--hover-bg-color);
-  border-color: var(--hover-border-color);
-}
 
 .sidenav-item.active {
   background-color: rgba(0, 122, 255, 0.2);
