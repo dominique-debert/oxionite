@@ -9,6 +9,7 @@ interface MagnetProps {
   inactiveTransition?: string;
   wrapperClassName?: string;
   innerClassName?: string;
+  style?: React.CSSProperties;
 }
 
 const Magnet: React.FC<MagnetProps> = ({
@@ -66,7 +67,7 @@ const Magnet: React.FC<MagnetProps> = ({
     <div
       ref={magnetRef}
       className={wrapperClassName}
-      style={{ position: "relative", display: "inline-block" }}
+      style={{ position: "relative", display: "inline-block", zIndex: props.style?.zIndex }}
       {...props}
     >
       <div

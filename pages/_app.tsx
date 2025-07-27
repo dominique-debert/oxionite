@@ -26,6 +26,13 @@ import {
   posthogId
 } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
+import { Noto_Sans_KR } from 'next/font/google'
+
+const notoKR = Noto_Sans_KR({
+  subsets: ['latin'],
+  weight: ['100', '300', '400', '500', '700', '900'],
+  variable: '--font-noto-sans-kr'
+})
 
 if (typeof window !== 'undefined') {
   bootstrap()
@@ -160,7 +167,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   }
 
   return (
-    <>
+    <div className={notoKR.variable}>
       <Background
         source={router.pathname === '/' ? backgroundAsset : notionImageUrl || null}
         scrollProgress={scrollProgress}
@@ -242,6 +249,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
 
         <Footer isMobile={isMobile} />
       </div>
-    </>
+    </div>
   )
 }

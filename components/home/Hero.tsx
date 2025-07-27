@@ -349,8 +349,8 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
             <h2 className={styles.heroTitle}>
               <VariableProximity
                 label={currentAsset.content[locale || 'ko'].title}
-                fromFontVariationSettings="'wght' 400, 'opsz' 9"
-                toFontVariationSettings="'wght' 1000, 'opsz' 40"
+                fromFontVariationSettings="'wght' 400"
+                toFontVariationSettings="'wght' 900"
                 containerRef={heroRef}
                 radius={200}
               />
@@ -360,15 +360,15 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
             <p className={styles.heroDescription}>
               <VariableProximity
                 label={currentAsset.content[locale || 'ko'].description}
-                fromFontVariationSettings="'wght' 400, 'opsz' 9"
-                toFontVariationSettings="'wght' 1000, 'opsz' 40"
+                fromFontVariationSettings="'wght' 400"
+                toFontVariationSettings="'wght' 900"
                 containerRef={heroRef}
                 radius={150}
               />
             </p>
           )}
           {currentAsset.url && (
-            <Magnet magnetStrength={20}>
+            <Magnet magnetStrength={20} style={{ zIndex: 3 }}>
               <div className={styles.heroButton}>
                 {t.viewMore} <FaArrowRight />
               </div>

@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap");
+
 :root {
   --sidenav-width: 320px;
   --blur-size: 16px;
@@ -122,10 +124,8 @@ body {
     background-color: var(--bg-color);
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap");
-
 .variable-proximity {
-  font-family: "Roboto Flex", sans-serif;
+  font-family: var(--font-noto-sans-kr), sans-serif;
 }
 
 .sr-only {
