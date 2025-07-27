@@ -35,7 +35,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
         pageId: pageInfo.pageId,
         title: pageInfo.title,
         description: pageInfo.description,
-        published: (pageInfo as any).date, // Fix: Property 'published' does not exist on type 'PageInfo'
+        date: (pageInfo as any).date, // Fix: Property 'published' does not exist on type 'PageInfo'
         slug: pageInfo.slug,
         language: pageInfo.language || 'ko',
         coverImage: pageInfo.coverImage || undefined,
@@ -323,7 +323,7 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
                       color: 'var(--secondary-text-color)',
                       lineHeight: '1.5',
                       marginTop: '0.5rem',
-                      marginBottom: '1rem',
+                      marginBottom: 0,
                       display: '-webkit-box',
                       WebkitLineClamp: 4,
                       WebkitBoxOrient: 'vertical',
@@ -333,15 +333,6 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
                     </p>
                   )}
                 </div>
-                {post.published && (
-                  <div style={{
-                    fontSize: '0.85rem',
-                    color: 'var(--tertiary-text-color)',
-                    fontWeight: '500'
-                  }}>
-                    {formatDate(post.published)}
-                  </div>
-                )}
               </div>
             </article>
           </Link>
