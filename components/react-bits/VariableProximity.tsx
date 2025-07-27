@@ -1,5 +1,6 @@
 import { forwardRef, useMemo, useRef, useEffect, MutableRefObject } from "react";
 import { motion } from "framer-motion";
+import styles from '../../styles/components/react-bits/VariableProximity.module.css';
 
 function useAnimationFrame(callback: () => void) {
   useEffect(() => {
@@ -153,7 +154,7 @@ const VariableProximity = forwardRef<HTMLSpanElement, {
   return (
     <span
       ref={ref}
-      className={`${className} variable-proximity`}
+      className={`${className} ${styles.variableProximity}`}
       onClick={onClick}
       style={{ display: "inline", ...style }}
       {...restProps}
