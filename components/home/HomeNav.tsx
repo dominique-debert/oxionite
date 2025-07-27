@@ -28,6 +28,7 @@ export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavPro
 
     const navRect = navRef.current.getBoundingClientRect()
     const mouseX = e.clientX - navRect.left
+    const mouseY = e.clientY - navRect.top
 
     let closestIndex = -1
     let minDistance = Infinity
@@ -35,8 +36,12 @@ export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavPro
     itemRefs.current.forEach((item, index) => {
       if (item) {
         const itemRect = item.getBoundingClientRect()
-        const itemCenter = (itemRect.left - navRect.left) + itemRect.width / 2
-        const distance = Math.abs(mouseX - itemCenter)
+        const itemCenterX = itemRect.left - navRect.left + itemRect.width / 2
+        const itemCenterY = itemRect.top - navRect.top + itemRect.height / 2
+
+        const dx = mouseX - itemCenterX
+        const dy = mouseY - itemCenterY
+        const distance = Math.sqrt(dx * dx + dy * dy)
 
         if (distance < minDistance) {
           minDistance = distance
@@ -57,8 +62,10 @@ export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavPro
       const item = itemRefs.current[hoveredItemIndex]
       if (item) {
         setPillStyle({
+          top: item.offsetTop,
           left: item.offsetLeft,
           width: item.offsetWidth,
+          height: item.offsetHeight,
           opacity: 1
         })
       }

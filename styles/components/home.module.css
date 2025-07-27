@@ -212,13 +212,10 @@
 /* 추가된 알약 스타일 */
 .navPill {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  height: calc(100% - 2rem); /* padding을 고려한 높이 */
   background-color: var(--hover-bg-color);
   border: 1px solid var(--hover-border-color);
   border-radius: 64px;
-  transition: left 0.3s ease-in-out, width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition: top 0.3s ease-in-out, left 0.3s ease-in-out, width 0.3s ease-in-out, height 0.3s ease-in-out, opacity 0.3s ease-in-out;
   z-index: 0; /* 텍스트보다 뒤에 위치 */
 }
 
