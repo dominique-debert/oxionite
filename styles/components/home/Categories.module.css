@@ -1,8 +1,0 @@
-.container {
-  width: 100%;
-  height: 75vh;
-  border-radius: 32px;
-  border: 1px solid var(--border-color);
-  backdrop-filter: blur(var(--blur-size));
-  -webkit-backdrop-filter: blur(var(--blur-size));
-}
