@@ -144,7 +144,9 @@
 }
 
 .heroButton {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 1rem;
   padding: 0.8rem 1.6rem;
   background-color:rgba(0, 0, 0, 0.3);

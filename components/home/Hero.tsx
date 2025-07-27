@@ -349,7 +349,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
             <h2 className={styles.heroTitle}>
               <VariableProximity
                 label={currentAsset.content[locale || 'ko'].title}
-                fromFontVariationSettings="'wght' 400"
+                fromFontVariationSettings="'wght' 600"
                 toFontVariationSettings="'wght' 900"
                 containerRef={heroRef}
                 radius={200}
@@ -360,10 +360,10 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
             <p className={styles.heroDescription}>
               <VariableProximity
                 label={currentAsset.content[locale || 'ko'].description}
-                fromFontVariationSettings="'wght' 400"
+                fromFontVariationSettings="'wght' 350"
                 toFontVariationSettings="'wght' 900"
                 containerRef={heroRef}
-                radius={150}
+                radius={200}
               />
             </p>
           )}

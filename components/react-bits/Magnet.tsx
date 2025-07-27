@@ -21,6 +21,7 @@ const Magnet: React.FC<MagnetProps> = ({
   inactiveTransition = "transform 0.5s ease-in-out",
   wrapperClassName = "",
   innerClassName = "",
+  style,
   ...props
 }) => {
   const [isActive, setIsActive] = useState(false);
@@ -67,7 +68,11 @@ const Magnet: React.FC<MagnetProps> = ({
     <div
       ref={magnetRef}
       className={wrapperClassName}
-      style={{ position: "relative", display: "inline-block", zIndex: props.style?.zIndex }}
+      style={{
+        position: "relative",
+        display: "inline-block",
+        ...style,
+      }}
       {...props}
     >
       <div

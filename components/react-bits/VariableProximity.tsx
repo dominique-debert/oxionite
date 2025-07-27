@@ -60,7 +60,7 @@ const VariableProximity = forwardRef<HTMLSpanElement, {
     toFontVariationSettings,
     containerRef,
     radius = 50,
-    falloff = "linear",
+    falloff = "gaussian",
     className = "",
     onClick,
     style,
