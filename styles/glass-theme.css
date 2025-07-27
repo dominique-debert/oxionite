@@ -30,7 +30,7 @@
   height: 2.5rem;
   min-width: 2.5rem;
   border-radius: 9999px;
-  border: 1px solid var(--border-color); /* Start with a transparent border */
+  border: 1px solid transparent; /* Start with a transparent border */
   background-color: var(--button-bg-color);
   backdrop-filter: blur(var(--blur-size));
   -webkit-backdrop-filter: blur(var(--blur-size));
@@ -114,36 +114,34 @@
 /* Language switcher dropdown menu */
 .language-switcher-menu {
   position: absolute;
-  top: calc(100% + 20px);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-color);
   background-color: var(--default-bg-color);
-  backdrop-filter: blur(var(--blur-size)) !important;
-  -webkit-backdrop-filter: blur(var(--blur-size)) !important;
+  backdrop-filter: blur(var(--blur-size));
+  -webkit-backdrop-filter: blur(var(--blur-size));
   box-shadow: 0 0 32px 0 var(--shadow-color);
   padding: 0.5rem;
   z-index: 1001;
   min-width: 100px;
+
 }
 
 .dark-mode .language-switcher-menu {
   background-color: var(--default-bg-color);
-  border-color: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(var(--blur-size)) !important;
-  -webkit-backdrop-filter: blur(var(--blur-size)) !important;
+  border-color: var(--border-color);
 }
 
 .language-switcher-menu a {
   display: block;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  color: inherit;
+  color: var(--primary-text-color);
   text-decoration: none;
+
 }
 
 .language-switcher-menu a:hover {
   background-color: var(--hover-bg-color);
-  border-color: var(--hover-border-color);
 }
 
 .dark-mode .language-switcher-menu a:hover {
