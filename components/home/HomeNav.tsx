@@ -1,5 +1,5 @@
 import cs from 'classnames'
-import React from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import styles from 'styles/components/home.module.css'
 
 import type { PageInfo } from '@/lib/types'
@@ -12,29 +12,79 @@ interface HomeNavProps {
 
 export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavProps) {
   const navItems = ['Recent Posts', 'Categories', 'Tags']
+  const allNavItems = [
+    ...homePages.map((page) => ({ title: page.title, pageId: page.pageId })),
+    ...navItems.map((item) => ({ title: item, pageId: undefined }))
+  ]
+
+  const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null)
+  const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 })
+
+  const navRef = useRef<HTMLElement>(null)
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (!navRef.current) return
+
+    const navRect = navRef.current.getBoundingClientRect()
+    const mouseX = e.clientX - navRect.left
+
+    let closestIndex = -1
+    let minDistance = Infinity
+
+    itemRefs.current.forEach((item, index) => {
+      if (item) {
+        const itemRect = item.getBoundingClientRect()
+        const itemCenter = (itemRect.left - navRect.left) + itemRect.width / 2
+        const distance = Math.abs(mouseX - itemCenter)
+
+        if (distance < minDistance) {
+          minDistance = distance
+          closestIndex = index
+        }
+      }
+    })
+
+    setHoveredItemIndex(closestIndex)
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredItemIndex(null)
+  }, [])
+
+  useEffect(() => {
+    if (hoveredItemIndex !== null && itemRefs.current[hoveredItemIndex]) {
+      const item = itemRefs.current[hoveredItemIndex]
+      if (item) {
+        setPillStyle({
+          left: item.offsetLeft,
+          width: item.offsetWidth,
+          opacity: 1
+        })
+      }
+    } else {
+      setPillStyle((prevStyle) => ({ ...prevStyle, opacity: 0 }))
+    }
+  }, [hoveredItemIndex])
 
   return (
-    <nav className={styles.homeNav}>
-      {homePages.map((page) => (
+    <nav
+      ref={navRef}
+      className={styles.homeNav}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div className={styles.navPill} style={pillStyle} />
+      {allNavItems.map((item, index) => (
         <button
-          key={page.pageId}
-          className={cs(styles.navItem, activeTab === page.title && styles.active)}
-          onClick={() => onNavClick(page.title, page.pageId)}
+          key={item.title}
+          ref={(el) => { itemRefs.current[index] = el }}
+          className={cs(styles.navItem, activeTab === item.title && styles.active)}
+          onClick={() => onNavClick(item.title, item.pageId)}
         >
-          {page.title}
-        </button>
-      ))}
-      {navItems.map((item) => (
-        <button
-          key={item}
-          className={cs(styles.navItem, activeTab === item && styles.active)}
-          onClick={() => onNavClick(item)}
-        >
-          {item}
+          {item.title}
         </button>
       ))}
     </nav>
   )
 }
-
- 

@@ -196,19 +196,35 @@
 
 /* Home Navigation */
 .homeNav {
+  position: relative; /* 자식 요소의 absolute 위치 기준 */
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 1rem;
   border: 1px solid var(--border-color);
-  border-radius: 32px;
+  border-radius: 64px;
   background-color: var(--default-bg-color);
   backdrop-filter: blur(var(--blur-size));
   -webkit-backdrop-filter: blur(var(--blur-size));
 }
 
+/* 추가된 알약 스타일 */
+.navPill {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: calc(100% - 2rem); /* padding을 고려한 높이 */
+  background-color: var(--hover-bg-color);
+  border: 1px solid var(--hover-border-color);
+  border-radius: 64px;
+  transition: left 0.3s ease-in-out, width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  z-index: 0; /* 텍스트보다 뒤에 위치 */
+}
+
 .navItem {
+  position: relative; /* z-index를 적용하기 위해 필요 */
+  z-index: 1; /* 알약보다 위에 위치 */
   padding: 0.5rem 1rem;
   font-size: 1rem;
   font-weight: 500;
@@ -217,13 +233,14 @@
   border: 1px solid transparent;
   border-radius: 64px;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out; /* 색상 변경은 유지 */
 }
 
-.navItem:hover {
+/* 기존 hover 효과 제거 */
+/* .navItem:hover {
   background-color: var(--hover-bg-color);
   border: 1px solid var(--hover-border-color);
-}
+} */
 
 .navItem.active {
   color: var(--primary-text-color);
