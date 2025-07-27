@@ -292,7 +292,7 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
+                justifyContent: 'center',
                 order: isMobile ? 2 : 1,
                 padding: isMobile ? '1.5rem 1rem' : '1.5rem 2rem',
                 minWidth: 0 // flex item이 수축할 때 내용이 넘치는 것을 방지

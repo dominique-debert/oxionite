@@ -58,7 +58,8 @@
     "react-transition-group": "^4.4.5",
     "react-tweet": "^3.2.2",
     "react-use": "^17.6.0",
-    "rss": "^1.2.2"
+    "rss": "^1.2.2",
+    "vis-network": "^10.0.1"
   },
   "devDependencies": {
     "@fisch0920/config": "^1.1.2",
