@@ -10,7 +10,6 @@ import styles from '@/styles/components/SideNav.module.css'
 
 import { CategoryTree } from './CategoryTree'
 
-import GlassSurface from './react-bits/GlassSurface'
 
 function filterNavigationItems(items: types.PageInfo[], currentLocale: string): types.PageInfo[] {
   if (!items || !Array.isArray(items)) return []
@@ -66,15 +65,8 @@ export function SideNav({
   )
 
   return (
-    <GlassSurface
-      width="100%"
-      height="100%"
-      borderRadius={0}
-      className='glass-surface'
-    > 
-      <aside className={asideClasses}>
-        <CategoryTree items={filteredNavigationTree} />
-      </aside>
-    </GlassSurface>
+    <aside className={asideClasses}>
+      <CategoryTree items={filteredNavigationTree} />
+    </aside>
   )
 }

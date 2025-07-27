@@ -335,8 +335,10 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
       </div>
 
       <div className={styles.heroOverlay}>
-        <div 
+        <div
           className={styles.heroTextContainer}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
           onClick={() => {
             if (currentAsset.url) {
               window.open(currentAsset.url, '_blank')

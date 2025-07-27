@@ -25,7 +25,7 @@
   position: relative;
   width: 100%;
   color: var(--primary-text-color);
-  padding: 8px 0;
+  padding: 1rem 0;
 }
 
 /* This pseudo-element creates the full-width background */
