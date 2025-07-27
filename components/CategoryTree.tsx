@@ -37,11 +37,14 @@ const countPostsRecursively = (item: PageInfo): number => {
 function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemProps) {
   const isCategory = item.type === 'Category'
   const router = useRouter()
-  const { asPath } = router
 
-  const locale = router.locale || 'en'
-  const pageUrl = `/${locale}/${item.slug}`
-  const isActive = asPath === pageUrl
+  // Construct pageUrl without locale
+  const pageUrl = `/${item.slug}`;
+  
+  // Clean asPath and pageUrl for comparison
+  const cleanedAsPath = router.asPath.split('?')[0].split('#')[0].replace(/\/$/, '');
+  const cleanedPageUrl = pageUrl.replace(/\/$/, '');
+  const isActive = cleanedAsPath === cleanedPageUrl;
 
   const postCount = isCategory ? countPostsRecursively(item) : 0
   const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' ? styles.postItem : ''}`

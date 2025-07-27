@@ -31,21 +31,23 @@ function filterNavigationItems(items: types.PageInfo[], currentLocale: string): 
     })
 }
 
-const findPathToActiveItem = (items: types.PageInfo[], activeSlug: string, currentLocale: string): string[] | null => {
+const findPathToActiveItem = (items: types.PageInfo[], activeSlug: string): string[] | null => {
+  const cleanedActiveSlug = activeSlug.split('?')[0].split('#')[0].replace(/\/$/, '');
+
   for (const item of items) {
-    const pageUrl = `/${currentLocale}/${item.slug}`
-    if (pageUrl === activeSlug) {
-      return [item.pageId]
+    const pageUrl = `/${item.slug}`.replace(/\/$/, '');
+    if (pageUrl === cleanedActiveSlug) {
+      return [item.pageId];
     }
     if (item.children) {
-      const childPath = findPathToActiveItem(item.children, activeSlug, currentLocale)
+      const childPath = findPathToActiveItem(item.children, activeSlug);
       if (childPath) {
-        return [item.pageId, ...childPath]
+        return [item.pageId, ...childPath];
       }
     }
   }
-  return null
-}
+  return null;
+};
 
 interface SideNavProps {
   siteMap: types.SiteMap
@@ -92,7 +94,7 @@ export function SideNav({
     }
     setInitialExpansion(filteredNavigationTree)
 
-    const activePath = findPathToActiveItem(filteredNavigationTree, asPath, locale || 'en')
+    const activePath = findPathToActiveItem(filteredNavigationTree, asPath)
     if (activePath) {
       activePath.forEach(id => {
         newExpandedState[id] = true
@@ -100,7 +102,7 @@ export function SideNav({
     }
 
     setExpandedItems(newExpandedState)
-  }, [filteredNavigationTree, asPath, locale])
+  }, [filteredNavigationTree, asPath])
 
   const toggleItemExpanded = (id: string) => {
     setExpandedItems(prev => ({
