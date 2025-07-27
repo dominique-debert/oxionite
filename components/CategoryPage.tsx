@@ -15,7 +15,7 @@ interface PostItem {
   pageId: string
   title: string
   description: string | null
-  published: string | null
+  date: string | null
   slug: string
   language: string
   coverImage?: string
@@ -35,7 +35,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
         pageId: pageInfo.pageId,
         title: pageInfo.title,
         description: pageInfo.description,
-        published: (pageInfo as any).published, // Fix: Property 'published' does not exist on type 'PageInfo'
+        published: (pageInfo as any).date, // Fix: Property 'published' does not exist on type 'PageInfo'
         slug: pageInfo.slug,
         language: pageInfo.language || 'ko',
         coverImage: pageInfo.coverImage || undefined,
@@ -119,10 +119,10 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
     
     // Sort by published date (newest first)
     return posts.sort((a, b) => {
-      if (!a.published && !b.published) return 0
-      if (!a.published) return 1
-      if (!b.published) return -1
-      return new Date(b.published).getTime() - new Date(a.published).getTime()
+      if (!a.date && !b.date) return 0
+      if (!a.date) return 1
+      if (!b.date) return -1
+      return new Date(b.date).getTime() - new Date(a.date).getTime()
     })
   }, [currentPageInfo])
   
@@ -307,6 +307,16 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
                   }}>
                     {post.title}
                   </h2>
+                  {post.date && (
+                    <div style={{
+                      fontSize: '0.85rem',
+                      color: 'var(--tertiary-text-color)',
+                      fontWeight: '500',
+                      marginTop: '0.25rem'
+                    }}>
+                      {formatDate(post.date)}
+                    </div>
+                  )}
                   {post.description && (
                     <p style={{
                       fontSize: '0.95rem',
@@ -315,7 +325,7 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
                       marginTop: '0.5rem',
                       marginBottom: '1rem',
                       display: '-webkit-box',
-                      WebkitLineClamp: 2,
+                      WebkitLineClamp: 4,
                       WebkitBoxOrient: 'vertical',
                       overflow: 'hidden'
                     }}>
@@ -424,4 +434,4 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
       )}
     </div>
   )
-} 
+}
