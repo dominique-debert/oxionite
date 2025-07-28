@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 
 import type { SiteMap, PageInfo, Block } from '@/lib/types';
 import { mapImageUrl } from '@/lib/map-image-url';
+import { useDarkMode } from '@/lib/use-dark-mode';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
@@ -84,7 +85,28 @@ export default function Categories({ siteMap }: CategoriesProps) {
   const locale = router.locale || 'ko';
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [colors, setColors] = useState({ node: '', link: '', text: '' });
+  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const { isDarkMode } = useDarkMode();
+
+  const colors = useMemo(() => {
+    if (isDarkMode) {
+      return {
+        node: 'rgba(0, 0, 0, 0.3)',
+        text: 'rgba(255, 255, 255, 0.9)',
+        link: 'rgba(255, 255, 255, 0.2)',
+        hover: 'rgba(255, 255, 255, 0.06)',
+        bg: 'rgba(0, 0, 0, 0.3)'
+      };
+    } else {
+      return {
+        node: 'rgba(255, 255, 255, 0.3)',
+        text: 'rgb(50, 48, 44)',
+        link: 'rgba(0, 0, 0, 0.2)',
+        hover: 'rgba(0, 0, 0, 0.04)',
+        bg: 'rgba(255, 255, 255, 0.3)'
+      };
+    }
+  }, [isDarkMode]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -93,11 +115,6 @@ export default function Categories({ siteMap }: CategoriesProps) {
         height: containerRef.current.offsetHeight,
       });
     }
-
-    const nodeColor = getComputedStyle(document.documentElement).getPropertyValue('--default-bg-color').trim();
-    const linkColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim();
-    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-text-color').trim();
-    setColors({ node: nodeColor, link: linkColor, text: textColor });
   }, []);
 
   const graphData = useMemo(() => {
@@ -124,9 +141,10 @@ export default function Categories({ siteMap }: CategoriesProps) {
         width: '100%', 
         height: '75vh', 
         position: 'relative', 
-        border: '1px solid var(--border-color)',
+        border: `1px solid ${colors.link}`,
         borderRadius: '32px',
         overflow: 'hidden',
+        backgroundColor: colors.bg,
       }}>
       {dimensions.width > 0 && (
         <ForceGraph2D
@@ -135,16 +153,24 @@ export default function Categories({ siteMap }: CategoriesProps) {
           graphData={graphData}
           nodeLabel="name"
           nodeVal={10}
-          linkColor={() => colors.link}
+          linkColor={(link) => {
+            const sourceId = typeof link.source === 'object' ? (link.source as GraphNode).id : link.source;
+            const targetId = typeof link.target === 'object' ? (link.target as GraphNode).id : link.target;
+            return hoveredNode && (sourceId === hoveredNode.id || targetId === hoveredNode.id)
+              ? colors.hover
+              : colors.link;
+          }}
           linkWidth={2}
           onNodeClick={handleNodeClick}
+          onNodeHover={node => setHoveredNode(node as GraphNode)}
           nodeCanvasObject={(node, ctx, globalScale) => {
             const r = Math.sqrt(node.val || 1) * 4;
+            const isHovered = hoveredNode && hoveredNode.id === node.id;
 
             // Draw circle
             ctx.beginPath();
             ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
-            ctx.fillStyle = colors.node || '#f0f0f0';
+            ctx.fillStyle = isHovered ? colors.hover : colors.node;
             ctx.fill();
 
             // Draw image inside circle
@@ -159,12 +185,12 @@ export default function Categories({ siteMap }: CategoriesProps) {
 
             // Draw label
             const label = node.name || '';
-            const fontSize = 12 / globalScale;
+            const fontSize = 16 / globalScale;
             ctx.font = `${fontSize}px Sans-Serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = colors.text || '#000';
-            ctx.fillText(label, node.x!, node.y! + r + 5);
+            ctx.fillStyle = colors.text;
+            ctx.fillText(label, node.x!, node.y! + r + 1);
           }}
         />
       )}
