@@ -10,13 +10,13 @@ import { useDarkMode } from '@/lib/use-dark-mode';
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 const GRAPH_LAYOUT_CONFIG = {
-  HOME_NODE_SIZE: 8,
-  CATEGORY_NODE_SIZE: 4,
-  POST_NODE_SIZE: 2,
+  HOME_NODE_SIZE: 32,
+  CATEGORY_NODE_SIZE: 10,
+  POST_NODE_SIZE: 4,
   HOME_CORNER_RADIUS: 16,
-  CATEGORY_CORNER_RADIUS: 4,
+  CATEGORY_CORNER_RADIUS: 2,
   LINK_WIDTH: 1,
-  HOVER_OPACITY: 0.3,
+  HOVER_OPACITY: 0.1,
   HOME_NAME_FONT_SIZE: 4,
   HOME_DESC_FONT_SIZE: 2,
   CATEGORY_FONT_SIZE: 2,
@@ -250,23 +250,25 @@ export default function Categories({ siteMap }: CategoriesProps) {
           nodeLabel="name"
           nodeVal="val"
           linkColor={(link: any) => {
-            const source = link.source;
-            const target = link.target;
-
-            if (!source || !target) {
+            if (!hoveredNode) {
               return colors.link;
             }
 
+            const source = link.source;
+            const target = link.target;
             const sourceId = typeof source === 'object' ? source.id : source;
             const targetId = typeof target === 'object' ? target.id : target;
-            
-            if (hoveredNode && (sourceId === hoveredNode.id || targetId === hoveredNode.id)) {
-              return colors.hover;
+
+            const isConnectedToHovered = sourceId === hoveredNode.id || targetId === hoveredNode.id;
+
+            if (isConnectedToHovered) {
+              return colors.link;
+            } else {
+              const linkColor = colors.link;
+              const lastCommaIndex = linkColor.lastIndexOf(',');
+              const baseColor = linkColor.substring(0, lastCommaIndex);
+              return `${baseColor}, ${GRAPH_LAYOUT_CONFIG.HOVER_OPACITY})`;
             }
-            if (hoveredNode && !(hoveredNode.neighbors?.some(n => n.id === sourceId) || hoveredNode.neighbors?.some(n => n.id === targetId))) {
-              return `rgba(0,0,0,${GRAPH_LAYOUT_CONFIG.HOVER_OPACITY})`;
-            }
-            return colors.link;
           }}
           linkWidth={GRAPH_LAYOUT_CONFIG.LINK_WIDTH}
           onNodeClick={handleNodeClick}
