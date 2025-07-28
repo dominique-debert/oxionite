@@ -8,6 +8,15 @@ import { useDarkMode } from '@/lib/use-dark-mode';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
+// 5. Layout variables are grouped at the top.
+const GRAPH_LAYOUT_CONFIG = {
+  CATEGORY_NODE_SIZE: 24,
+  POST_NODE_SIZE: 12,
+  CATEGORY_CORNER_RADIUS: 4,
+  LABEL_FONT_SIZE: 4,
+  LINK_WIDTH: 2,
+};
+
 interface CategoriesProps {
   siteMap?: SiteMap;
 }
@@ -15,10 +24,10 @@ interface CategoriesProps {
 interface GraphNode {
   id: string;
   name: string;
+  type: 'Category' | 'Post';
   imageUrl?: string;
   page: PageInfo;
   img?: HTMLImageElement;
-  val?: number;
   x?: number;
   y?: number;
 }
@@ -30,51 +39,63 @@ interface GraphLink {
 
 const imageCache = new Map<string, HTMLImageElement>();
 
+// 1. Displays posts and categories for the current locale at once.
 const createGraphData = (navigationTree: PageInfo[], locale: string) => {
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
+  const addedNodes = new Set<string>();
 
-  function traverse(pages: PageInfo[]) {
+  const addNode = (page: PageInfo) => {
+    if (addedNodes.has(page.pageId) || page.language !== locale) return;
+    if (page.type !== 'Category' && page.type !== 'Post') return;
+
+    const imageUrl = page.coverImage && page.coverImageBlock
+      ? mapImageUrl(page.coverImage, page.coverImageBlock as Block)
+      : undefined;
+
+    const node: GraphNode = {
+      id: page.pageId,
+      name: page.title,
+      type: page.type as 'Category' | 'Post',
+      imageUrl,
+      page: page,
+    };
+
+    if (imageUrl && !imageCache.has(imageUrl)) {
+      const img = new Image();
+      img.src = imageUrl;
+      imageCache.set(imageUrl, img);
+    }
+    if (imageUrl) {
+      node.img = imageCache.get(imageUrl);
+    }
+
+    nodes.push(node);
+    addedNodes.add(page.pageId);
+  };
+
+  const traverse = (pages: PageInfo[]) => {
     pages.forEach((page) => {
-      if (page.language !== locale || page.type !== 'Category') {
-        return;
-      }
+      if (page.language !== locale) return;
 
-      const imageUrl = page.coverImage && page.coverImageBlock
-        ? mapImageUrl(page.coverImage, page.coverImageBlock as Block)
-        : undefined;
+      if (page.type === 'Category') {
+        addNode(page);
 
-      const node: GraphNode = {
-        id: page.pageId,
-        name: page.title,
-        imageUrl,
-        page: page,
-      };
-
-      if (imageUrl && !imageCache.has(imageUrl)) {
-        const img = new Image();
-        img.src = imageUrl;
-        imageCache.set(imageUrl, img);
-      }
-      if (imageUrl) {
-        node.img = imageCache.get(imageUrl);
-      }
-
-      nodes.push(node);
-
-      if (page.children && page.children.length > 0) {
-        page.children.forEach((child) => {
-          if (child.language === locale && child.type === 'Category') {
-            links.push({
-              source: page.pageId,
-              target: child.pageId,
-            });
-          }
-        });
-        traverse(page.children);
+        if (page.children?.length) {
+          page.children.forEach((child) => {
+            if (child.language === locale && (child.type === 'Category' || child.type === 'Post')) {
+              addNode(child);
+              links.push({
+                source: page.pageId,
+                target: child.pageId,
+              });
+            }
+          });
+          traverse(page.children);
+        }
       }
     });
-  }
+  };
 
   traverse(navigationTree);
   return { nodes, links };
@@ -124,6 +145,7 @@ export default function Categories({ siteMap }: CategoriesProps) {
     return createGraphData(siteMap.navigationTree, locale);
   }, [siteMap, locale]);
 
+  // 4. Clicking routes to the slug, which works for both types.
   const handleNodeClick = (node: any) => {
     const page = node.page as PageInfo;
     if (page) {
@@ -152,7 +174,6 @@ export default function Categories({ siteMap }: CategoriesProps) {
           height={dimensions.height}
           graphData={graphData}
           nodeLabel="name"
-          nodeVal={10}
           linkColor={(link) => {
             const sourceId = typeof link.source === 'object' ? (link.source as GraphNode).id : link.source;
             const targetId = typeof link.target === 'object' ? (link.target as GraphNode).id : link.target;
@@ -160,37 +181,43 @@ export default function Categories({ siteMap }: CategoriesProps) {
               ? colors.hover
               : colors.link;
           }}
-          linkWidth={2}
+          linkWidth={GRAPH_LAYOUT_CONFIG.LINK_WIDTH}
           onNodeClick={handleNodeClick}
           onNodeHover={node => setHoveredNode(node as GraphNode)}
-          nodeCanvasObject={(node, ctx, globalScale) => {
-            const r = Math.sqrt(node.val || 1) * 4;
+          nodeCanvasObject={(node: GraphNode, ctx, globalScale) => {
             const isHovered = hoveredNode && hoveredNode.id === node.id;
+            const { CATEGORY_NODE_SIZE, POST_NODE_SIZE, CATEGORY_CORNER_RADIUS, LABEL_FONT_SIZE } = GRAPH_LAYOUT_CONFIG;
 
-            // Draw circle
+            // 2 & 3. Draw shape based on node type (Category or Post)
             ctx.beginPath();
-            ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
+            if (node.type === 'Category') {
+              const size = CATEGORY_NODE_SIZE;
+              ctx.roundRect(node.x! - size / 2, node.y! - size / 2, size, size, CATEGORY_CORNER_RADIUS);
+            } else { // Post
+              const r = POST_NODE_SIZE / 2;
+              ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
+            }
             ctx.fillStyle = isHovered ? colors.hover : colors.node;
             ctx.fill();
 
-            // Draw image inside circle
+            // 2 & 3. Draw cover image if available
             if (node.img && node.img.complete) {
               ctx.save();
-              ctx.beginPath();
-              ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
-              ctx.clip();
-              ctx.drawImage(node.img, node.x! - r, node.y! - r, r * 2, r * 2);
+              ctx.clip(); // Clip to the path we just drew
+              const size = node.type === 'Category' ? CATEGORY_NODE_SIZE : POST_NODE_SIZE;
+              ctx.drawImage(node.img, node.x! - size / 2, node.y! - size / 2, size, size);
               ctx.restore();
             }
 
             // Draw label
             const label = node.name || '';
-            const fontSize = 16 / globalScale;
+            const fontSize = LABEL_FONT_SIZE;
             ctx.font = `${fontSize}px Sans-Serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = colors.text;
-            ctx.fillText(label, node.x!, node.y! + r + 1);
+            const textYOffset = (node.type === 'Category' ? CATEGORY_NODE_SIZE / 2 : POST_NODE_SIZE / 2) + 8;
+            ctx.fillText(label, node.x!, node.y! + textYOffset);
           }}
         />
       )}

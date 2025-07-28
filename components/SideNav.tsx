@@ -10,6 +10,7 @@ import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SideNav.module.css'
 
 import { CategoryTree } from './CategoryTree'
+import { HomeButton } from './HomeButton'
 
 function filterNavigationItems(items: types.PageInfo[], currentLocale: string): types.PageInfo[] {
   if (!items || !Array.isArray(items)) return []
@@ -197,6 +198,7 @@ export function SideNav({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
+      <HomeButton />
       <div className="sidenav-pill" style={pillStyle} />
       <CategoryTree 
         items={filteredNavigationTree}
