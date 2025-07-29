@@ -22,11 +22,16 @@
   margin: 1rem 0;
 }
 
-.fullscreenButton {
+.buttonContainer {
   position: absolute;
-  top: 1rem;
+  bottom: 1rem;
   right: 1rem;
   z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.button {
   background: var(--default-bg-color);
   border: 1px solid var(--border-color);
   color: var(--primary-text-color);
@@ -37,9 +42,10 @@
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s ease;
+  box-shadow: 0 2px 8px var(--shadow-color);
 }
 
-.fullscreenButton:hover {
+.button:hover {
   background: var(--hover-bg-color);
   border-color: var(--hover-border-color);
 

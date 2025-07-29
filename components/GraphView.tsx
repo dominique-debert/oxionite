@@ -1,8 +1,9 @@
-import React, { useMemo, useEffect, useState, useRef } from 'react';
+import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import siteConfig from 'site.config';
-import { MdFullscreen, MdFullscreenExit } from 'react-icons/md';
+import { MdFullscreen, MdFullscreenExit, MdMyLocation } from 'react-icons/md';
+import { createPortal } from 'react-dom';
 
 import type { SiteMap, PageInfo, Block } from '@/lib/types';
 import { mapImageUrl } from '@/lib/map-image-url';
@@ -176,11 +177,10 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
   return { nodes, links };
 };
 
-import { createPortal } from 'react-dom';
-
-const GraphComponent = ({ siteMap }: { siteMap?: SiteMap }) => {
+const GraphComponent = React.forwardRef(({ siteMap }: { siteMap?: SiteMap }, ref) => {
   const router = useRouter();
   const locale = router.locale || 'ko';
+  const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
@@ -214,6 +214,23 @@ const GraphComponent = ({ siteMap }: { siteMap?: SiteMap }) => {
     }
   }, [isDarkMode]);
 
+  const graphData = useMemo(() => {
+    if (!siteMap) {
+      return { nodes: [], links: [] };
+    }
+    return createGraphData(siteMap.navigationTree, locale);
+  }, [siteMap, locale]);
+
+  const focusOnNode = useCallback((node: GraphNode) => {
+    if (fgRef.current) {
+      fgRef.current.zoomToFit(400, 150, (n: GraphNode) => n === node);
+    }
+  }, []);
+
+  React.useImperativeHandle(ref, () => ({
+    focusOnNode,
+  }));
+
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -225,15 +242,15 @@ const GraphComponent = ({ siteMap }: { siteMap?: SiteMap }) => {
     };
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
 
-  const graphData = useMemo(() => {
-    if (!siteMap) {
-      return { nodes: [], links: [] };
+    const slug = router.asPath.split('/').pop()?.split('?')[0];
+    const currentNode = graphData.nodes.find(n => n.page.slug === slug);
+    if (currentNode) {
+      setTimeout(() => focusOnNode(currentNode), 500);
     }
-    return createGraphData(siteMap.navigationTree, locale);
-  }, [siteMap, locale]);
+
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [graphData, router.asPath, focusOnNode]);
 
   const handleNodeClick = (node: any) => {
     const typedNode = node as GraphNode;
@@ -267,6 +284,7 @@ const GraphComponent = ({ siteMap }: { siteMap?: SiteMap }) => {
     <div ref={containerRef} className={styles.graphInner}>
       {dimensions.width > 0 && (
         <ForceGraph2D
+          ref={fgRef}
           width={dimensions.width}
           height={dimensions.height}
           graphData={graphData}
@@ -343,11 +361,13 @@ const GraphComponent = ({ siteMap }: { siteMap?: SiteMap }) => {
       )}
     </div>
   );
-};
+});
 
 export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const graphRef = useRef<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
@@ -356,25 +376,47 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  const handleFocusCurrentNode = () => {
+    if (graphRef.current) {
+      const slug = router.asPath.split('/').pop()?.split('?')[0];
+      const siteMapNodes = (siteMap?.navigationTree || []);
+      const nodes = createGraphData(siteMapNodes, router.locale || 'ko').nodes;
+      const currentNode = nodes.find(n => n.page.slug === slug);
+      if (currentNode) {
+        graphRef.current.focusOnNode(currentNode);
+      }
+    }
+  };
+
   const containerClasses = `${styles.graphContainer} ${viewType === 'home' ? styles.homeView : styles.sideNavView}`;
 
   const modalContent = (
     <div className={styles.modalOverlay} onClick={closeModal}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <button onClick={closeModal} className={styles.fullscreenButton} aria-label="Close fullscreen">
-          <MdFullscreenExit size={24} />
-        </button>
-        <GraphComponent siteMap={siteMap} />
+         <div className={styles.buttonContainer}>
+          <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
+            <MdMyLocation size={24} />
+          </button>
+          <button onClick={closeModal} className={styles.button} aria-label="Close fullscreen">
+            <MdFullscreenExit size={24} />
+          </button>
+        </div>
+        <GraphComponent siteMap={siteMap} ref={graphRef} />
       </div>
     </div>
   );
 
   return (
     <div className={containerClasses}>
-      <button onClick={openModal} className={styles.fullscreenButton} aria-label="Open in fullscreen">
-        <MdFullscreen size={24} />
-      </button>
-      <GraphComponent siteMap={siteMap} />
+      <div className={styles.buttonContainer}>
+        <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
+          <MdMyLocation size={24} />
+        </button>
+        <button onClick={openModal} className={styles.button} aria-label="Open in fullscreen">
+          <MdFullscreen size={24} />
+        </button>
+      </div>
+      <GraphComponent siteMap={siteMap} ref={graphRef} />
 
       {isMounted && isModalOpen && createPortal(modalContent, document.getElementById('modal-root')!)}
     </div>
