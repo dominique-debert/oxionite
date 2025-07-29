@@ -15,8 +15,8 @@ const GRAPH_LAYOUT_CONFIG = {
   POST_NODE_SIZE: 4,
   HOME_CORNER_RADIUS: 16,
   CATEGORY_CORNER_RADIUS: 2,
-  LINK_WIDTH: 1,
-  HOVER_OPACITY: 0.1,
+  LINK_WIDTH: 0.5,
+  HOVER_OPACITY: 0.2,
   HOME_NAME_FONT_SIZE: 4,
   HOME_DESC_FONT_SIZE: 2,
   CATEGORY_FONT_SIZE: 2,
@@ -40,6 +40,7 @@ interface GraphNode {
   x?: number;
   y?: number;
   neighbors?: GraphNode[];
+  links?: GraphLink[];
   val?: number;
 }
 
@@ -151,15 +152,21 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
     }
   });
   
-  // Calculate neighbors
+  // Calculate neighbors and links on nodes
   links.forEach(link => {
-    const a = nodes.find(n => n.id === (link.source as any).id || n.id === link.source);
-    const b = nodes.find(n => n.id === (link.target as any).id || n.id === link.target);
+    const a = nodes.find(n => n.id === (link.source as any)?.id || n.id === link.source);
+    const b = nodes.find(n => n.id === (link.target as any)?.id || n.id === link.target);
     if (!a || !b) return;
+
     !a.neighbors && (a.neighbors = []);
     !b.neighbors && (b.neighbors = []);
     a.neighbors.push(b);
     b.neighbors.push(a);
+
+    !a.links && (a.links = []);
+    !b.links && (b.links = []);
+    a.links.push(link);
+    b.links.push(link);
   });
 
   nodes.forEach(node => {
@@ -175,6 +182,8 @@ export default function Categories({ siteMap }: CategoriesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [highlightNodes, setHighlightNodes] = useState(new Set<GraphNode>());
+  const [highlightLinks, setHighlightLinks] = useState(new Set<GraphLink>());
   const { isDarkMode } = useDarkMode();
 
   const colors = useMemo(() => {
@@ -183,7 +192,9 @@ export default function Categories({ siteMap }: CategoriesProps) {
         node: 'rgba(0, 0, 0, 0.3)',
         text: 'rgba(255, 255, 255, 0.9)',
         desc: 'rgba(255, 255, 255, 0.7)',
-        link: 'rgba(255, 255, 255, 0.2)',
+        link: 'rgba(255, 255, 255, 0.4)',
+        linkHover: 'rgba(255, 255, 255, 0.6)',
+        linkMinor: 'rgba(255, 255, 255, 0.02)',
         hover: 'rgba(255, 255, 255, 0.06)',
         bg: 'rgba(0, 0, 0, 0.3)'
       };
@@ -192,8 +203,10 @@ export default function Categories({ siteMap }: CategoriesProps) {
         node: 'rgba(255, 255, 255, 0.3)',
         text: 'rgb(50, 48, 44)',
         desc: 'rgba(50, 48, 44, 0.7)',
-        link: 'rgba(0, 0, 0, 0.2)',
-        hover: 'rgba(0, 0, 0, 0.04)',
+        link: 'rgba(0, 0, 0, 0.4)',
+        linkHover: 'rgba(0, 0, 0, 0.6)',
+        linkMinor: 'rgba(0, 0, 0, 0.02)',
+        hover: 'rgba(0, 0, 0, 0.1)',
         bg: 'rgba(255, 255, 255, 0.3)'
       };
     }
@@ -215,16 +228,32 @@ export default function Categories({ siteMap }: CategoriesProps) {
     return createGraphData(siteMap.navigationTree, locale);
   }, [siteMap, locale]);
 
-  const handleNodeClick = (untypedNode: any) => {
-    const node = untypedNode as GraphNode;
-    if (node.id === HOME_NODE_ID) {
+  const handleNodeClick = (node: any) => {
+    const typedNode = node as GraphNode;
+    if (typedNode.id === HOME_NODE_ID) {
       void router.push('/');
       return;
     }
-    const page = node.page as PageInfo;
+    const page = typedNode.page as PageInfo;
     if (page && page.slug) {
       void router.push(`/${page.language}/${page.slug}`);
     }
+  };
+
+  const handleNodeHover = (node: any) => {
+    const typedNode = node as GraphNode | null;
+    const newHighlightNodes = new Set<GraphNode>();
+    const newHighlightLinks = new Set<GraphLink>();
+
+    if (typedNode) {
+      newHighlightNodes.add(typedNode);
+      typedNode.neighbors?.forEach(neighbor => newHighlightNodes.add(neighbor));
+      typedNode.links?.forEach(link => newHighlightLinks.add(link));
+    }
+
+    setHoveredNode(typedNode);
+    setHighlightNodes(newHighlightNodes);
+    setHighlightLinks(newHighlightLinks);
   };
 
   if (!siteMap) {
@@ -249,49 +278,38 @@ export default function Categories({ siteMap }: CategoriesProps) {
           graphData={graphData}
           nodeLabel="name"
           nodeVal="val"
+          autoPauseRedraw={false}
           linkColor={(link: any) => {
-            if (!hoveredNode) {
-              return colors.link;
-            }
-
-            const source = link.source;
-            const target = link.target;
-            const sourceId = typeof source === 'object' ? source.id : source;
-            const targetId = typeof target === 'object' ? target.id : target;
-
-            const isConnectedToHovered = sourceId === hoveredNode.id || targetId === hoveredNode.id;
-
-            if (isConnectedToHovered) {
-              return colors.link;
-            } else {
-              const linkColor = colors.link;
-              const lastCommaIndex = linkColor.lastIndexOf(',');
-              const baseColor = linkColor.substring(0, lastCommaIndex);
-              return `${baseColor}, ${GRAPH_LAYOUT_CONFIG.HOVER_OPACITY})`;
-            }
+            const typedLink = link as GraphLink;
+            if (!hoveredNode) return colors.link;
+            return highlightLinks.has(typedLink) ? colors.linkHover : colors.linkMinor;
           }}
           linkWidth={GRAPH_LAYOUT_CONFIG.LINK_WIDTH}
           onNodeClick={handleNodeClick}
-          onNodeHover={node => setHoveredNode(node as GraphNode)}
+          onNodeHover={handleNodeHover}
           nodeCanvasObject={(untypedNode, ctx) => {
             const node = untypedNode as GraphNode;
-            const isHovered = hoveredNode && hoveredNode.id === node.id;
-            const isNeighbor = hoveredNode && hoveredNode.neighbors?.some(n => n.id === node.id);
-            const opacity = (hoveredNode && !isHovered && !isNeighbor) ? GRAPH_LAYOUT_CONFIG.HOVER_OPACITY : 1;
 
-            ctx.globalAlpha = opacity;
+            // Opacity
+            if (hoveredNode && !highlightNodes.has(node)) {
+              ctx.globalAlpha = GRAPH_LAYOUT_CONFIG.HOVER_OPACITY;
+            } else {
+              ctx.globalAlpha = 1;
+            }
 
+            const isTheHoveredNode = hoveredNode && hoveredNode.id === node.id;
+            
             const {
               HOME_NODE_SIZE, CATEGORY_NODE_SIZE, POST_NODE_SIZE,
               HOME_CORNER_RADIUS, CATEGORY_CORNER_RADIUS,
-              HOME_NAME_FONT_SIZE, HOME_DESC_FONT_SIZE, CATEGORY_FONT_SIZE, POST_FONT_SIZE
+              HOME_NAME_FONT_SIZE, CATEGORY_FONT_SIZE, POST_FONT_SIZE
             } = GRAPH_LAYOUT_CONFIG;
 
             if (node.type === 'Home') {
               const size = HOME_NODE_SIZE;
               ctx.beginPath();
               ctx.roundRect(node.x! - size / 2, node.y! - size / 2, size, size, HOME_CORNER_RADIUS);
-              ctx.fillStyle = isHovered ? colors.hover : colors.bg;
+              ctx.fillStyle = isTheHoveredNode ? colors.hover : colors.bg;
               ctx.fill();
               ctx.strokeStyle = colors.link;
               ctx.stroke();
@@ -309,37 +327,38 @@ export default function Categories({ siteMap }: CategoriesProps) {
               ctx.fillStyle = colors.text;
               ctx.font = `600 ${HOME_NAME_FONT_SIZE}px Sans-Serif`;
               ctx.fillText(node.name, node.x!, node.y! + size / 2 + HOME_NAME_FONT_SIZE);
-              
-              return;
+            } else {
+              ctx.beginPath();
+              if (node.type === 'Category') {
+                const size = CATEGORY_NODE_SIZE;
+                ctx.roundRect(node.x! - size / 2, node.y! - size / 2, size, size, CATEGORY_CORNER_RADIUS);
+              } else { // Post
+                const r = POST_NODE_SIZE / 2;
+                ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
+              }
+              ctx.fillStyle = isTheHoveredNode ? colors.hover : colors.node;
+              ctx.fill();
+
+              if (node.img && node.img.complete) {
+                ctx.save();
+                ctx.clip();
+                const size = node.type === 'Category' ? CATEGORY_NODE_SIZE : POST_NODE_SIZE;
+                ctx.drawImage(node.img, node.x! - size / 2, node.y! - size / 2, size, size);
+                ctx.restore();
+              }
+
+              const label = node.name || '';
+              const fontSize = node.type === 'Category' ? CATEGORY_FONT_SIZE : POST_FONT_SIZE;
+              ctx.font = `${fontSize}px Sans-Serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = colors.text;
+              const textYOffset = (node.type === 'Category' ? CATEGORY_NODE_SIZE / 2 : POST_NODE_SIZE / 2) + 2;
+              ctx.fillText(label, node.x!, node.y! + textYOffset);
             }
 
-            ctx.beginPath();
-            if (node.type === 'Category') {
-              const size = CATEGORY_NODE_SIZE;
-              ctx.roundRect(node.x! - size / 2, node.y! - size / 2, size, size, CATEGORY_CORNER_RADIUS);
-            } else { // Post
-              const r = POST_NODE_SIZE / 2;
-              ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
-            }
-            ctx.fillStyle = isHovered ? colors.hover : colors.node;
-            ctx.fill();
-
-            if (node.img && node.img.complete) {
-              ctx.save();
-              ctx.clip();
-              const size = node.type === 'Category' ? CATEGORY_NODE_SIZE : POST_NODE_SIZE;
-              ctx.drawImage(node.img, node.x! - size / 2, node.y! - size / 2, size, size);
-              ctx.restore();
-            }
-
-            const label = node.name || '';
-            const fontSize = node.type === 'Category' ? CATEGORY_FONT_SIZE : POST_FONT_SIZE;
-            ctx.font = `${fontSize}px Sans-Serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = colors.text;
-            const textYOffset = (node.type === 'Category' ? CATEGORY_NODE_SIZE / 2 : POST_NODE_SIZE / 2) + 2;
-            ctx.fillText(label, node.x!, node.y! + textYOffset);
+            // Reset alpha to prevent affecting other elements
+            ctx.globalAlpha = 1;
           }}
         />
       )}
