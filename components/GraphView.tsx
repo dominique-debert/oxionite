@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { GraphMethods } from './ForceGraphWrapper';
 import siteConfig from 'site.config';
-import { MdFullscreen, MdFullscreenExit, MdMyLocation } from 'react-icons/md';
+import { MdFullscreen, MdFullscreenExit, MdMyLocation, MdHome } from 'react-icons/md';
 import { createPortal } from 'react-dom';
 import type { ForceGraphMethods, NodeObject, LinkObject } from 'react-force-graph-2d';
 
@@ -177,7 +177,7 @@ interface GraphViewProps {
   viewType?: 'home' | 'sidenav';
 }
 
-function GraphComponent({ siteMap, isModal = false }: { siteMap?: SiteMap, isModal?: boolean }) {
+function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteMap?: SiteMap, isModal?: boolean, viewType?: 'home' | 'sidenav' }) {
   const router = useRouter();
   const locale = router.locale || 'ko';
 
@@ -240,6 +240,7 @@ function GraphComponent({ siteMap, isModal = false }: { siteMap?: SiteMap, isMod
   const handleEngineStop = useCallback(() => {
     console.log('[GraphComponent] handleEngineStop triggered.');
     console.log('[GraphComponent] fgInstance in handleEngineStop:', fgInstance);
+    console.log('[GraphComponent] viewType:', viewType);
     
     // 그래프가 로드되었음을 표시
     setIsGraphLoaded(true);
@@ -250,13 +251,27 @@ function GraphComponent({ siteMap, isModal = false }: { siteMap?: SiteMap, isMod
         fgInstance.zoomToFit(400, 150, (n: any) => n.id === initialFocusNode.id);
         setInitialFocusNode(null); // Reset after focusing
       } else {
-        console.log('[GraphComponent] Engine stopped. Calling zoomToFit without a specific node.');
-        fgInstance.zoomToFit(400, 150);
+        // 초기 로드 시 동작 구분: viewType에 따라 다르게 동작
+        if (viewType === 'sidenav') {
+          // SideNav에서는 current location으로 포커스
+          console.log('[GraphComponent] SideNav initial load. Auto fit to current location');
+          const slug = router.asPath.split('/').pop()?.split('?')[0] || '';
+          const currentNode = graphData.nodes.find(n => n.page.slug === slug);
+          if (currentNode) {
+            fgInstance.zoomToFit(400, 150, (n: any) => n.id === currentNode.id);
+          } else {
+            fgInstance.zoomToFit(400, 150, (n: any) => n.id === HOME_NODE_ID);
+          }
+        } else {
+          // Home에서는 fit to home
+          console.log('[GraphComponent] Home initial load. Auto fit to home.');
+          fgInstance.zoomToFit(400, 150);
+        }
       }
     } else {
       console.error('[GraphComponent] Engine stopped, but zoomToFit is not available.', { fgInstance });
     }
-  }, [initialFocusNode, setInitialFocusNode, fgInstance]);
+  }, [initialFocusNode, setInitialFocusNode, fgInstance, graphData.nodes, router.asPath, viewType]);
 
   const handleNodeClick = (node: GraphNode) => {
     if (node.id === HOME_NODE_ID) {
@@ -305,11 +320,23 @@ function GraphComponent({ siteMap, isModal = false }: { siteMap?: SiteMap, isMod
     }
   }, [fgInstance, graphData.nodes, router.asPath]);
 
+  const handleFitToHome = useCallback(() => {
+    if (!fgInstance) {
+      console.log('[GraphComponent] handleFitToHome: fgInstance is null or undefined.');
+      return;
+    }
+    console.log('[GraphComponent] Fit to home clicked');
+    fgInstance.zoomToFit(400, 150);
+  }, [fgInstance]);
+
   return (
     <div className={styles.graphInner} ref={containerRef}>
       <div className={styles.buttonContainer}>
         <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
           <MdMyLocation size={24} />
+        </button>
+        <button onClick={handleFitToHome} className={styles.button} aria-label="Fit to home">
+          <MdHome size={24} />
         </button>
         {isModal ? (
           <button onClick={() => (window as any).closeGraphModal()} className={styles.button} aria-label="Close fullscreen">
@@ -331,8 +358,8 @@ function GraphComponent({ siteMap, isModal = false }: { siteMap?: SiteMap, isMod
           nodeLabel="name"
           nodeVal="val"
           warmupTicks={200}
-          cooldownTicks={Infinity}
-          cooldownTime={0}
+          cooldownTicks={100}
+          cooldownTime={15000}
           onEngineStop={handleEngineStop as any}
           linkColor={(link) => {
             if (!hoveredNode) return colors.link;
@@ -343,6 +370,11 @@ function GraphComponent({ siteMap, isModal = false }: { siteMap?: SiteMap, isMod
           linkWidth={GRAPH_LAYOUT_CONFIG.LINK_WIDTH}
           onNodeClick={handleNodeClick as any}
           onNodeHover={handleNodeHover as any}
+          onNodeDragEnd={(node: any) => {
+            // 드래그가 끝난 후 노드의 고정을 해제하여 물리엔진이 계속 작동하도록 함
+            node.fx = undefined;
+            node.fy = undefined;
+          }}
           nodeCanvasObject={(node, ctx) => {
             const isHighlighted = highlightedNodeIds.has(node.id as string);
             if (!hoveredNode) {
