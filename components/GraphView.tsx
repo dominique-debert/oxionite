@@ -1,16 +1,18 @@
-import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import { GraphMethods } from './ForceGraphWrapper';
 import siteConfig from 'site.config';
 import { MdFullscreen, MdFullscreenExit, MdMyLocation } from 'react-icons/md';
 import { createPortal } from 'react-dom';
+import type { ForceGraphMethods, NodeObject, LinkObject } from 'react-force-graph-2d';
 
 import type { SiteMap, PageInfo, Block } from '@/lib/types';
 import { mapImageUrl } from '@/lib/map-image-url';
 import { useDarkMode } from '@/lib/use-dark-mode';
 import styles from '@/styles/components/GraphView.module.css';
 
-const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
+const ForceGraph2D = dynamic(() => import('./ForceGraphWrapper'), { ssr: false });
 
 const GRAPH_LAYOUT_CONFIG = {
   HOME_NODE_SIZE: 32,
@@ -28,12 +30,7 @@ const GRAPH_LAYOUT_CONFIG = {
 
 const HOME_NODE_ID = '__HOME__';
 
-interface GraphViewProps {
-  siteMap?: SiteMap;
-  viewType?: 'home' | 'sidenav';
-}
-
-interface GraphNode {
+export interface GraphNode extends NodeObject {
   id: string;
   name: string;
   description?: string;
@@ -41,16 +38,14 @@ interface GraphNode {
   imageUrl?: string;
   page: Partial<PageInfo>;
   img?: HTMLImageElement;
-  x?: number;
-  y?: number;
   neighbors?: GraphNode[];
   links?: GraphLink[];
   val?: number;
 }
 
-interface GraphLink {
-  source: string | GraphNode;
-  target: string | GraphNode;
+export interface GraphLink extends LinkObject {
+  source: string;
+  target: string;
 }
 
 const imageCache = new Map<string, HTMLImageElement>();
@@ -155,8 +150,8 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
   });
   
   links.forEach(link => {
-    const a = nodes.find(n => n.id === (link.source as any)?.id || n.id === link.source);
-    const b = nodes.find(n => n.id === (link.target as any)?.id || n.id === link.target);
+    const a = nodes.find(n => n.id === link.source);
+    const b = nodes.find(n => n.id === link.target);
     if (!a || !b) return;
 
     !a.neighbors && (a.neighbors = []);
@@ -177,16 +172,23 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
   return { nodes, links };
 };
 
-const GraphComponent = React.forwardRef(({ siteMap }: { siteMap?: SiteMap }, ref) => {
+interface GraphViewProps {
+  siteMap?: SiteMap;
+  viewType?: 'home' | 'sidenav';
+}
+
+function GraphComponent({ siteMap, isModal = false }: { siteMap?: SiteMap, isModal?: boolean }) {
   const router = useRouter();
   const locale = router.locale || 'ko';
-  const fgRef = useRef<any>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
-  const [highlightNodes, setHighlightNodes] = useState(new Set<GraphNode>());
-  const [highlightLinks, setHighlightLinks] = useState(new Set<GraphLink>());
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState(new Set<string>());
   const { isDarkMode } = useDarkMode();
+  const [initialFocusNode, setInitialFocusNode] = useState<GraphNode | null>(null);
+  const [isGraphLoaded, setIsGraphLoaded] = useState(false);
+  const [fgInstance, setFgInstance] = useState<any>(null);
 
   const colors = useMemo(() => {
     if (isDarkMode) {
@@ -221,16 +223,6 @@ const GraphComponent = React.forwardRef(({ siteMap }: { siteMap?: SiteMap }, ref
     return createGraphData(siteMap.navigationTree, locale);
   }, [siteMap, locale]);
 
-  const focusOnNode = useCallback((node: GraphNode) => {
-    if (fgRef.current) {
-      fgRef.current.zoomToFit(400, 150, (n: GraphNode) => n === node);
-    }
-  }, []);
-
-  React.useImperativeHandle(ref, () => ({
-    focusOnNode,
-  }));
-
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -242,70 +234,123 @@ const GraphComponent = React.forwardRef(({ siteMap }: { siteMap?: SiteMap }, ref
     };
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
-
-    const slug = router.asPath.split('/').pop()?.split('?')[0];
-    const currentNode = graphData.nodes.find(n => n.page.slug === slug);
-    if (currentNode) {
-      setTimeout(() => focusOnNode(currentNode), 500);
-    }
-
     return () => window.removeEventListener('resize', updateDimensions);
-  }, [graphData, router.asPath, focusOnNode]);
+  }, []);
 
-  const handleNodeClick = (node: any) => {
-    const typedNode = node as GraphNode;
-    if (typedNode.id === HOME_NODE_ID) {
+  const handleEngineStop = useCallback(() => {
+    console.log('[GraphComponent] handleEngineStop triggered.');
+    console.log('[GraphComponent] fgInstance in handleEngineStop:', fgInstance);
+    
+    // 그래프가 로드되었음을 표시
+    setIsGraphLoaded(true);
+    
+    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
+      if (initialFocusNode) {
+        console.log('[GraphComponent] Engine stopped. Focusing on initial node:', initialFocusNode.name);
+        fgInstance.zoomToFit(400, 150, (n: any) => n.id === initialFocusNode.id);
+        setInitialFocusNode(null); // Reset after focusing
+      } else {
+        console.log('[GraphComponent] Engine stopped. Calling zoomToFit without a specific node.');
+        fgInstance.zoomToFit(400, 150);
+      }
+    } else {
+      console.error('[GraphComponent] Engine stopped, but zoomToFit is not available.', { fgInstance });
+    }
+  }, [initialFocusNode, setInitialFocusNode, fgInstance]);
+
+  const handleNodeClick = (node: GraphNode) => {
+    if (node.id === HOME_NODE_ID) {
       void router.push('/');
       return;
     }
-    const page = typedNode.page as PageInfo;
+    const page = node.page as PageInfo;
     if (page && page.slug) {
       void router.push(`/${page.language}/${page.slug}`);
     }
   };
 
-  const handleNodeHover = (node: any) => {
-    const typedNode = node as GraphNode | null;
-    const newHighlightNodes = new Set<GraphNode>();
-    const newHighlightLinks = new Set<GraphLink>();
-
-    if (typedNode) {
-      newHighlightNodes.add(typedNode);
-      typedNode.neighbors?.forEach(neighbor => newHighlightNodes.add(neighbor));
-      typedNode.links?.forEach(link => newHighlightLinks.add(link));
+  const handleNodeHover = (node: GraphNode | null) => {
+    const newIds = new Set<string>();
+    if (node) {
+      newIds.add(node.id as string);
+      node.neighbors?.forEach(neighbor => newIds.add(neighbor.id as string));
     }
-
-    setHoveredNode(typedNode);
-    setHighlightNodes(newHighlightNodes);
-    setHighlightLinks(newHighlightLinks);
+    setHighlightedNodeIds(newIds);
+    setHoveredNode(node);
   };
 
+  const focusOnNode = useCallback((node: GraphNode) => {
+    console.log('[GraphComponent] focusOnNode called for node:', node.name);
+    console.log('[GraphComponent] fgInstance before zoomToFit:', fgInstance);
+    
+    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
+      console.log('[GraphComponent] zoomToFit is a function. Calling it now.');
+      fgInstance.zoomToFit(400, 150, (n: any) => n.id === node.id);
+    } else {
+      console.error('[GraphComponent] zoomToFit is NOT a function or fgInstance is not set.', { fgInstance });
+    }
+  }, [fgInstance]);
+
+  const handleFocusCurrentNode = useCallback(() => {
+    if (!fgInstance) {
+      console.log('[GraphComponent] handleFocusCurrentNode: fgInstance is null or undefined.');
+      return;
+    }
+    const slug = router.asPath.split('/').pop()?.split('?')[0] || '';
+    const currentNode = graphData.nodes.find(n => n.page.slug === slug);
+    if (currentNode) {
+      focusOnNode(currentNode);
+    } else {
+      focusOnNode(graphData.nodes.find(n => n.id === HOME_NODE_ID) as GraphNode);
+    }
+  }, [fgInstance, graphData.nodes, router.asPath]);
+
   return (
-    <div ref={containerRef} className={styles.graphInner}>
+    <div className={styles.graphInner} ref={containerRef}>
+      <div className={styles.buttonContainer}>
+        <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
+          <MdMyLocation size={24} />
+        </button>
+        {isModal ? (
+          <button onClick={() => (window as any).closeGraphModal()} className={styles.button} aria-label="Close fullscreen">
+            <MdFullscreenExit size={24} />
+          </button>
+        ) : (
+          <button onClick={() => (window as any).openGraphModal()} className={styles.button} aria-label="Open in fullscreen">
+            <MdFullscreen size={24} />
+          </button>
+        )}
+      </div>
+
       {dimensions.width > 0 && (
         <ForceGraph2D
-          ref={fgRef}
           width={dimensions.width}
           height={dimensions.height}
           graphData={graphData}
+          onReady={setFgInstance}
           nodeLabel="name"
           nodeVal="val"
-          autoPauseRedraw={false}
-          linkColor={(link: any) => {
-            const typedLink = link as GraphLink;
+          warmupTicks={200}
+          cooldownTicks={Infinity}
+          cooldownTime={0}
+          onEngineStop={handleEngineStop as any}
+          linkColor={(link) => {
             if (!hoveredNode) return colors.link;
-            return highlightLinks.has(typedLink) ? colors.linkHover : colors.linkMinor;
+            const sourceId = typeof link.source === 'string' ? link.source : (link.source as GraphNode)?.id;
+            const targetId = typeof link.target === 'string' ? link.target : (link.target as GraphNode)?.id;
+            return sourceId === hoveredNode.id || targetId === hoveredNode.id ? colors.linkHover : colors.linkMinor;
           }}
           linkWidth={GRAPH_LAYOUT_CONFIG.LINK_WIDTH}
-          onNodeClick={handleNodeClick}
-          onNodeHover={handleNodeHover}
-          nodeCanvasObject={(untypedNode, ctx) => {
-            const node = untypedNode as GraphNode;
-            if (hoveredNode && !highlightNodes.has(node)) {
-              ctx.globalAlpha = GRAPH_LAYOUT_CONFIG.HOVER_OPACITY;
-            } else {
+          onNodeClick={handleNodeClick as any}
+          onNodeHover={handleNodeHover as any}
+          nodeCanvasObject={(node, ctx) => {
+            const isHighlighted = highlightedNodeIds.has(node.id as string);
+            if (!hoveredNode) {
               ctx.globalAlpha = 1;
+            } else {
+              ctx.globalAlpha = isHighlighted ? 1 : GRAPH_LAYOUT_CONFIG.HOVER_OPACITY;
             }
+
             const isTheHoveredNode = hoveredNode && hoveredNode.id === node.id;
             const { HOME_NODE_SIZE, CATEGORY_NODE_SIZE, POST_NODE_SIZE, HOME_CORNER_RADIUS, CATEGORY_CORNER_RADIUS, HOME_NAME_FONT_SIZE, CATEGORY_FONT_SIZE, POST_FONT_SIZE } = GRAPH_LAYOUT_CONFIG;
             if (node.type === 'Home') {
@@ -361,63 +406,39 @@ const GraphComponent = React.forwardRef(({ siteMap }: { siteMap?: SiteMap }, ref
       )}
     </div>
   );
-});
+}
 
 export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const graphRef = useRef<any>(null);
-  const router = useRouter();
+
+  const openModal = useCallback(() => setIsModalOpen(true), []);
+  const closeModal = useCallback(() => setIsModalOpen(false), []);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    (window as any).openGraphModal = openModal;
+    (window as any).closeGraphModal = closeModal;
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
-
-  const handleFocusCurrentNode = () => {
-    if (graphRef.current) {
-      const slug = router.asPath.split('/').pop()?.split('?')[0];
-      const siteMapNodes = (siteMap?.navigationTree || []);
-      const nodes = createGraphData(siteMapNodes, router.locale || 'ko').nodes;
-      const currentNode = nodes.find(n => n.page.slug === slug);
-      if (currentNode) {
-        graphRef.current.focusOnNode(currentNode);
-      }
+    return () => {
+      delete (window as any).openGraphModal;
+      delete (window as any).closeGraphModal;
     }
-  };
+  }, [openModal, closeModal]);
 
   const containerClasses = `${styles.graphContainer} ${viewType === 'home' ? styles.homeView : styles.sideNavView}`;
 
   const modalContent = (
     <div className={styles.modalOverlay} onClick={closeModal}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-         <div className={styles.buttonContainer}>
-          <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
-            <MdMyLocation size={24} />
-          </button>
-          <button onClick={closeModal} className={styles.button} aria-label="Close fullscreen">
-            <MdFullscreenExit size={24} />
-          </button>
-        </div>
-        <GraphComponent siteMap={siteMap} ref={graphRef} />
+        <GraphComponent siteMap={siteMap} isModal={true} />
       </div>
     </div>
   );
 
   return (
     <div className={containerClasses}>
-      <div className={styles.buttonContainer}>
-        <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
-          <MdMyLocation size={24} />
-        </button>
-        <button onClick={openModal} className={styles.button} aria-label="Open in fullscreen">
-          <MdFullscreen size={24} />
-        </button>
-      </div>
-      <GraphComponent siteMap={siteMap} ref={graphRef} />
-
+      <GraphComponent siteMap={siteMap} />
       {isMounted && isModalOpen && createPortal(modalContent, document.getElementById('modal-root')!)}
     </div>
   );
