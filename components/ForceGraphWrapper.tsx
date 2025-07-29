@@ -1,6 +1,5 @@
 import React, { useRef, useImperativeHandle, useEffect } from 'react';
-import ForceGraph2D, { ForceGraphMethods, NodeObject } from 'react-force-graph-2d';
-import { GraphNode, GraphLink } from './GraphView';
+import ForceGraph2D from 'react-force-graph-2d';
 
 // 필요한 메서드만 노출하는 인터페이스 정의
 export interface GraphMethods {
@@ -12,7 +11,7 @@ type ForceGraphProps = React.ComponentProps<typeof ForceGraph2D> & {
 };
 
 const ForceGraphWrapper = React.forwardRef<GraphMethods, ForceGraphProps>(
-  (props, ref) => {
+  ({ onReady, ...restProps }, ref) => {
     const internalRef = useRef<any>(null);
     
     // ref가 설정될 때 필요한 메서드만 노출
@@ -28,14 +27,14 @@ const ForceGraphWrapper = React.forwardRef<GraphMethods, ForceGraphProps>(
     }), []);
     
     useEffect(() => {
-      if (internalRef.current && props.onReady) {
+      if (internalRef.current && onReady) {
         console.log('[ForceGraphWrapper] Graph ready, calling onReady');
-        props.onReady(internalRef.current);
+        onReady(internalRef.current);
       }
-    }, [props.onReady]);
+    }, [onReady]);
 
     return <ForceGraph2D 
-      {...props} 
+      {...restProps} 
       ref={internalRef} 
     />;
   }

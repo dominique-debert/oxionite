@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
-import { GraphMethods } from './ForceGraphWrapper';
 import siteConfig from 'site.config';
 import { MdFullscreen, MdFullscreenExit, MdMyLocation, MdHome } from 'react-icons/md';
 import { createPortal } from 'react-dom';
-import type { ForceGraphMethods, NodeObject, LinkObject } from 'react-force-graph-2d';
+import type { NodeObject, LinkObject } from 'react-force-graph-2d';
 
 import type { SiteMap, PageInfo, Block } from '@/lib/types';
 import { mapImageUrl } from '@/lib/map-image-url';
@@ -128,13 +127,18 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
       name: page.title,
       type: page.type as 'Category' | 'Post',
       imageUrl,
-      page: page,
+      page,
     };
 
     if (imageUrl && !imageCache.has(imageUrl)) {
       const img = new Image();
       img.src = imageUrl;
-      imageCache.set(imageUrl, img);
+      img.addEventListener('load', () => {
+        imageCache.set(imageUrl, img);
+      });
+      img.addEventListener('error', () => {
+        console.warn(`Failed to load image: ${imageUrl}`);
+      });
     }
     if (imageUrl) {
       node.img = imageCache.get(imageUrl);
@@ -167,13 +171,13 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
     const b = nodes.find(n => n.id === link.target);
     if (!a || !b) return;
 
-    !a.neighbors && (a.neighbors = []);
-    !b.neighbors && (b.neighbors = []);
+    if (!a.neighbors) a.neighbors = [];
+    if (!b.neighbors) b.neighbors = [];
     a.neighbors.push(b);
     b.neighbors.push(a);
 
-    !a.links && (a.links = []);
-    !b.links && (b.links = []);
+    if (!a.links) a.links = [];
+    if (!b.links) b.links = [];
     a.links.push(link);
     b.links.push(link);
   });
@@ -199,34 +203,31 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState(new Set<string>());
   const { isDarkMode } = useDarkMode();
-  const [initialFocusNode, setInitialFocusNode] = useState<GraphNode | null>(null);
+
   const [isGraphLoaded, setIsGraphLoaded] = useState(false);
   const [fgInstance, setFgInstance] = useState<any>(null);
 
   const colors = useMemo(() => {
-    if (isDarkMode) {
-      return {
-        node: 'rgba(0, 0, 0, 0.3)',
-        text: 'rgba(255, 255, 255, 0.9)',
-        desc: 'rgba(255, 255, 255, 0.7)',
-        link: 'rgba(255, 255, 255, 0.2)',
-        linkHover: 'rgba(255, 255, 255, 0.3)',
-        linkMinor: 'rgba(255, 255, 255, 0.1)',
-        hover: 'rgba(255, 255, 255, 0.06)',
-        bg: 'rgba(0, 0, 0, 0.3)'
-      };
-    } else {
-      return {
-        node: 'rgba(255, 255, 255, 0.3)',
-        text: 'rgb(50, 48, 44)',
-        desc: 'rgba(50, 48, 44, 0.7)',
-        link: 'rgba(0, 0, 0, 0.2)',
-        linkHover: 'rgba(0, 0, 0, 0.3)',
-        linkMinor: 'rgba(0, 0, 0, 0.1)',
-        hover: 'rgba(0, 0, 0, 0.04)',
-        bg: 'rgba(255, 255, 255, 0.3)'
-      };
-    }
+    const colors = isDarkMode ? {
+      node: 'rgba(0, 0, 0, 0.3)',
+      text: 'rgba(255, 255, 255, 0.9)',
+      desc: 'rgba(255, 255, 255, 0.7)',
+      link: 'rgba(255, 255, 255, 0.2)',
+      linkHover: 'rgba(255, 255, 255, 0.3)',
+      linkMinor: 'rgba(255, 255, 255, 0.1)',
+      hover: 'rgba(255, 255, 255, 0.06)',
+      bg: 'rgba(0, 0, 0, 0.3)'
+    } : {
+      node: 'rgba(255, 255, 255, 0.3)',
+      text: 'rgb(50, 48, 44)',
+      desc: 'rgba(50, 48, 44, 0.7)',
+      link: 'rgba(0, 0, 0, 0.2)',
+      linkHover: 'rgba(0, 0, 0, 0.3)',
+      linkMinor: 'rgba(0, 0, 0, 0.1)',
+      hover: 'rgba(0, 0, 0, 0.04)',
+      bg: 'rgba(255, 255, 255, 0.3)'
+    };
+    return colors;
   }, [isDarkMode]);
 
   const graphData = useMemo(() => {
@@ -251,16 +252,10 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
   }, []);
 
   const handleEngineStop = useCallback(() => {
-    console.log('[GraphComponent] handleEngineStop triggered.');
-    console.log('[GraphComponent] fgInstance in handleEngineStop:', fgInstance);
-    console.log('[GraphComponent] viewType:', viewType);
-    
-    // 그래프가 로드되었음을 표시 - 자동 줌 동작은 하지 않음
     setIsGraphLoaded(true);
-    console.log('[GraphComponent] Graph engine stopped. No automatic zoom/fit will occur.');
   }, [setIsGraphLoaded]);
 
-  const handleNodeClick = (node: GraphNode) => {
+  const handleNodeClick = useCallback((node: GraphNode) => {
     if (node.id === HOME_NODE_ID) {
       void router.push('/');
     } else {
@@ -277,7 +272,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
         (window as any).closeGraphModal();
       }
     }
-  };
+  }, [router, isModal]);
 
   const handleNodeHover = (node: GraphNode | null) => {
     const newIds = new Set<string>();
@@ -315,10 +310,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
   }, [fgInstance, dimensions]);
 
   const handleFocusCurrentNode = useCallback(() => {
-    if (!fgInstance) {
-      console.log('[GraphComponent] handleFocusCurrentNode: fgInstance is null or undefined.');
-      return;
-    }
+    if (!fgInstance) return;
     const slug = router.asPath.split('/').pop()?.split('?')[0] || '';
     const currentNode = graphData.nodes.find(n => n.page.slug === slug);
     if (currentNode) {
@@ -326,25 +318,17 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
     } else {
       focusOnNode(graphData.nodes.find(n => n.id === HOME_NODE_ID) as GraphNode);
     }
-  }, [fgInstance, graphData.nodes, router.asPath]);
+  }, [fgInstance, graphData.nodes, router.asPath, focusOnNode]);
 
   const handleFitToHome = useCallback(() => {
     if (!fgInstance) {
-      console.log('[GraphComponent] handleFitToHome: fgInstance is null or undefined.');
+      console.log('[GraphComponent] handleFitToHome: fgInstance is null');
       return;
     }
-    console.log('[GraphComponent] Fit to home clicked, dimensions:', dimensions);
-    
-    // 캔버스 크기에 따라 동적으로 padding 계산
+    console.log('[GraphComponent] handleFitToHome: calling zoomToFit');
     const minDimension = Math.min(dimensions.width, dimensions.height);
-    const dynamicPadding = Math.max(20, minDimension * 0.1); // 최소 20px, 최대 10%
-    
-    console.log('[GraphComponent] Fit to home with dynamic padding:', dynamicPadding);
-    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
-      fgInstance.zoomToFit(400, dynamicPadding);
-    } else {
-      console.error('[GraphComponent] zoomToFit is NOT a function or fgInstance is not set.', { fgInstance });
-    }
+    const padding = Math.max(40, minDimension * 0.15);
+    fgInstance.zoomToFit(400, padding);
   }, [fgInstance, dimensions]);
 
   // Reliable focusing system with timeout fallback and viewType debugging
@@ -377,8 +361,9 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
           isEngineRunning = movingNodes.length > 0;
         }
       }
-    } catch (e) {
-      console.log('[GraphComponent] Could not determine engine state, using timeout fallback');
+    } catch {
+      console.warn('[GraphComponent] Error checking physics engine state');
+      return false;
     }
 
     if (isEngineRunning && attemptCount < MAX_ATTEMPTS) {
@@ -491,7 +476,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
           nodeVal="val"
           warmupTicks={200}
           cooldownTicks={100}
-          cooldownTime={15000}
+          cooldownTime={15_000}
           onEngineStop={handleEngineStop as any}
           linkColor={(link) => {
             if (!hoveredNode) return colors.link;
@@ -504,7 +489,6 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
           onNodeHover={handleNodeHover as any}
           onBackgroundClick={() => handleNodeHover(null)}
           onNodeDragEnd={(node: any) => {
-            // 드래그가 끝난 후 노드의 고정을 해제하여 물리엔진이 계속 작동하도록 함
             node.fx = undefined;
             node.fy = undefined;
           }}
