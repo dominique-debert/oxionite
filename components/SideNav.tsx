@@ -10,6 +10,7 @@ import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SideNav.module.css'
 
 import { CategoryTree } from './CategoryTree'
+import GraphView from './GraphView'
 import { HomeButton } from './HomeButton'
 
 function filterNavigationItems(items: types.PageInfo[], currentLocale: string): types.PageInfo[] {
@@ -205,6 +206,7 @@ export function SideNav({
         expandedItems={expandedItems}
         toggleItemExpanded={toggleItemExpanded}
       />
+      <GraphView siteMap={siteMap} viewType='sidenav' />
     </aside>
   )
 }

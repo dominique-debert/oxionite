@@ -11,7 +11,7 @@ interface HomeNavProps {
 }
 
 export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavProps) {
-  const navItems = ['Recent Posts', 'Categories', 'Tags']
+  const navItems = ['Recent Posts', 'Graph View']
   const allNavItems = [
     ...homePages.map((page) => ({ title: page.title, pageId: page.pageId })),
     ...navItems.map((item) => ({ title: item, pageId: undefined }))

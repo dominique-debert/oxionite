@@ -5,11 +5,10 @@ import type { PageInfo, PageProps } from '@/lib/types'
 
 import { NotionPage } from '../../components/NotionPage'
 import { PageHead } from '../../components/PageHead'
-import Categories from './Categories'
+import GraphView from '../GraphView'
 import Hero from './Hero'
 import HomeNav from './HomeNav'
 import RecentPosts from './RecentPosts'
-import { Tags } from './Tags'
 
 export function Home({
   setBackgroundAsset,
@@ -59,10 +58,8 @@ export function Home({
     switch (activeTab) {
       case 'Recent Posts':
         return <RecentPosts siteMap={siteMap} />
-      case 'Categories':
-        return <Categories siteMap={siteMap} />
-      case 'Tags':
-        return <Tags />
+      case 'Graph View':
+        return <GraphView siteMap={siteMap} />
       default:
         return <RecentPosts siteMap={siteMap} />
     }

@@ -168,6 +168,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
 
   return (
     <div className={notoKR.variable}>
+      <div id="modal-root"></div>
       <Background
         source={router.pathname === '/' ? backgroundAsset : notionImageUrl || null}
         scrollProgress={scrollProgress}

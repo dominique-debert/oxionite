@@ -2,10 +2,12 @@ import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import siteConfig from 'site.config';
+import { MdFullscreen, MdFullscreenExit } from 'react-icons/md';
 
 import type { SiteMap, PageInfo, Block } from '@/lib/types';
 import { mapImageUrl } from '@/lib/map-image-url';
 import { useDarkMode } from '@/lib/use-dark-mode';
+import styles from '@/styles/components/GraphView.module.css';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
@@ -15,8 +17,8 @@ const GRAPH_LAYOUT_CONFIG = {
   POST_NODE_SIZE: 4,
   HOME_CORNER_RADIUS: 16,
   CATEGORY_CORNER_RADIUS: 2,
-  LINK_WIDTH: 0.5,
-  HOVER_OPACITY: 0.2,
+  LINK_WIDTH: 1,
+  HOVER_OPACITY: 0.1,
   HOME_NAME_FONT_SIZE: 4,
   HOME_DESC_FONT_SIZE: 2,
   CATEGORY_FONT_SIZE: 2,
@@ -25,8 +27,9 @@ const GRAPH_LAYOUT_CONFIG = {
 
 const HOME_NODE_ID = '__HOME__';
 
-interface CategoriesProps {
+interface GraphViewProps {
   siteMap?: SiteMap;
+  viewType?: 'home' | 'sidenav';
 }
 
 interface GraphNode {
@@ -98,7 +101,6 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
   }
   flatten(navigationTree);
 
-  // First pass: create all valid nodes
   allPages.forEach(page => {
     if (page.language !== locale || (page.type !== 'Category' && page.type !== 'Post')) {
       return;
@@ -134,7 +136,6 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
     pageMap.set(page.pageId, page);
   });
 
-  // Second pass: create links
   nodes.forEach(node => {
     if (node.id === HOME_NODE_ID) {
       return;
@@ -152,7 +153,6 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
     }
   });
   
-  // Calculate neighbors and links on nodes
   links.forEach(link => {
     const a = nodes.find(n => n.id === (link.source as any)?.id || n.id === link.source);
     const b = nodes.find(n => n.id === (link.target as any)?.id || n.id === link.target);
@@ -176,7 +176,9 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
   return { nodes, links };
 };
 
-export default function Categories({ siteMap }: CategoriesProps) {
+import { createPortal } from 'react-dom';
+
+const GraphComponent = ({ siteMap }: { siteMap?: SiteMap }) => {
   const router = useRouter();
   const locale = router.locale || 'ko';
   const containerRef = useRef<HTMLDivElement>(null);
@@ -192,9 +194,9 @@ export default function Categories({ siteMap }: CategoriesProps) {
         node: 'rgba(0, 0, 0, 0.3)',
         text: 'rgba(255, 255, 255, 0.9)',
         desc: 'rgba(255, 255, 255, 0.7)',
-        link: 'rgba(255, 255, 255, 0.4)',
-        linkHover: 'rgba(255, 255, 255, 0.6)',
-        linkMinor: 'rgba(255, 255, 255, 0.02)',
+        link: 'rgba(255, 255, 255, 0.2)',
+        linkHover: 'rgba(255, 255, 255, 0.3)',
+        linkMinor: 'rgba(255, 255, 255, 0.1)',
         hover: 'rgba(255, 255, 255, 0.06)',
         bg: 'rgba(0, 0, 0, 0.3)'
       };
@@ -203,22 +205,27 @@ export default function Categories({ siteMap }: CategoriesProps) {
         node: 'rgba(255, 255, 255, 0.3)',
         text: 'rgb(50, 48, 44)',
         desc: 'rgba(50, 48, 44, 0.7)',
-        link: 'rgba(0, 0, 0, 0.4)',
-        linkHover: 'rgba(0, 0, 0, 0.6)',
-        linkMinor: 'rgba(0, 0, 0, 0.02)',
-        hover: 'rgba(0, 0, 0, 0.1)',
+        link: 'rgba(0, 0, 0, 0.2)',
+        linkHover: 'rgba(0, 0, 0, 0.3)',
+        linkMinor: 'rgba(0, 0, 0, 0.1)',
+        hover: 'rgba(0, 0, 0, 0.04)',
         bg: 'rgba(255, 255, 255, 0.3)'
       };
     }
   }, [isDarkMode]);
 
   useEffect(() => {
-    if (containerRef.current) {
-      setDimensions({
-        width: containerRef.current.offsetWidth,
-        height: containerRef.current.offsetHeight,
-      });
-    }
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.offsetWidth,
+          height: containerRef.current.offsetHeight,
+        });
+      }
+    };
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
   const graphData = useMemo(() => {
@@ -256,21 +263,8 @@ export default function Categories({ siteMap }: CategoriesProps) {
     setHighlightLinks(newHighlightLinks);
   };
 
-  if (!siteMap) {
-    return <div style={{ width: '100%', height: '500px' }} />;
-  }
-
   return (
-    <div ref={containerRef}
-      style={{
-        width: '100%',
-        height: '75vh',
-        position: 'relative',
-        border: `1px solid ${colors.link}`,
-        borderRadius: '32px',
-        overflow: 'hidden',
-        backgroundColor: colors.bg,
-      }}>
+    <div ref={containerRef} className={styles.graphInner}>
       {dimensions.width > 0 && (
         <ForceGraph2D
           width={dimensions.width}
@@ -289,22 +283,13 @@ export default function Categories({ siteMap }: CategoriesProps) {
           onNodeHover={handleNodeHover}
           nodeCanvasObject={(untypedNode, ctx) => {
             const node = untypedNode as GraphNode;
-
-            // Opacity
             if (hoveredNode && !highlightNodes.has(node)) {
               ctx.globalAlpha = GRAPH_LAYOUT_CONFIG.HOVER_OPACITY;
             } else {
               ctx.globalAlpha = 1;
             }
-
             const isTheHoveredNode = hoveredNode && hoveredNode.id === node.id;
-            
-            const {
-              HOME_NODE_SIZE, CATEGORY_NODE_SIZE, POST_NODE_SIZE,
-              HOME_CORNER_RADIUS, CATEGORY_CORNER_RADIUS,
-              HOME_NAME_FONT_SIZE, CATEGORY_FONT_SIZE, POST_FONT_SIZE
-            } = GRAPH_LAYOUT_CONFIG;
-
+            const { HOME_NODE_SIZE, CATEGORY_NODE_SIZE, POST_NODE_SIZE, HOME_CORNER_RADIUS, CATEGORY_CORNER_RADIUS, HOME_NAME_FONT_SIZE, CATEGORY_FONT_SIZE, POST_FONT_SIZE } = GRAPH_LAYOUT_CONFIG;
             if (node.type === 'Home') {
               const size = HOME_NODE_SIZE;
               ctx.beginPath();
@@ -313,7 +298,6 @@ export default function Categories({ siteMap }: CategoriesProps) {
               ctx.fill();
               ctx.strokeStyle = colors.link;
               ctx.stroke();
-
               if (node.img && node.img.complete) {
                 const iconSize = size * 0.6;
                 ctx.save();
@@ -321,7 +305,6 @@ export default function Categories({ siteMap }: CategoriesProps) {
                 ctx.drawImage(node.img, node.x! - iconSize / 2, node.y! - iconSize / 2, iconSize, iconSize);
                 ctx.restore();
               }
-              
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillStyle = colors.text;
@@ -338,7 +321,6 @@ export default function Categories({ siteMap }: CategoriesProps) {
               }
               ctx.fillStyle = isTheHoveredNode ? colors.hover : colors.node;
               ctx.fill();
-
               if (node.img && node.img.complete) {
                 ctx.save();
                 ctx.clip();
@@ -346,7 +328,6 @@ export default function Categories({ siteMap }: CategoriesProps) {
                 ctx.drawImage(node.img, node.x! - size / 2, node.y! - size / 2, size, size);
                 ctx.restore();
               }
-
               const label = node.name || '';
               const fontSize = node.type === 'Category' ? CATEGORY_FONT_SIZE : POST_FONT_SIZE;
               ctx.font = `${fontSize}px Sans-Serif`;
@@ -356,12 +337,46 @@ export default function Categories({ siteMap }: CategoriesProps) {
               const textYOffset = (node.type === 'Category' ? CATEGORY_NODE_SIZE / 2 : POST_NODE_SIZE / 2) + 2;
               ctx.fillText(label, node.x!, node.y! + textYOffset);
             }
-
-            // Reset alpha to prevent affecting other elements
             ctx.globalAlpha = 1;
           }}
         />
       )}
+    </div>
+  );
+};
+
+export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const containerClasses = `${styles.graphContainer} ${viewType === 'home' ? styles.homeView : styles.sideNavView}`;
+
+  const modalContent = (
+    <div className={styles.modalOverlay} onClick={closeModal}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <button onClick={closeModal} className={styles.fullscreenButton} aria-label="Close fullscreen">
+          <MdFullscreenExit size={24} />
+        </button>
+        <GraphComponent siteMap={siteMap} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={containerClasses}>
+      <button onClick={openModal} className={styles.fullscreenButton} aria-label="Open in fullscreen">
+        <MdFullscreen size={24} />
+      </button>
+      <GraphComponent siteMap={siteMap} />
+
+      {isMounted && isModalOpen && createPortal(modalContent, document.getElementById('modal-root')!)}
     </div>
   );
 }
