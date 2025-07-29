@@ -28,6 +28,19 @@ const GRAPH_LAYOUT_CONFIG = {
   POST_FONT_SIZE: 1,
 };
 
+const ZOOM_CONFIG = {
+  // Base zoom levels for different node types (normalized to POST_NODE_SIZE = 1)
+  HOME_NODE_ZOOM: 10,
+  CATEGORY_NODE_ZOOM: 10,
+  POST_NODE_ZOOM: 10,
+  
+  // Base reference size (POST_NODE_SIZE)
+  BASE_NODE_SIZE: 4,
+  
+  // Zoom calculation: zoom = BASE_ZOOM * (BASE_NODE_SIZE / actual_node_size)
+  // This ensures consistent visual size regardless of node type
+};
+
 const HOME_NODE_ID = '__HOME__';
 
 export interface GraphNode extends NodeObject {
@@ -242,45 +255,27 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
     console.log('[GraphComponent] fgInstance in handleEngineStop:', fgInstance);
     console.log('[GraphComponent] viewType:', viewType);
     
-    // 그래프가 로드되었음을 표시
+    // 그래프가 로드되었음을 표시 - 자동 줌 동작은 하지 않음
     setIsGraphLoaded(true);
-    
-    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
-      if (initialFocusNode) {
-        console.log('[GraphComponent] Engine stopped. Focusing on initial node:', initialFocusNode.name);
-        fgInstance.zoomToFit(400, 150, (n: any) => n.id === initialFocusNode.id);
-        setInitialFocusNode(null); // Reset after focusing
-      } else {
-        // 초기 로드 시 동작 구분: viewType에 따라 다르게 동작
-        if (viewType === 'sidenav') {
-          // SideNav에서는 current location으로 포커스
-          console.log('[GraphComponent] SideNav initial load. Auto fit to current location');
-          const slug = router.asPath.split('/').pop()?.split('?')[0] || '';
-          const currentNode = graphData.nodes.find(n => n.page.slug === slug);
-          if (currentNode) {
-            fgInstance.zoomToFit(400, 150, (n: any) => n.id === currentNode.id);
-          } else {
-            fgInstance.zoomToFit(400, 150, (n: any) => n.id === HOME_NODE_ID);
-          }
-        } else {
-          // Home에서는 fit to home
-          console.log('[GraphComponent] Home initial load. Auto fit to home.');
-          fgInstance.zoomToFit(400, 150);
-        }
-      }
-    } else {
-      console.error('[GraphComponent] Engine stopped, but zoomToFit is not available.', { fgInstance });
-    }
-  }, [initialFocusNode, setInitialFocusNode, fgInstance, graphData.nodes, router.asPath, viewType]);
+    console.log('[GraphComponent] Graph engine stopped. No automatic zoom/fit will occur.');
+  }, [setIsGraphLoaded]);
 
   const handleNodeClick = (node: GraphNode) => {
     if (node.id === HOME_NODE_ID) {
       void router.push('/');
-      return;
+    } else {
+      const page = node.page as PageInfo;
+      if (page && page.slug) {
+        void router.push(`/${page.language}/${page.slug}`);
+      }
     }
-    const page = node.page as PageInfo;
-    if (page && page.slug) {
-      void router.push(`/${page.language}/${page.slug}`);
+    
+    // Always close modal on node click (works for both mobile and desktop)
+    if (isModal) {
+      console.log('[GraphComponent] Closing modal after node click');
+      if (typeof window !== 'undefined' && (window as any).closeGraphModal) {
+        (window as any).closeGraphModal();
+      }
     }
   };
 
@@ -294,17 +289,30 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
     setHoveredNode(node);
   };
 
+  const handleCanvasMouseLeave = useCallback(() => {
+    console.log('[GraphComponent] Mouse left canvas - resetting hover state');
+    handleNodeHover(null);
+  }, []);
+
   const focusOnNode = useCallback((node: GraphNode) => {
+    if (!fgInstance) {
+      console.log('[GraphComponent] focusOnNode: fgInstance is null or undefined.');
+      return;
+    }
     console.log('[GraphComponent] focusOnNode called for node:', node.name);
-    console.log('[GraphComponent] fgInstance before zoomToFit:', fgInstance);
+    console.log('[GraphComponent] dimensions:', dimensions);
     
     if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
-      console.log('[GraphComponent] zoomToFit is a function. Calling it now.');
-      fgInstance.zoomToFit(400, 150, (n: any) => n.id === node.id);
+      // 캔버스 크기에 따라 동적으로 padding 계산
+      const minDimension = Math.min(dimensions.width, dimensions.height);
+      const dynamicPadding = Math.max(20, minDimension * 0.1); // 최소 20px, 최대 10%
+      
+      console.log('[GraphComponent] zoomToFit with dynamic padding:', dynamicPadding);
+      fgInstance.zoomToFit(400, dynamicPadding, (n: any) => n.id === node.id);
     } else {
       console.error('[GraphComponent] zoomToFit is NOT a function or fgInstance is not set.', { fgInstance });
     }
-  }, [fgInstance]);
+  }, [fgInstance, dimensions]);
 
   const handleFocusCurrentNode = useCallback(() => {
     if (!fgInstance) {
@@ -325,12 +333,136 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
       console.log('[GraphComponent] handleFitToHome: fgInstance is null or undefined.');
       return;
     }
-    console.log('[GraphComponent] Fit to home clicked');
-    fgInstance.zoomToFit(400, 150);
-  }, [fgInstance]);
+    console.log('[GraphComponent] Fit to home clicked, dimensions:', dimensions);
+    
+    // 캔버스 크기에 따라 동적으로 padding 계산
+    const minDimension = Math.min(dimensions.width, dimensions.height);
+    const dynamicPadding = Math.max(20, minDimension * 0.1); // 최소 20px, 최대 10%
+    
+    console.log('[GraphComponent] Fit to home with dynamic padding:', dynamicPadding);
+    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
+      fgInstance.zoomToFit(400, dynamicPadding);
+    } else {
+      console.error('[GraphComponent] zoomToFit is NOT a function or fgInstance is not set.', { fgInstance });
+    }
+  }, [fgInstance, dimensions]);
+
+  // Reliable focusing system with timeout fallback and viewType debugging
+  const performFocusBasedOnViewType = useCallback((targetPath?: string, attemptCount = 0) => {
+    if (!fgInstance || !isGraphLoaded) {
+      console.log('[GraphComponent] Cannot focus - fgInstance or isGraphLoaded not ready');
+      return;
+    }
+
+    console.log(`[GraphComponent] === FOCUS ATTEMPT === viewType: ${viewType}, path: ${targetPath || router.asPath}`);
+
+    const MAX_ATTEMPTS = 20; // 2 seconds max wait (100ms * 20)
+    
+    // Try to get actual engine state
+    let isEngineRunning = false;
+    try {
+      // Check if we can access the engine directly
+      if (fgInstance._destructor) {
+        // ForceGraph2D instance
+        const alpha = fgInstance.d3Alpha?.() || fgInstance.alpha?.();
+        isEngineRunning = alpha !== undefined && alpha > 0.01;
+      } else {
+        // Fallback: check if nodes are still moving
+        const nodes = fgInstance.graphData?.()?.nodes;
+        if (nodes && nodes.length > 0) {
+          const movingNodes = nodes.filter((n: any) => 
+            (n.vx && Math.abs(n.vx) > 0.01) || 
+            (n.vy && Math.abs(n.vy) > 0.01)
+          );
+          isEngineRunning = movingNodes.length > 0;
+        }
+      }
+    } catch (e) {
+      console.log('[GraphComponent] Could not determine engine state, using timeout fallback');
+    }
+
+    if (isEngineRunning && attemptCount < MAX_ATTEMPTS) {
+      console.log(`[GraphComponent] Engine running, attempt ${attemptCount + 1}/${MAX_ATTEMPTS}, viewType: ${viewType}`);
+      setTimeout(() => {
+        performFocusBasedOnViewType(targetPath, attemptCount + 1);
+      }, 100);
+      return;
+    }
+
+    // Engine stopped or max attempts reached
+    console.log(`[GraphComponent] Proceeding with focus, viewType: ${viewType}`);
+    
+    const currentPath = targetPath || router.asPath;
+    const minDimension = Math.min(dimensions.width, dimensions.height);
+    
+    if (viewType === 'sidenav') {
+      // SideNav: focus on current location with moderate zoom
+      const slug = currentPath.split('/').pop()?.split('?')[0] || '';
+      const currentNode = graphData.nodes.find(n => n.page.slug === slug);
+      console.log(`[GraphComponent] SideNav mode - looking for slug: ${slug}, found node: ${currentNode?.name || 'none'}`);
+      if (currentNode) {
+        console.log('[GraphComponent] SideNav - focusing on current node with dynamic zoom:', currentNode.name);
+        
+        // Calculate dynamic zoom based on node type and size
+        let targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM; // Default for post
+        
+        if (currentNode.type === 'Home') {
+          targetZoom = ZOOM_CONFIG.HOME_NODE_ZOOM;
+        } else if (currentNode.type === 'Category') {
+          targetZoom = ZOOM_CONFIG.CATEGORY_NODE_ZOOM;
+        } else {
+          targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM;
+        }
+        
+        // Adjust zoom based on actual node size for consistent visual appearance
+        const actualNodeSize = currentNode.type === 'Home' ? GRAPH_LAYOUT_CONFIG.HOME_NODE_SIZE :
+                              currentNode.type === 'Category' ? GRAPH_LAYOUT_CONFIG.CATEGORY_NODE_SIZE :
+                              GRAPH_LAYOUT_CONFIG.POST_NODE_SIZE;
+        
+        const finalZoom = targetZoom * (ZOOM_CONFIG.BASE_NODE_SIZE / actualNodeSize);
+        
+        console.log(`[GraphComponent] Node type: ${currentNode.type}, size: ${actualNodeSize}, zoom: ${finalZoom.toFixed(2)}`);
+        
+        // Center on the node and apply calculated zoom
+        fgInstance.centerAt(currentNode.x, currentNode.y, 400);
+        setTimeout(() => {
+          fgInstance.zoom(finalZoom, 400);
+        }, 100);
+        
+      } else {
+        console.log('[GraphComponent] SideNav - current node not found, focusing on home');
+        const homePadding = Math.max(40, minDimension * 0.2);
+        fgInstance.zoomToFit(400, homePadding, (n: any) => n.id === HOME_NODE_ID);
+      }
+    } else {
+      // Home: fit to all nodes
+      console.log(`[GraphComponent] Home view - fitting to all nodes, path: ${currentPath}`);
+      const homePadding = Math.max(40, minDimension * 0.15);
+      fgInstance.zoomToFit(400, homePadding);
+    }
+  }, [fgInstance, isGraphLoaded, viewType, router.asPath, graphData.nodes, dimensions]);
+
+  // Initial load focus with delay
+  useEffect(() => {
+    if (isGraphLoaded && fgInstance) {
+      console.log('[GraphComponent] Initial load detected, waiting for engine...');
+      // Add extra delay for initial load to ensure graph is fully ready
+      setTimeout(() => {
+        performFocusBasedOnViewType();
+      }, 500);
+    }
+  }, [isGraphLoaded, fgInstance, performFocusBasedOnViewType]);
+
+  // Route change handler
+  useEffect(() => {
+    if (isGraphLoaded && fgInstance) {
+      console.log('[GraphComponent] Route change detected:', router.asPath);
+      performFocusBasedOnViewType(router.asPath);
+    }
+  }, [router.asPath, isGraphLoaded, fgInstance, performFocusBasedOnViewType]);
 
   return (
-    <div className={styles.graphInner} ref={containerRef}>
+    <div className={styles.graphInner} ref={containerRef} onMouseLeave={handleCanvasMouseLeave}>
       <div className={styles.buttonContainer}>
         <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
           <MdMyLocation size={24} />
@@ -370,6 +502,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
           linkWidth={GRAPH_LAYOUT_CONFIG.LINK_WIDTH}
           onNodeClick={handleNodeClick as any}
           onNodeHover={handleNodeHover as any}
+          onBackgroundClick={() => handleNodeHover(null)}
           onNodeDragEnd={(node: any) => {
             // 드래그가 끝난 후 노드의 고정을 해제하여 물리엔진이 계속 작동하도록 함
             node.fx = undefined;
@@ -385,6 +518,31 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
 
             const isTheHoveredNode = hoveredNode && hoveredNode.id === node.id;
             const { HOME_NODE_SIZE, CATEGORY_NODE_SIZE, POST_NODE_SIZE, HOME_CORNER_RADIUS, CATEGORY_CORNER_RADIUS, HOME_NAME_FONT_SIZE, CATEGORY_FONT_SIZE, POST_FONT_SIZE } = GRAPH_LAYOUT_CONFIG;
+
+            // Helper function to draw image that completely fills the shape (crop to fill)
+            const drawImageFillShape = (img: HTMLImageElement, x: number, y: number, width: number, height: number) => {
+              const imgAspect = img.width / img.height;
+              const containerAspect = width / height;
+              
+              let drawWidth, drawHeight, offsetX, offsetY;
+              
+              if (imgAspect > containerAspect) {
+                // Image is wider, crop sides to fit height
+                drawHeight = height;
+                drawWidth = height * imgAspect;
+                offsetX = (width - drawWidth) / 2;
+                offsetY = 0;
+              } else {
+                // Image is taller, crop top/bottom to fit width
+                drawWidth = width;
+                drawHeight = width / imgAspect;
+                offsetX = 0;
+                offsetY = (height - drawHeight) / 2;
+              }
+              
+              ctx.drawImage(img, x + offsetX, y + offsetY, drawWidth, drawHeight);
+            };
+
             if (node.type === 'Home') {
               const size = HOME_NODE_SIZE;
               ctx.beginPath();
@@ -394,10 +552,20 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
               ctx.strokeStyle = colors.link;
               ctx.stroke();
               if (node.img && node.img.complete) {
-                const iconSize = size * 0.6;
                 ctx.save();
+                // Create clipping path that matches the exact shape
+                ctx.beginPath();
+                ctx.roundRect(node.x! - size / 2, node.y! - size / 2, size, size, HOME_CORNER_RADIUS);
                 ctx.clip();
-                ctx.drawImage(node.img, node.x! - iconSize / 2, node.y! - iconSize / 2, iconSize, iconSize);
+                
+                // Draw image to completely fill the shape
+                drawImageFillShape(
+                  node.img, 
+                  node.x! - size / 2, 
+                  node.y! - size / 2, 
+                  size, 
+                  size
+                );
                 ctx.restore();
               }
               ctx.textAlign = 'center';
@@ -407,20 +575,35 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
               ctx.fillText(node.name, node.x!, node.y! + size / 2 + HOME_NAME_FONT_SIZE);
             } else {
               ctx.beginPath();
+              let nodeSize: number;
               if (node.type === 'Category') {
-                const size = CATEGORY_NODE_SIZE;
-                ctx.roundRect(node.x! - size / 2, node.y! - size / 2, size, size, CATEGORY_CORNER_RADIUS);
+                nodeSize = CATEGORY_NODE_SIZE;
+                ctx.roundRect(node.x! - nodeSize / 2, node.y! - nodeSize / 2, nodeSize, nodeSize, CATEGORY_CORNER_RADIUS);
               } else { // Post
-                const r = POST_NODE_SIZE / 2;
-                ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
+                nodeSize = POST_NODE_SIZE;
+                ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI, false);
               }
               ctx.fillStyle = isTheHoveredNode ? colors.hover : colors.node;
               ctx.fill();
               if (node.img && node.img.complete) {
                 ctx.save();
+                // Create clipping path that matches the exact shape
+                ctx.beginPath();
+                if (node.type === 'Category') {
+                  ctx.roundRect(node.x! - nodeSize / 2, node.y! - nodeSize / 2, nodeSize, nodeSize, CATEGORY_CORNER_RADIUS);
+                } else { // Post - circular
+                  ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI, false);
+                }
                 ctx.clip();
-                const size = node.type === 'Category' ? CATEGORY_NODE_SIZE : POST_NODE_SIZE;
-                ctx.drawImage(node.img, node.x! - size / 2, node.y! - size / 2, size, size);
+                
+                // Draw image to completely fill the shape
+                drawImageFillShape(
+                  node.img,
+                  node.x! - nodeSize / 2,
+                  node.y! - nodeSize / 2,
+                  nodeSize,
+                  nodeSize
+                );
                 ctx.restore();
               }
               const label = node.name || '';
@@ -429,7 +612,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillStyle = colors.text;
-              const textYOffset = (node.type === 'Category' ? CATEGORY_NODE_SIZE / 2 : POST_NODE_SIZE / 2) + 2;
+              const textYOffset = (nodeSize / 2) + 2;
               ctx.fillText(label, node.x!, node.y! + textYOffset);
             }
             ctx.globalAlpha = 1;
@@ -463,14 +646,14 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
   const modalContent = (
     <div className={styles.modalOverlay} onClick={closeModal}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <GraphComponent siteMap={siteMap} isModal={true} />
+        <GraphComponent siteMap={siteMap} isModal={true} viewType={viewType} />
       </div>
     </div>
   );
 
   return (
     <div className={containerClasses}>
-      <GraphComponent siteMap={siteMap} />
+      <GraphComponent siteMap={siteMap} viewType={viewType} />
       {isMounted && isModalOpen && createPortal(modalContent, document.getElementById('modal-root')!)}
     </div>
   );
