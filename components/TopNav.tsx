@@ -5,7 +5,7 @@ import { IoSearchOutline } from '@react-icons/all-files/io5/IoSearchOutline'
 import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { getBlockTitle, parsePageId } from 'notion-utils'
+
 import React from 'react'
 import { createPortal } from 'react-dom'
 
@@ -212,19 +212,33 @@ function findPagePath(
   tree: types.PageInfo[]
 ): BreadcrumbItem[] | null {
   for (const item of tree) {
+    const href =
+      item.type === 'Post'
+        ? `/post/${item.slug}`
+        : item.type === 'Category'
+        ? `/category/${item.slug}`
+        : `/${item.slug}`
+
     const currentPath = [
       {
         title: item.title || 'Untitled',
         pageInfo: item,
-        href: `/${item.slug}`
+        href
       }
     ]
-    if (item.pageId === pageId) return currentPath
+
+    if (item.pageId === pageId) {
+      return currentPath
+    }
+
     if (item.children) {
       const subPath = findPagePath(pageId, item.children)
-      if (subPath) return [...currentPath, ...subPath]
+      if (subPath) {
+        return [...currentPath, ...subPath]
+      }
     }
   }
+
   return null
 }
 
@@ -236,42 +250,14 @@ interface TopNavProps {
 }
 
 export function TopNav({ pageProps, isMobile = false, isSideNavCollapsed = false, onToggleMobileMenu }: TopNavProps) {
-  const { siteMap, pageId, recordMap, topLevelPageInfo } = pageProps
-  const router = useRouter()
+  const { siteMap, pageId } = pageProps
 
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
-    if (!siteMap || !pageId || !topLevelPageInfo || !recordMap) return []
+    if (!siteMap || !pageId) return []
 
-    const basePath =
-      findPagePath(topLevelPageInfo.pageId, siteMap.navigationTree || []) || []
-
-    // 2. Build the hierarchical path for sub-pages from the URL slug array
-    const slugParts = (router.query.slug as string[]) || []
-    const subPageCrumbs: BreadcrumbItem[] = []
-
-    if (slugParts.length > 1) {
-      // Iterate from the first sub-page slug to the last one
-      for (let i = 1; i < slugParts.length; i++) {
-        const subPageSlug = slugParts[i]
-        const subPageId = parsePageId(subPageSlug)
-
-        if (subPageId && recordMap.block[subPageId]?.value) {
-          const subPageBlock = recordMap.block[subPageId].value
-          const subPageTitle = getBlockTitle(subPageBlock, recordMap) || 'Untitled'
-
-          // Construct the full path for the link
-          const href = `/${slugParts.slice(0, i + 1).join('/')}`
-
-          subPageCrumbs.push({
-            title: subPageTitle,
-            href
-          })
-        }
-      }
-    }
-
-    return [...basePath, ...subPageCrumbs]
-  }, [siteMap, pageId, recordMap, topLevelPageInfo, router.query.slug])
+    const path = findPagePath(pageId, siteMap.navigationTree || [])
+    return path || []
+  }, [siteMap, pageId])
 
   return (
     <nav className="glass-nav">

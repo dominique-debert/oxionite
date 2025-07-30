@@ -1,10 +1,9 @@
-import Link from 'next/link'
 import { useRouter } from 'next/router'
 import * as React from 'react'
 
+import { PostList } from '@/components/PostList'
 import type * as types from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
-import { mapImageUrl } from '@/lib/map-image-url'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
 interface CategoryPageProps {
@@ -57,28 +56,10 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
   return posts
 }
 
-// Format date
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return ''
-  try {
-    // Handles both 'YYYY-MM-DD' and 'Month DD, YYYY' formats
-    const date = new Date(dateString)
-    // Check if the date is valid
-    if (Number.isNaN(date.getTime())) {
-      throw new Error('Invalid date')
-    }
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}.${month}.${day}`
-  } catch (err) {
-    console.error(`Invalid date string: ${dateString}`, err)
-    return dateString // Return original string on error
-  }
-}
+
 
 export function CategoryPage({ pageProps }: CategoryPageProps) {
-  const { siteMap, pageId, isMobile = false } = pageProps
+  const { siteMap, pageId } = pageProps
   const router = useRouter()
   const [currentPage, setCurrentPage] = React.useState(1)
   const { isDarkMode } = useDarkMode()
@@ -175,28 +156,22 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   };
 
+  // Format posts for PostList component
+  const formattedPosts = React.useMemo(() => {
+    return currentPosts.map((post) => ({
+      pageId: post.pageId,
+      title: post.title,
+      description: post.description,
+      date: post.date,
+      slug: post.slug,
+      language: post.language || 'ko',
+      coverImage: post.coverImage || undefined,
+      coverImageBlock: post.coverImageBlock || undefined,
+    }))
+  }, [currentPosts])
+
   if (!currentPageInfo) {
     return <div>Category not found</div>
-  }
-
-  // Define styles for glassmorphism effect on post cards
-  const cardStyle: React.CSSProperties = {
-    textDecoration: 'none',
-    color: 'inherit',
-    borderRadius: '16px',
-    border: '1px solid',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer',
-    backgroundColor: isDarkMode ? 'rgba(40, 40, 40, 0.5)' : 'rgba(255, 255, 255, 0.4)',
-    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)'
-  }
-
-  const cardHoverStyle: React.CSSProperties = {
-    transform: 'translateY(-3px)',
-    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.12)',
-    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'
   }
 
   return (
@@ -240,104 +215,13 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
         </div>
       </div>
       
-      {/* Posts List */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-start',
-        gap: '2.5rem'
-      }}>
-        {currentPosts.map((post) => (
-          <Link
-            key={post.pageId}
-            href={`/${post.language}/${post.slug}`}
-            style={cardStyle}
-            onMouseEnter={(e) => {
-              Object.assign(e.currentTarget.style, cardHoverStyle)
-            }}
-            onMouseLeave={(e) => {
-              // Reset to base styles defined in `cardStyle`
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
-              e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <article style={{
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              width: '100%',
-              minHeight: isMobile ? 'auto' : '140px',
-              overflow: 'hidden',
-              borderRadius: '16px' // Match parent Link's rounding
-            }}
-            >
-              {/* Cover Image - 모바일에서는 위에, 데스크톱에서는 오른쪽 */}
-              {post.coverImage && post.coverImageBlock && (
-                <div style={{
-                  width: isMobile ? '100%' : '260px',
-                  height: isMobile ? '200px' : 'auto',
-                  order: isMobile ? 1 : 2,
-                  alignSelf: isMobile ? 'stretch' : 'stretch',
-                  backgroundColor: 'var(--bg-color-1)',
-                  flexShrink: 0,
-                  backgroundImage: `url('${mapImageUrl(post.coverImage, post.coverImageBlock)}')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  borderRadius: isMobile ? '16px 16px 0 0' : '0 16px 16px 0'
-                }} />
-              )}
-
-              {/* Content */}
-              <div style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                order: isMobile ? 2 : 1,
-                padding: isMobile ? '1.5rem 1rem' : '1.5rem 2rem',
-                minWidth: 0 // flex item이 수축할 때 내용이 넘치는 것을 방지
-              }}>
-                <div>
-                  <h2 style={{
-                    fontSize: '1.25rem',
-                    fontWeight: '600',
-                    color: 'var(--primary-text-color)',
-                    margin: '0',
-                    lineHeight: '1.4'
-                  }}>
-                    {post.title}
-                  </h2>
-                  {post.date && (
-                    <div style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--tertiary-text-color)',
-                      fontWeight: '500',
-                      marginTop: '0.25rem'
-                    }}>
-                      {formatDate(post.date)}
-                    </div>
-                  )}
-                  {post.description && (
-                    <p style={{
-                      fontSize: '0.95rem',
-                      color: 'var(--secondary-text-color)',
-                      lineHeight: '1.5',
-                      marginTop: '0.5rem',
-                      marginBottom: 0,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 4,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
-                    }}>
-                      {post.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </article>
-          </Link>
-        ))}
-      </div>
+      <PostList
+        posts={formattedPosts}
+        title={currentPageInfo.title}
+        description={currentPageInfo.description || undefined}
+        emptyMessage={t.noPosts}
+        emptyDescription={t.noPostsDescription}
+      />
       
       {/* Pagination */}
       {totalPages > 1 && (

@@ -194,7 +194,7 @@ interface GraphViewProps {
   viewType?: 'home' | 'sidenav';
 }
 
-function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteMap?: SiteMap, isModal?: boolean, viewType?: 'home' | 'sidenav' }) {
+function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModal }: { siteMap?: SiteMap, isModal?: boolean, viewType?: 'home' | 'sidenav', closeModal?: () => void }) {
   const router = useRouter();
   const locale = router.locale || 'ko';
 
@@ -260,8 +260,16 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
       void router.push('/');
     } else {
       const page = node.page as PageInfo;
-      if (page && page.slug) {
-        void router.push(`/${page.language}/${page.slug}`);
+      if (page?.slug) {
+        if (isModal && closeModal) {
+          closeModal();
+        }
+        const url = node.page.type === 'Post'
+          ? `/post/${node.page.slug}`
+          : node.page.type === 'Category'
+          ? `/category/${node.page.slug}`
+          : `/${node.page.slug}`
+        void router.push(url);
       }
     }
     
@@ -272,7 +280,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home' }: { siteM
         (window as any).closeGraphModal();
       }
     }
-  }, [router, isModal]);
+  }, [router, isModal, closeModal]);
 
   const handleNodeHover = (node: GraphNode | null) => {
     const newIds = new Set<string>();
@@ -630,7 +638,7 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
   const modalContent = (
     <div className={styles.modalOverlay} onClick={closeModal}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <GraphComponent siteMap={siteMap} isModal={true} viewType={viewType} />
+        <GraphComponent siteMap={siteMap} isModal={true} viewType={viewType} closeModal={closeModal} />
       </div>
     </div>
   );

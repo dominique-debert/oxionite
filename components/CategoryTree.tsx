@@ -39,7 +39,11 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   const router = useRouter()
 
   // Construct pageUrl without locale
-  const pageUrl = `/${item.slug}`;
+  const pageUrl = item.type === 'Post'
+    ? `/post/${item.slug}`
+    : item.type === 'Category'
+    ? `/category/${item.slug}`
+    : `/${item.slug}`;
   
   // Clean asPath and pageUrl for comparison
   const cleanedAsPath = router.asPath.split('?')[0].split('#')[0].replace(/\/$/, '');

@@ -22,6 +22,11 @@ export interface LocaleTexts {
   typeToSearch: string
   resultsCount: (count: number) => string
   viewMore: string
+  
+  // TagPage
+  postsTaggedWith: string
+  noPostsFound: string
+  noPostsWithTag: string
 }
 
 const koTexts: LocaleTexts = {
@@ -47,7 +52,12 @@ const koTexts: LocaleTexts = {
   noResults: '검색 결과가 없습니다',
   typeToSearch: '검색어를 입력하세요...',
   resultsCount: (count: number) => `총 ${count}개의 결과를 찾았습니다.`,
-  viewMore: '자세히 보기'
+  viewMore: '자세히 보기',
+  
+  // TagPage
+  postsTaggedWith: '태그된 글',
+  noPostsFound: '게시물을 찾을 수 없습니다',
+  noPostsWithTag: '이 태그와 관련된 게시물이 없습니다'
 }
 
 const enTexts: LocaleTexts = {
@@ -73,7 +83,12 @@ const enTexts: LocaleTexts = {
   noResults: 'No results found',
   typeToSearch: 'Type to search...',
   resultsCount: (count: number) => `Found ${count} result${count !== 1 ? 's' : ''}`,
-  viewMore: 'View More'
+  viewMore: 'View More',
+  
+  // TagPage
+  postsTaggedWith: 'Posts tagged with',
+  noPostsFound: 'No posts found',
+  noPostsWithTag: 'There are no posts with this tag'
 }
 
 const translations = {
