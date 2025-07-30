@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import siteConfig from 'site.config';
 import { MdFullscreen, MdFullscreenExit, MdMyLocation, MdHome } from 'react-icons/md';
+import { PiGraphBold } from "react-icons/pi";
+import { FaTags } from 'react-icons/fa';
 import { createPortal } from 'react-dom';
 import type { NodeObject, LinkObject } from 'react-force-graph-2d';
 
@@ -11,7 +13,15 @@ import { mapImageUrl } from '@/lib/map-image-url';
 import { useDarkMode } from '@/lib/use-dark-mode';
 import styles from '@/styles/components/GraphView.module.css';
 
-const ForceGraph2D = dynamic(() => import('./ForceGraphWrapper'), { ssr: false });
+const ForceGraphWrapper = dynamic(() => import('./ForceGraphWrapper').then(mod => mod.default), {
+  ssr: false,
+  loading: () => <div>Loading graph...</div>
+});
+
+const TagGraphComponent = dynamic(() => import('./TagGraphComponent').then(mod => mod.TagGraphComponent), {
+  ssr: false,
+  loading: () => <div>Loading tag graph...</div>
+});
 
 const GRAPH_LAYOUT_CONFIG = {
   HOME_NODE_SIZE: 24,
@@ -501,24 +511,24 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
     <div className={styles.graphInner} ref={containerRef} onMouseLeave={handleCanvasMouseLeave}>
       <div className={styles.buttonContainer}>
         <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
-          <MdMyLocation size={24} />
+          <MdMyLocation size={20} />
         </button>
         <button onClick={handleFitToHome} className={styles.button} aria-label="Fit to home">
-          <MdHome size={24} />
+          <MdHome size={20} />
         </button>
         {isModal ? (
           <button onClick={() => (window as any).closeGraphModal()} className={styles.button} aria-label="Close fullscreen">
-            <MdFullscreenExit size={24} />
+            <MdFullscreenExit size={20} />
           </button>
         ) : (
           <button onClick={() => (window as any).openGraphModal()} className={styles.button} aria-label="Open in fullscreen">
-            <MdFullscreen size={24} />
+            <MdFullscreen size={20} />
           </button>
         )}
       </div>
 
       {dimensions.width > 0 && (
-        <ForceGraph2D
+        <ForceGraphWrapper
           width={dimensions.width}
           height={dimensions.height}
           graphData={graphData}
@@ -529,7 +539,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
           cooldownTicks={100}
           cooldownTime={15_000}
           onEngineStop={handleEngineStop as any}
-          linkColor={(link) => {
+          linkColor={(link: any) => {
             if (!hoveredNode) return colors.link;
             const sourceId = typeof link.source === 'string' ? link.source : (link.source as GraphNode)?.id;
             const targetId = typeof link.target === 'string' ? link.target : (link.target as GraphNode)?.id;
@@ -543,7 +553,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
             node.fx = undefined;
             node.fy = undefined;
           }}
-          nodeCanvasObject={(node, ctx) => {
+          nodeCanvasObject={(node: any, ctx: any) => {
             const isHighlighted = highlightedNodeIds.has(node.id as string);
             if (!hoveredNode) {
               ctx.globalAlpha = 1;
@@ -664,9 +674,66 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
 export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeView, setActiveView] = useState<'post_view' | 'tag_view'>('post_view');
+  const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null);
+  const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 });
+
+  const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const openModal = useCallback(() => setIsModalOpen(true), []);
   const closeModal = useCallback(() => setIsModalOpen(false), []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (!navRef.current) return;
+
+    const navRect = navRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - navRect.left;
+    const mouseY = e.clientY - navRect.top;
+
+    let closestIndex = -1;
+    let minDistance = Infinity;
+
+    itemRefs.current.forEach((item, index) => {
+      if (item) {
+        const itemRect = item.getBoundingClientRect();
+        const itemCenterX = itemRect.left - navRect.left + itemRect.width / 2;
+        const itemCenterY = itemRect.top - navRect.top + itemRect.height / 2;
+
+        const dx = mouseX - itemCenterX;
+        const dy = mouseY - itemCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = index;
+        }
+      }
+    });
+
+    setHoveredItemIndex(closestIndex);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredItemIndex(null);
+  }, []);
+
+  useEffect(() => {
+    if (hoveredItemIndex !== null && itemRefs.current[hoveredItemIndex]) {
+      const item = itemRefs.current[hoveredItemIndex];
+      if (item) {
+        setPillStyle({
+          top: item.offsetTop,
+          left: item.offsetLeft,
+          width: item.offsetWidth,
+          height: item.offsetHeight,
+          opacity: 1
+        });
+      }
+    } else {
+      setPillStyle((prevStyle) => ({ ...prevStyle, opacity: 0 }));
+    }
+  }, [hoveredItemIndex]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -689,9 +756,61 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
     </div>
   );
 
+  
+
   return (
     <div className={containerClasses}>
+      <div className={styles.viewNavContainer}>
+        <nav 
+          ref={navRef}
+          className={styles.viewNav}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className={styles.viewNavPill} style={pillStyle} />
+          <button
+            ref={(el) => { itemRefs.current[0] = el }}
+            className={`${styles.viewNavItem} ${activeView === 'post_view' ? styles.active : ''}`}
+            onClick={() => setActiveView('post_view')}
+          >
+            <PiGraphBold className={styles.viewNavIcon} />
+            Graph View
+          </button>
+          <button
+            ref={(el) => { itemRefs.current[1] = el }}
+            className={`${styles.viewNavItem} ${activeView === 'tag_view' ? styles.active : ''}`}
+            onClick={() => setActiveView('tag_view')}
+          >
+            <FaTags className={styles.viewNavIcon} />
+            Tag View
+          </button>
+        </nav>
+      </div>
+      
       <GraphComponent siteMap={siteMap} viewType={viewType} />
+
+      {activeView === 'tag_view' && (
+        <div className={styles.tagViewContainer}>
+          {siteMap?.tagGraphData && (
+            <TagGraphComponent 
+              tagGraphData={siteMap.tagGraphData} 
+              viewType={viewType === 'home' ? 'fullscreen' : 'sidebar'} 
+            />
+          )}
+          <div className={styles.buttonContainer}>
+            <button className={styles.button} title="Center">
+              <MdMyLocation size={20} />
+            </button>
+            <button className={styles.button} title="Home">
+              <MdHome size={20} />
+            </button>
+            <button className={styles.button} title="Fullscreen">
+              <MdFullscreen size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+      
       {isMounted && isModalOpen && createPortal(modalContent, document.getElementById('modal-root')!)}
     </div>
   );

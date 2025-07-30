@@ -91,14 +91,24 @@ export interface PageInfo {
   detail?: string
 }
 
+export interface TagGraphData {
+  tagCounts: Record<string, number>
+  tagRelationships: Record<string, string[]>
+  tagPages: Record<string, string[]>
+  totalPosts: number
+  lastUpdated: number
+}
+
 /**
  * The main data structure holding all site information after being processed.
  */
-export type SiteMap = {
+export interface SiteMap {
   site: Site
   pageInfoMap: Record<string, PageInfo>
-  canonicalPageMap: CanonicalPageMap
   navigationTree: PageInfo[]
+  canonicalPageMap: CanonicalPageMap
+  tagGraphData?: TagGraphData
+  lastUpdated: number
 }
 
 export interface CanonicalPageMap {

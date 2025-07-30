@@ -5,6 +5,7 @@ import type { CanonicalPageMap, PageInfo, SiteMap } from './types'
 import * as config from './config'
 import { mapImageUrl } from './map-image-url'
 import { notion } from './notion-api'
+import { buildTagGraphData } from './tag-graph'
 
 // Custom function to parse Notion relation properties
 function parseRelationProperty(
@@ -79,12 +80,21 @@ export const getSiteMap = async (): Promise<SiteMap> => {
   const navigationTree = buildNavigationTree(pageInfoMap)
   removeCircularDependencies(navigationTree) // This removes the circular 'parent' property
   const canonicalPageMap = buildCanonicalPageMap(pageInfoMap)
+  const tagGraphData = buildTagGraphData({ 
+    site: config.site, 
+    pageInfoMap, 
+    navigationTree, 
+    canonicalPageMap,
+    lastUpdated: Date.now()
+  })
 
   return {
     site: config.site,
     pageInfoMap,
     navigationTree,
-    canonicalPageMap
+    canonicalPageMap,
+    tagGraphData,
+    lastUpdated: Date.now()
   }
 }
 
