@@ -48,7 +48,23 @@
 .button:hover {
   background: var(--hover-bg-color);
   border-color: var(--hover-border-color);
+}
 
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--default-bg-color);
+  border-color: var(--border-color);
+}
+
+.button:disabled:hover {
+  background: var(--default-bg-color);
+  border-color: var(--border-color);
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
 }
 
 .modalOverlay {

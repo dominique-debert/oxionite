@@ -711,9 +711,13 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
 }
 
 export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps) {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [activeView, setActiveView] = useState<'post_view' | 'tag_view'>('post_view');
+  
+  // Extract current tag from URL
+  const currentTag = router.pathname.startsWith('/tag/') ? router.query.tag as string : undefined;
   const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null);
   const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 });
 
@@ -811,6 +815,7 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
             isModal={true}
             activeView={activeView}
             onViewChange={setActiveView}
+            currentTag={currentTag}
           />
         )}
       </div>
@@ -858,6 +863,7 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
               viewType={viewType === 'home' ? 'fullscreen' : 'sidebar'}
               activeView={activeView}
               onViewChange={setActiveView}
+              currentTag={currentTag}
             />
           )}
         </div>

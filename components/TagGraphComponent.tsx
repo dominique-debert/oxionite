@@ -28,6 +28,7 @@ interface TagGraphComponentProps {
   activeView?: 'post_view' | 'tag_view'
   onViewChange?: (view: 'post_view' | 'tag_view') => void
   isModal?: boolean
+  currentTag?: string
 }
 
 interface TagNode {
@@ -35,6 +36,12 @@ interface TagNode {
   name: string
   count: number
   val: number
+  x?: number
+  y?: number
+  z?: number
+  fx?: number
+  fy?: number
+  fz?: number
 }
 
 interface TagLink {
@@ -48,7 +55,8 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
   viewType,
   activeView = 'tag_view',
   onViewChange,
-  isModal = false
+  isModal = false,
+  currentTag
 }) => {
   const router = useRouter()
   const [fgInstance, setFgInstance] = useState<any>(null)
@@ -99,10 +107,13 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
 
   // Handle control buttons
   const handleFocusCurrentNode = useCallback(() => {
-    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
-      fgInstance.zoomToFit(400, 50)
+    if (!currentTag || !fgInstance) return
+    
+    const targetNode = graphData.nodes.find(node => node.id === currentTag)
+    if (targetNode && fgInstance && typeof fgInstance.zoomToFit === 'function') {
+      fgInstance.zoomToFit(1000, 50, (node: any) => node.id === currentTag)
     }
-  }, [fgInstance])
+  }, [fgInstance, graphData.nodes, currentTag])
 
   const handleFitToHome = useCallback(() => {
     if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
@@ -110,30 +121,50 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
     }
   }, [fgInstance])
 
-  // Center graph when loaded
+  // Handle initial zoom based on current tag or fallback to home
   useEffect(() => {
-    if (isGraphLoaded && fgInstance && typeof fgInstance.zoomToFit === 'function') {
+    if (isGraphLoaded && fgInstance && graphData.nodes.length > 0) {
       try {
-        console.log('[TagGraphComponent] Centering graph, dimensions:', dimensions)
-        fgInstance.zoomToFit(dimensions.width || 400, dimensions.height || 300)
+        if (currentTag) {
+          // Find the current tag node
+          const targetNode = graphData.nodes.find(node => node.id === currentTag)
+          if (targetNode) {
+            console.log('[TagGraphComponent] Focusing on current tag:', currentTag)
+            // Use zoomToFit with a filter to focus on the specific tag
+            setTimeout(() => {
+              if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
+                fgInstance.zoomToFit(1000, 50, (node: any) => node.id === currentTag)
+              }
+            }, 500) // Delay to allow graph to stabilize
+          } else {
+            // Tag not found, fallback to home
+            console.log('[TagGraphComponent] Tag not found, falling back to home view')
+            handleFitToHome()
+          }
+        } else {
+          // No current tag, use home view
+          console.log('[TagGraphComponent] No current tag, using home view')
+          handleFitToHome()
+        }
       } catch (error) {
-        console.error('[TagGraphComponent] zoomToFit failed:', error)
+        console.error('[TagGraphComponent] Initial zoom failed:', error)
+        handleFitToHome()
       }
     }
-  }, [isGraphLoaded, fgInstance, dimensions])
+  }, [isGraphLoaded, fgInstance, graphData.nodes, currentTag])
 
-  // Initial camera setup
+  // Sidebar initial setup
   useEffect(() => {
-    if (fgInstance && viewType === 'sidebar') {
+    if (fgInstance && viewType === 'sidebar' && !currentTag) {
       fgInstance.zoomToFit(400, 50)
     }
-  }, [viewType, fgInstance])
+  }, [viewType, fgInstance, currentTag])
 
   // Custom node rendering for pill-shaped nodes
   const nodeCanvasObject = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const tagName = node.name
     const count = node.count
-    const fontSize = Math.max(10, Math.min(16, node.val * 2 / globalScale))
+    const fontSize = (Math.max(10, Math.min(16, node.val * 2 / globalScale))) / 10
     
     // Measure text widths
     ctx.font = `bold ${fontSize}px Inter, sans-serif`
@@ -286,9 +317,13 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
           </nav>
         </div>
       )}
-      
       <div className={styles.buttonContainer}>
-        <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current view">
+        <button 
+          onClick={handleFocusCurrentNode} 
+          className={`${styles.button} ${(!currentTag || !graphData.nodes.find(node => node.id === currentTag)) ? styles.disabled : ''}`}
+          disabled={!currentTag || !graphData.nodes.find(node => node.id === currentTag)}
+          aria-label="Focus on current tag"
+        >
           <MdMyLocation size={20} />
         </button>
         <button onClick={handleFitToHome} className={styles.button} aria-label="Fit to home">
@@ -304,7 +339,6 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
           </button>
         )}
       </div>
-
       <ForceGraphWrapper
         key={`tag-graph-${isModal}-${dimensions.width}-${dimensions.height}`}
         graphData={graphData}
