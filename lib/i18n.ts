@@ -24,7 +24,7 @@ export interface LocaleTexts {
   viewMore: string
   
   // TagPage
-  postsTaggedWith: string
+  postsTaggedWithCount: (count: number) => string
   noPostsFound: string
   noPostsWithTag: string
 }
@@ -55,14 +55,14 @@ const koTexts: LocaleTexts = {
   viewMore: '자세히 보기',
   
   // TagPage
-  postsTaggedWith: '태그된 글',
+  postsTaggedWithCount: (count: number) => `총 ${count}개의 글`,
   noPostsFound: '게시물을 찾을 수 없습니다',
   noPostsWithTag: '이 태그와 관련된 게시물이 없습니다'
 }
 
 const enTexts: LocaleTexts = {
   // CategoryPage
-  totalPostsCount: (count: number) => `${count} post${count !== 1 ? 's' : ''} total`,
+  totalPostsCount: (count: number) => `Total ${count} post${count !== 1 ? 's' : ''}`,
   previousPage: 'Previous',
   nextPage: 'Next',
   noPosts: 'No posts in this category yet.',
@@ -86,7 +86,7 @@ const enTexts: LocaleTexts = {
   viewMore: 'View More',
   
   // TagPage
-  postsTaggedWith: 'Posts tagged with',
+  postsTaggedWithCount: (count: number) => `Total ${count} post${count !== 1 ? 's' : ''}`,
   noPostsFound: 'No posts found',
   noPostsWithTag: 'There are no posts with this tag'
 }

@@ -3,8 +3,8 @@ import { IoMenuOutline } from '@react-icons/all-files/io5/IoMenuOutline'
 import { IoMoonSharp } from '@react-icons/all-files/io5/IoMoonSharp'
 import { IoSearchOutline } from '@react-icons/all-files/io5/IoSearchOutline'
 import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
-import Link from 'next/link'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 
 import React from 'react'
 import { createPortal } from 'react-dom'
@@ -249,15 +249,38 @@ interface TopNavProps {
   onToggleMobileMenu?: () => void
 }
 
-export function TopNav({ pageProps, isMobile = false, isSideNavCollapsed = false, onToggleMobileMenu }: TopNavProps) {
+export const TopNav: React.FC<TopNavProps> = ({
+  pageProps,
+  isMobile,
+  isSideNavCollapsed,
+  onToggleMobileMenu
+}) => {
+  const router = useRouter()
   const { siteMap, pageId } = pageProps
 
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
-    if (!siteMap || !pageId) return []
+    const { pathname, query } = router
 
-    const path = findPagePath(pageId, siteMap.navigationTree || [])
-    return path || []
-  }, [siteMap, pageId])
+    // Handle tag pages via route
+    if (pathname.startsWith('/tag/')) {
+      const tag = query.tag as string
+      if (tag) {
+        return [
+          {
+            title: `#${tag}`,
+            pageInfo: { pageId: `tag-${tag}`, title: `#${tag}` } as types.PageInfo,
+            href: `/tag/${tag}`
+          }
+        ];
+      }
+    }
+
+    // Handle other pages
+    if (!siteMap || !pageId) return [];
+    
+    const path = findPagePath(pageId, siteMap.navigationTree || []);
+    return path || [];
+  }, [siteMap, pageId, router]);
 
   return (
     <nav className="glass-nav">

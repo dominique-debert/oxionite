@@ -21,7 +21,7 @@ interface PostItem {
   coverImageBlock?: types.Block // Add block for mapImageUrl
 }
 
-const POSTS_PER_PAGE = 5
+const _POSTS_PER_PAGE = 5
 
 // Utility function to get all posts from a category recursively (same logic as CategoryTree)
 const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] => {
@@ -61,8 +61,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
 export function CategoryPage({ pageProps }: CategoryPageProps) {
   const { siteMap, pageId } = pageProps
   const router = useRouter()
-  const [currentPage, setCurrentPage] = React.useState(1)
-  const { isDarkMode } = useDarkMode()
+  const { isDarkMode: _isDarkMode } = useDarkMode()
 
   // Get texts for current locale
   const locale = router.locale || 'ko'
@@ -98,215 +97,46 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
     const posts = getAllPostsFromCategory(currentPageInfo)
     console.log('CategoryPage - Collected posts count:', posts.length)
     
+    // Filter posts by current locale
+    const filteredPosts = posts.filter(post => post.language === locale)
+    console.log('CategoryPage - Filtered posts count:', filteredPosts.length)
+    
     // Sort by published date (newest first)
-    return posts.sort((a, b) => {
+    return filteredPosts.sort((a, b) => {
       if (!a.date && !b.date) return 0
       if (!a.date) return 1
       if (!b.date) return -1
       return new Date(b.date).getTime() - new Date(a.date).getTime()
     })
-  }, [currentPageInfo])
+  }, [currentPageInfo, locale])
   
-  // Pagination calculations
-  const totalPages = Math.ceil(allPosts.length / POSTS_PER_PAGE)
-  const startIndex = (currentPage - 1) * POSTS_PER_PAGE
-  const endIndex = startIndex + POSTS_PER_PAGE
-  const currentPosts = allPosts.slice(startIndex, endIndex)
-  
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const siblingCount = 2; // Number of pages on each side of the current page, creating a block of 5
-    const totalPageNumbers = siblingCount + 5; // A threshold to decide when to use ellipsis
 
-    // If total pages are less than the threshold, show all page numbers
-    if (totalPageNumbers >= totalPages) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-
-    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-    const rightSiblingIndex = Math.min(
-      currentPage + siblingCount,
-      totalPages
-    );
-
-    const shouldShowLeftDots = leftSiblingIndex > 2;
-    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
-
-    const firstPageIndex = 1;
-    const lastPageIndex = totalPages;
-
-    if (!shouldShowLeftDots && shouldShowRightDots) {
-      const leftItemCount = 3 + 2 * siblingCount;
-      const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1);
-      return [...leftRange, '...', totalPages];
-    }
-
-    if (shouldShowLeftDots && !shouldShowRightDots) {
-      const rightItemCount = 3 + 2 * siblingCount;
-      const rightRange = Array.from({ length: rightItemCount }, (_, i) => totalPages - rightItemCount + 1 + i);
-      return [firstPageIndex, '...', ...rightRange];
-    }
-
-    if (shouldShowLeftDots && shouldShowRightDots) {
-      const middleRange = Array.from({ length: rightSiblingIndex - leftSiblingIndex + 1 }, (_, i) => leftSiblingIndex + i);
-      return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex];
-    }
-    
-    // Default case: show all pages (shouldn't be reached often with the logic above)
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  };
 
   // Format posts for PostList component
   const formattedPosts = React.useMemo(() => {
-    return currentPosts.map((post) => ({
+    return allPosts.map((post) => ({
       pageId: post.pageId,
       title: post.title,
       description: post.description,
       date: post.date,
       slug: post.slug,
-      language: post.language || 'ko',
-      coverImage: post.coverImage || undefined,
-      coverImageBlock: post.coverImageBlock || undefined,
+      language: post.language,
+      coverImage: post.coverImage,
+      coverImageBlock: post.coverImageBlock,
     }))
-  }, [currentPosts])
+  }, [allPosts])
 
   if (!currentPageInfo) {
     return <div>Category not found</div>
   }
 
   return (
-    <div style={{
-      width: '100%',
-      maxWidth: '800px',
-      margin: '0 auto',
-      padding: '2rem',
-      marginBottom: '1rem'
-    }}>
-      {/* Category Header */}
-      <div style={{
-        marginBottom: '3rem',
-        borderBottom: '1px solid var(--secondary-bg-color)',
-        paddingBottom: '2rem'
-      }}>
-        <h1 style={{
-          fontSize: '2.5rem',
-          fontWeight: '700',
-          color: 'var(--primary-text-color)',
-          marginBottom: '1rem',
-          lineHeight: '1.2'
-        }}>
-          {currentPageInfo.title}
-        </h1>
-        {currentPageInfo.description && (
-          <p style={{
-            fontSize: '1.1rem',
-            color: 'var(--secondary-text-color)',
-            lineHeight: '1.6',
-            marginBottom: '1rem'
-          }}>
-            {currentPageInfo.description}
-          </p>
-        )}
-        <div style={{
-          fontSize: '0.9rem',
-          color: 'var(--secondary-text-color)'
-        }}>
-          {t.totalPostsCount(allPosts.length)}
-        </div>
-      </div>
-      
-      <PostList
-        posts={formattedPosts}
-        title={currentPageInfo.title}
-        description={currentPageInfo.description || undefined}
-        emptyMessage={t.noPosts}
-        emptyDescription={t.noPostsDescription}
-      />
-      
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '0.75rem',
-          marginTop: '4rem',
-          marginBottom: '3rem',
-          paddingTop: '2rem',
-          borderTop: '1px solid rgba(55, 53, 47, 0.16)'
-        }}>
-          {/* Page Numbers */}
-          {getPageNumbers().map((pageNum, index) =>
-            typeof pageNum === 'string' ? (
-              <span key={`ellipsis-${index}`} style={{ padding: '0 0.25rem', color: 'var(--tertiary-text-color)' }}>
-                {pageNum}
-              </span>
-            ) : (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid',
-                  borderColor: pageNum === currentPage ? 'var(--primary-highlight-color)' : (isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0,0,0,0.2)'),
-                  borderRadius: '9999px',
-                  backgroundColor: pageNum === currentPage ? 'var(--primary-highlight-color)' : 'transparent',
-                  color: pageNum === currentPage ? '#FFFFFF' : 'var(--secondary-text-color)',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: pageNum === currentPage ? '600' : '400',
-                  transition: 'all 0.2s ease',
-                  minWidth: '40px',
-                  lineHeight: '1'
-                }}
-                onMouseEnter={(e) => {
-                  if (pageNum !== currentPage) {
-                    e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (pageNum !== currentPage) {
-                    e.currentTarget.style.backgroundColor = 'transparent'
-                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'
-                  }
-                }}
-              >
-                {pageNum}
-              </button>
-            )
-          )}
-        </div>
-      )}
-      
-      {/* No Posts Message */}
-      {allPosts.length === 0 && (
-        <div style={{
-          textAlign: 'center',
-          padding: '4rem 2rem',
-          color: 'var(--secondary-text-color)',
-          minHeight: '30vh', // Set a minimum height
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <React.Fragment>
-            <div style={{
-              fontSize: '1.1rem',
-              marginBottom: '0.5rem',
-              width: '100%'
-            }}>
-              {t.noPosts}
-            </div>
-            <div style={{
-              fontSize: '0.9rem'
-            }}>
-              {t.noPostsDescription}
-            </div>
-          </React.Fragment>
-        </div>
-      )}
-    </div>
+    <PostList
+      posts={formattedPosts}
+      title={currentPageInfo.title}
+      description={t.totalPostsCount(formattedPosts.length)}
+      emptyMessage={t.noPosts}
+      emptyDescription={t.noPostsDescription}
+    />
   )
 }

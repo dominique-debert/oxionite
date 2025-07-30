@@ -24,14 +24,19 @@ export function TagPage({ pageProps, tag }: TagPageProps) {
       (page) => page.type === 'Post' && page.public === true
     )
 
-    // Filter posts by tag (case-insensitive)
+    // Filter posts by tag and current locale
     return allPosts.filter((post) => {
-      // For now, we'll check if the tag appears in title, description, or we'll need to add tags property
-      // In a real implementation, you'd want to add a 'Tags' property to your Notion database
-      const searchText = `${post.title} ${post.description || ''}`.toLowerCase()
-      return searchText.includes(tag.toLowerCase())
+      // Check if the post has the specific tag
+      const hasTag = post.tags?.some((postTag: string) => 
+        postTag.toLowerCase() === tag.toLowerCase()
+      ) || false
+      
+      // Also filter by current locale to prevent showing posts from all languages
+      const postLanguage = post.language || 'ko'
+      
+      return hasTag && postLanguage === locale
     })
-  }, [siteMap?.pageInfoMap, tag])
+  }, [siteMap?.pageInfoMap, tag, locale])
 
   // Format posts for PostList component
   const formattedPosts = React.useMemo(() => {
@@ -51,7 +56,7 @@ export function TagPage({ pageProps, tag }: TagPageProps) {
     <PostList
       posts={formattedPosts}
       title={`#${tag}`}
-      description={`${t.postsTaggedWith} "${tag}"`}
+      description={t.postsTaggedWithCount(postsWithTag.length)}
       emptyMessage={t.noPostsFound}
       emptyDescription={`${t.noPostsWithTag} "${tag}"`}
     />

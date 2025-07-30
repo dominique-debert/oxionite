@@ -30,24 +30,23 @@ export const getStaticPaths: GetStaticPaths = async (): Promise<any> => {
     const tags = new Set<string>()
     Object.values(siteMap.pageInfoMap).forEach((pageInfo) => {
       const page = pageInfo as types.PageInfo
-      if (page.type === 'Post') {
-        const tagPattern = /#(\w+)/g
-        const titleMatches: string[] = page.title?.match(tagPattern) || []
-        const descMatches: string[] = page.description?.match(tagPattern) || []
-        
-        titleMatches.concat(descMatches).forEach((match: string) => {
-          const tag = match.slice(1)
-          tags.add(tag)
+      if (page.type === 'Post' && page.tags) {
+        page.tags.forEach((tag: string) => {
+          if (tag && tag.trim()) {
+            tags.add(tag.trim())
+          }
         })
       }
     })
 
     tags.forEach((tag: string) => {
       ['ko', 'en'].forEach((locale: string) => {
-        paths.push({
-          params: { tag },
-          locale,
-        })
+        if (tag && tag.trim()) {
+          paths.push({
+            params: { tag },
+            locale,
+          })
+        }
       })
     })
 
@@ -71,19 +70,14 @@ export const getStaticProps: GetStaticProps<TagPageProps, { tag: string }> = asy
   try {
     const siteMap = await getCachedSiteMap()
 
-    const safeTag = tag.toLowerCase().replace(/[^a-z0-9-]/g, '')
-    if (safeTag !== tag) {
-      return {
-        notFound: true,
-        revalidate: site.isr?.revalidate ?? 60,
-      }
-    }
-
+    // Allow UTF-8 characters in tags
+    const decodedTag = decodeURIComponent(tag)
+    
     return {
       props: {
         site: siteMap.site,
         siteMap,
-        tag: safeTag,
+        tag: decodedTag,
       },
       revalidate: site.isr?.revalidate ?? 60,
     }

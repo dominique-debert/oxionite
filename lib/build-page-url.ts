@@ -3,23 +3,44 @@ import type { PageInfo,SiteMap } from './types'
 
 
 /**
- * Builds the proper hierarchical URL for a given page ID.
- * - For Posts and Categories, it's a simple /slug.
- * - For SubPages, it constructs the full path e.g., /post-slug/sub-page-slug.
+ * Builds the proper hierarchical URL for a given page ID based on page type.
+ * - Posts: /post/{slug}
+ * - Categories: /category/{slug}
+ * - SubPages: /{parent-slug}/{sub-page-slug}
+ * - Home: /
  */
 export const buildPageUrl = (pageId: string, siteMap: SiteMap): string => {
   const pageInfoMap = siteMap.pageInfoMap
+  const pageInfo: PageInfo | undefined = pageInfoMap[pageId]
+  
+  if (!pageInfo) {
+    // Fallback for pages not found
+    return `/${pageId}`
+  }
+
+  // Handle Home page
+  if (pageInfo.slug === 'index' && !pageInfo.parentPageId) {
+    return '/'
+  }
+
+  // Handle Posts and Categories with new routing
+  if (pageInfo.type === 'Post') {
+    return `/post/${pageInfo.slug}`
+  }
+  
+  if (pageInfo.type === 'Category') {
+    return `/category/${pageInfo.slug}`
+  }
+
+  // For other page types (like SubPages), build hierarchical path
   let currentPageId: string | undefined = pageId
   const path: string[] = []
 
   while (currentPageId) {
-    const pageInfo: PageInfo | undefined = pageInfoMap[currentPageId]
-    if (!pageInfo) {
-      // This page is not in the site map
-      break
-    }
+    const currentPageInfo: PageInfo | undefined = pageInfoMap[currentPageId]
+    if (!currentPageInfo) break
 
-    path.unshift(pageInfo.slug)
+    path.unshift(currentPageInfo.slug)
 
     // Check if the current page is a top-level page in the navigation tree
     const idInLoop = currentPageId
@@ -27,21 +48,14 @@ export const buildPageUrl = (pageId: string, siteMap: SiteMap): string => {
       (item) => item.pageId === idInLoop
     )
     if (isTopLevel) {
-      // We've reached the top of the hierarchy for this branch
       break
     }
 
-    currentPageId = pageInfo.parentPageId || undefined
+    currentPageId = currentPageInfo.parentPageId || undefined
   }
 
   if (path.length === 0) {
-    // Fallback for pages not found or other errors
     return `/${pageId}`
-  }
-
-  // Handle Home page case where slug is 'index'
-  if (path.length === 1 && path[0] === 'index') {
-    return '/'
   }
 
   return `/${path.join('/')}`

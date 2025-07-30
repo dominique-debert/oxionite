@@ -220,6 +220,7 @@ async function getAllPagesFromDatabase(
           getPageProperty<string>('status', block, recordMap) ||
           getPageProperty<string>('Status', block, recordMap) ||
           'draft',
+        tags: getPageProperty<string[]>('Tags', block, collectionRecordMap) || [],
         children: []
       }
     }
