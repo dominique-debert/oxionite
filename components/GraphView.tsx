@@ -15,8 +15,8 @@ const ForceGraph2D = dynamic(() => import('./ForceGraphWrapper'), { ssr: false }
 
 const GRAPH_LAYOUT_CONFIG = {
   HOME_NODE_SIZE: 24,
-  CATEGORY_NODE_SIZE: 10,
-  POST_NODE_SIZE: 4,
+  _CATEGORY_NODE_SIZE: 10,
+  _POST_NODE_SIZE: 4,
   HOME_CORNER_RADIUS: 16,
   CATEGORY_CORNER_RADIUS: 2,
   LINK_WIDTH: 1,
@@ -69,10 +69,10 @@ const getNodeSize = (node: GraphNode) => {
   
   switch (node.type) {
     case 'Category':
-      return GRAPH_LAYOUT_CONFIG.CATEGORY_NODE_SIZE;
+      return GRAPH_LAYOUT_CONFIG._CATEGORY_NODE_SIZE;
     case 'Post':
     case 'Home':
-      return GRAPH_LAYOUT_CONFIG.POST_NODE_SIZE;
+      return GRAPH_LAYOUT_CONFIG._POST_NODE_SIZE;
     default:
       return 1;
   }
@@ -319,7 +319,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
       targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM;
     }
     
-    // Calculate padding based on node type
+    // Calculate padding based on canvas size for proportional scaling
     const minDimension = Math.min(dimensions.width, dimensions.height);
     let padding = Math.max(20, minDimension * 0.1);
     
@@ -416,7 +416,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
     console.log(`[GraphComponent] Proceeding with focus, viewType: ${viewType}`);
     
     const currentPath = targetPath || router.asPath;
-    const minDimension = Math.min(dimensions.width, dimensions.height);
+    const _minDimension = Math.min(dimensions.width, dimensions.height);
     
     if (viewType === 'sidenav') {
       // SideNav: focus on current location - use same logic as handleFocusCurrentNode
@@ -437,16 +437,15 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
           targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM;
         }
         
-        // Calculate padding based on node type (same as focusOnNode)
-        const minDimension = Math.min(dimensions.width, dimensions.height);
-        let padding = Math.max(20, minDimension * 0.1);
+        // Use fixed padding values (same as focusOnNode)
+        let _padding = 60; // Base padding in pixels
         
         if (currentNode.type === 'Root' || currentNode.id === HOME_NODE_ID) {
-          padding = Math.max(40, minDimension * 0.15);
+          _padding = 80; // Larger padding for home node
         } else if (currentNode.type === 'Category') {
-          padding = Math.max(30, minDimension * 0.12);
+          _padding = 70; // Medium padding for category nodes
         } else {
-          padding = Math.max(25, minDimension * 0.1);
+          _padding = 60; // Standard padding for post nodes
         }
         
         // Center on the node and apply calculated zoom (same as focusOnNode)
@@ -459,8 +458,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
         const homeNode = graphData.nodes.find(n => n.id === HOME_NODE_ID);
         if (homeNode) {
           // Use same logic as focusOnNode for home node
-          const minDimension = Math.min(dimensions.width, dimensions.height);
-          const padding = Math.max(40, minDimension * 0.15);
+          const _padding = 80; // Fixed padding for home node
           
           fgInstance.centerAt(homeNode.x!, homeNode.y!, 400);
           setTimeout(() => {
@@ -471,8 +469,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
     } else {
       // Home: fit to all nodes - use same logic as handleFitToHome
       console.log(`[GraphComponent] Home view - fitting to all nodes, path: ${currentPath}`);
-      const minDimension = Math.min(dimensions.width, dimensions.height);
-      const padding = Math.max(40, minDimension * 0.1); // Same as handleFitToHome
+      const padding = 80; // Fixed padding for fit-to-home view
       
       if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
         // Use zoomToFit without filter to show all nodes (same as handleFitToHome)
@@ -555,7 +552,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
             }
 
             const isTheHoveredNode = hoveredNode && hoveredNode.id === node.id;
-            const { HOME_NODE_SIZE, CATEGORY_NODE_SIZE, POST_NODE_SIZE, HOME_CORNER_RADIUS, CATEGORY_CORNER_RADIUS, HOME_NAME_FONT_SIZE, CATEGORY_FONT_SIZE, POST_FONT_SIZE } = GRAPH_LAYOUT_CONFIG;
+            const { HOME_NODE_SIZE, _CATEGORY_NODE_SIZE, _POST_NODE_SIZE, HOME_CORNER_RADIUS, CATEGORY_CORNER_RADIUS, HOME_NAME_FONT_SIZE, CATEGORY_FONT_SIZE, POST_FONT_SIZE } = GRAPH_LAYOUT_CONFIG;
 
             // Helper function to draw image that completely fills the shape (crop to fill)
             const drawImageFillShape = (img: HTMLImageElement, x: number, y: number, width: number, height: number) => {

@@ -10,7 +10,7 @@ import RSS from 'rss'
 import * as config from '@/lib/config'
 import { getSiteMap } from '@/lib/get-site-map'
 import { getSocialImageUrl } from '@/lib/get-social-image-url'
-import { getCanonicalPageUrl } from '@/lib/map-page-url'
+import { buildPageUrl } from '@/lib/build-page-url'
 import { notion } from '@/lib/notion-api'
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
@@ -56,7 +56,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     const description =
       getPageProperty<string>('Description', block, recordMap) ||
       config.description
-    const url = pageId ? getCanonicalPageUrl(config.site, recordMap)(pageId) : ''
+    const url = pageId ? buildPageUrl(pageId, siteMap, []) : ''
     const lastUpdatedTime = getPageProperty<number>(
       'Last Updated',
       block,

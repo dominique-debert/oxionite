@@ -146,19 +146,18 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
       currentPageId = parentPostPageId
     } else {
       // Subpage: /post/{root-slug}/{...}/{title}-{pageId} - extract full UUID
-      const lastSegment = slug[slug.length - 1]
+      const lastSegment = slug.at(-1)
       
       // UUID format: 8-4-4-4-12 hex digits (36 chars total with hyphens)
       const uuidRegex = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i
-      const match = lastSegment.match(uuidRegex)
+      const match = lastSegment?.match(uuidRegex)
       
       if (match) {
         currentPageId = match[1]
-        console.log(`[SSR] Extracted subpage ID: ${currentPageId}`)
       } else {
-        currentPageId = lastSegment
-        console.log(`[SSR] Using page ID directly: ${currentPageId}`)
-      }
+        currentPageId = lastSegment || ''
+      } 
+      console.log(`[SSR] Using page ID directly: ${currentPageId}`)
     }
 
     // Fetch the page content

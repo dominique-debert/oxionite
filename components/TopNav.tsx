@@ -14,7 +14,6 @@ import { isSearchEnabled } from '@/lib/config'
 import { useI18n } from '@/lib/i18n'
 
 import { useDarkMode } from '@/lib/use-dark-mode'
-import { buildPageUrl } from '@/lib/build-page-url'
 import { getBlockTitle } from 'notion-utils'
 import styles from '@/styles/components/SearchModal.module.css'
 
@@ -307,18 +306,19 @@ export const TopNav: React.FC<TopNavProps> = ({
     if (postIndex !== -1) {
       const postSegments = pathSegments.slice(postIndex + 1)
       let currentPath = '/post'
+      let isFirst = true
       
-      for (let i = 0; i < postSegments.length; i++) {
-        const segment = postSegments[i]
+      for (const segment of postSegments) {
         currentPath += `/${segment}`
         
         let pageInfo: types.PageInfo | undefined
         let title: string
         
-        if (i === 0) {
+        if (isFirst) {
           // Root page - find by slug
           pageInfo = Object.values(siteMap.pageInfoMap).find(p => p.slug === segment)
           title = pageInfo?.title || 'Untitled'
+          isFirst = false
         } else {
           // Subpage - extract page ID and get actual title from recordMap
           let extractedPageId: string
@@ -352,15 +352,15 @@ export const TopNav: React.FC<TopNavProps> = ({
         }
         
         breadcrumbs.push({
-          title: title,
-          pageInfo: pageInfo || { pageId: segment, title: title } as types.PageInfo,
+          title,
+          pageInfo: pageInfo || { pageId: segment, title } as types.PageInfo,
           href: currentPath
         })
       }
     }
     
     return breadcrumbs
-  }, [siteMap, pageId, router])
+  }, [siteMap, pageId, router, recordMap])
 
   return (
     <nav className="glass-nav">

@@ -9,7 +9,7 @@ import type { SiteMap } from './types'
 export function buildPageUrl(
   pageId: string,
   siteMap: SiteMap,
-  currentPath: string[] = []
+  _currentPath: string[] = []
 ): string {
   const pageInfo = siteMap.pageInfoMap[pageId]
   
@@ -19,13 +19,13 @@ export function buildPageUrl(
   }
   
   // Subpage - use current path context
-  if (currentPath.length > 0) {
-    const currentSlug = currentPath[0] // The root slug
+  if (_currentPath.length > 0) {
+    const currentSlug = _currentPath[0] // The root slug
     const subpageTitle = pageInfo?.title || 'page'
     const subpageSlug = subpageTitle.toLowerCase().replace(/\s+/g, '-')
     
     // Build hierarchical path: /post/{root-slug}/{hierarchy}-{pageId}
-    const pathSegments = [...currentPath]
+    const pathSegments = [..._currentPath]
     if (pathSegments.length === 1) {
       // Direct subpage of root
       return `/post/${currentSlug}/${subpageSlug}-${pageId}`
@@ -45,18 +45,18 @@ export function buildPageUrl(
 export function extractPageIdFromUrl(segments: string[]): string {
   if (segments.length === 0) return ''
   
-  const lastSegment = segments[segments.length - 1]
+  const lastSegment = segments.at(-1)
   
   // Handle format: {title}-{pageId} where pageId is a UUID with hyphens
   // UUID format: 8-4-4-4-12 hex digits (36 chars total with hyphens)
   const uuidRegex = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i
-  const match = lastSegment.match(uuidRegex)
+  const match = lastSegment?.match(uuidRegex)
   
   if (match) {
     return match[1]
   }
   
-  return lastSegment
+  return lastSegment || ''
 }
 
 /**
@@ -64,11 +64,11 @@ export function extractPageIdFromUrl(segments: string[]): string {
  */
 export function buildBreadcrumb(segments: string[], siteMap: SiteMap): Array<{title: string, href: string}> {
   const breadcrumbs = []
-  let currentPath = ''
+  let _currentPath = ''
   
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i]
-    currentPath += `/${segment}`
+    _currentPath += `/${segment}`
     
     if (i === 0) {
       // Root page
