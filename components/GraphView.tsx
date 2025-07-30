@@ -29,7 +29,7 @@ const GRAPH_LAYOUT_CONFIG = {
 const ZOOM_CONFIG = {
   // Base zoom levels for different node types (normalized to POST_NODE_SIZE = 1)
   HOME_NODE_ZOOM: 3,
-  CATEGORY_NODE_ZOOM: 10,
+  CATEGORY_NODE_ZOOM: 5,
   POST_NODE_ZOOM: 10,
   
   // Base reference size (POST_NODE_SIZE)
