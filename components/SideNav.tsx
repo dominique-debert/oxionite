@@ -18,7 +18,6 @@ function filterNavigationItems(items: types.PageInfo[], currentLocale: string): 
 
   return items
     .filter((item: types.PageInfo) => {
-      if (item.type === 'Home') return false
       if (!item.language) return true
       return item.language.toLowerCase() === currentLocale?.toLowerCase()
     })

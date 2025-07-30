@@ -1,62 +1,42 @@
-import type { PageInfo,SiteMap } from './types'
-
-
+import type { SiteMap } from './types'
 
 /**
  * Builds the proper hierarchical URL for a given page ID based on page type.
  * - Posts: /post/{slug}
  * - Categories: /category/{slug}
- * - SubPages: /{parent-slug}/{sub-page-slug}
+ * - SubPages: /post/{current-slug}/{subpage-slug}
  * - Home: /
  */
-export const buildPageUrl = (pageId: string, siteMap: SiteMap): string => {
+export function buildPageUrl(
+  pageId: string, 
+  siteMap: SiteMap, 
+  currentPageSlug?: string  // 현재 페이지의 slug (subpage URL 구성용)
+): string {
   const pageInfoMap = siteMap.pageInfoMap
-  const pageInfo: PageInfo | undefined = pageInfoMap[pageId]
-  
-  if (!pageInfo) {
-    // Fallback for pages not found
-    return `/${pageId}`
-  }
+  const pageInfo = pageInfoMap[pageId]
 
-  // Handle Home page
-  if (pageInfo.slug === 'index' && !pageInfo.parentPageId) {
+  if (!pageInfo) {
     return '/'
   }
 
-  // Handle Posts and Categories with new routing
-  if (pageInfo.type === 'Post') {
-    return `/post/${pageInfo.slug}`
-  }
-  
-  if (pageInfo.type === 'Category') {
-    return `/category/${pageInfo.slug}`
+  const { type, slug } = pageInfo
+
+  // Handle home page - but route to /post/{slug}  // Handle posts and home pages (both go to /post/)
+  if (type === 'Post' || type === 'Home') {
+    return `/post/${slug}`
   }
 
-  // For other page types (like SubPages), build hierarchical path
-  let currentPageId: string | undefined = pageId
-  const path: string[] = []
-
-  while (currentPageId) {
-    const currentPageInfo: PageInfo | undefined = pageInfoMap[currentPageId]
-    if (!currentPageInfo) break
-
-    path.unshift(currentPageInfo.slug)
-
-    // Check if the current page is a top-level page in the navigation tree
-    const idInLoop = currentPageId
-    const isTopLevel = siteMap.navigationTree.some(
-      (item) => item.pageId === idInLoop
-    )
-    if (isTopLevel) {
-      break
-    }
-
-    currentPageId = currentPageInfo.parentPageId || undefined
+  // Handle categories
+  if (type === 'Category') {
+    return `/category/${slug}`
   }
 
-  if (path.length === 0) {
-    return `/${pageId}`
+  // For subpages (pages not in Notion DB), use current page slug as base
+  if (currentPageSlug) {
+    // If we're on a post or home page, subpages go under /post/{current-slug}/{subpage-slug}
+    return `/post/${currentPageSlug}/${slug}`
   }
 
-  return `/${path.join('/')}`
+  // Fallback for pages without context
+  return `/${slug}`
 }

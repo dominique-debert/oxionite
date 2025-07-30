@@ -18,6 +18,7 @@ import type * as types from '@/lib/types'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { mapPageUrl } from '@/lib/map-page-url'
+import { buildPageUrl } from '@/lib/build-page-url'
 import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
@@ -201,11 +202,30 @@ export function NotionPage({
 
   const siteMapPageUrl = useMemo(() => {
     if (!site || !recordMap) return null
-    const searchParams = new URLSearchParams()
-    const { slug } = router.query
-    const basePath = Array.isArray(slug) ? slug.join('/') : ''
-    return mapPageUrl(site, recordMap, searchParams, basePath)
-  }, [site, recordMap, router.query])
+    
+    // Get current page slug for subpage URL generation
+    const currentPageInfo = pageId ? siteMap?.pageInfoMap?.[pageId] : undefined
+    const currentPageSlug = currentPageInfo?.slug
+    
+    return (pageId = '') => {
+      if (!pageId) return '/'
+      
+      // Always use buildPageUrl when siteMap is available for proper slug values
+      if (siteMap) {
+        try {
+          return buildPageUrl(pageId, siteMap, currentPageSlug)
+        } catch (err) {
+          console.error('Error building page URL:', err)
+        }
+      }
+      
+      // Fallback to original behavior
+      const searchParams = new URLSearchParams()
+      const { slug } = router.query
+      const basePath = Array.isArray(slug) ? slug.join('/') : ''
+      return mapPageUrl(site, recordMap, searchParams, basePath)(pageId)
+    }
+  }, [site, recordMap, siteMap, router.query, pageId])
 
   const { block, tweetId } = useMemo(() => {
     const block = recordMap?.block?.[pageId!]?.value

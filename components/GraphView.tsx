@@ -14,7 +14,7 @@ import styles from '@/styles/components/GraphView.module.css';
 const ForceGraph2D = dynamic(() => import('./ForceGraphWrapper'), { ssr: false });
 
 const GRAPH_LAYOUT_CONFIG = {
-  HOME_NODE_SIZE: 32,
+  HOME_NODE_SIZE: 24,
   CATEGORY_NODE_SIZE: 10,
   POST_NODE_SIZE: 4,
   HOME_CORNER_RADIUS: 16,
@@ -29,7 +29,7 @@ const GRAPH_LAYOUT_CONFIG = {
 
 const ZOOM_CONFIG = {
   // Base zoom levels for different node types (normalized to POST_NODE_SIZE = 1)
-  HOME_NODE_ZOOM: 10,
+  HOME_NODE_ZOOM: 1,
   CATEGORY_NODE_ZOOM: 10,
   POST_NODE_ZOOM: 10,
   
@@ -46,7 +46,7 @@ export interface GraphNode extends NodeObject {
   id: string;
   name: string;
   description?: string;
-  type: 'Category' | 'Post' | 'Home';
+  type: 'Root' | 'Category' | 'Post' | 'Home';
   imageUrl?: string;
   page: Partial<PageInfo>;
   img?: HTMLImageElement;
@@ -63,12 +63,16 @@ export interface GraphLink extends LinkObject {
 const imageCache = new Map<string, HTMLImageElement>();
 
 const getNodeSize = (node: GraphNode) => {
+  // Special home node gets larger size
+  if (node.id === HOME_NODE_ID) {
+    return GRAPH_LAYOUT_CONFIG.HOME_NODE_SIZE;
+  }
+  
   switch (node.type) {
-    case 'Home':
-      return GRAPH_LAYOUT_CONFIG.HOME_NODE_SIZE;
     case 'Category':
       return GRAPH_LAYOUT_CONFIG.CATEGORY_NODE_SIZE;
     case 'Post':
+    case 'Home':
       return GRAPH_LAYOUT_CONFIG.POST_NODE_SIZE;
     default:
       return 1;
@@ -86,7 +90,7 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
     id: HOME_NODE_ID,
     name: siteConfig.name,
     description: siteConfig.description,
-    type: 'Home',
+    type: 'Root',
     page: { slug: '', language: locale },
     imageUrl: homeImageUrl,
   };
@@ -110,7 +114,7 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
   flatten(navigationTree);
 
   allPages.forEach(page => {
-    if (page.language !== locale || (page.type !== 'Category' && page.type !== 'Post')) {
+    if (page.language !== locale || (page.type !== 'Category' && page.type !== 'Post' && page.type !== 'Home')) {
       return;
     }
 
@@ -125,7 +129,8 @@ const createGraphData = (navigationTree: PageInfo[], locale: string) => {
     const node: GraphNode = {
       id: page.pageId,
       name: page.title,
-      type: page.type as 'Category' | 'Post',
+      // Treat Notion pages with type 'Home' as 'Post' nodes
+      type: page.type === 'Home' ? 'Post' : page.type as 'Category' | 'Post',
       imageUrl,
       page,
     };
@@ -264,7 +269,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
         if (isModal && closeModal) {
           closeModal();
         }
-        const url = node.page.type === 'Post'
+        const url = node.page.type === 'Post' || node.page.type === 'Home'
           ? `/post/${node.page.slug}`
           : node.page.type === 'Category'
           ? `/category/${node.page.slug}`
@@ -333,11 +338,24 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
       console.log('[GraphComponent] handleFitToHome: fgInstance is null');
       return;
     }
-    console.log('[GraphComponent] handleFitToHome: calling zoomToFit');
+    
+    const homeNode = graphData.nodes.find(n => n.id === HOME_NODE_ID);
+    if (!homeNode) {
+      console.log('[GraphComponent] handleFitToHome: home node not found');
+      return;
+    }
+
+    console.log('[GraphComponent] handleFitToHome: focusing on home node');
     const minDimension = Math.min(dimensions.width, dimensions.height);
+    const zoomLevel = ZOOM_CONFIG.HOME_NODE_ZOOM;
     const padding = Math.max(40, minDimension * 0.15);
-    fgInstance.zoomToFit(400, padding);
-  }, [fgInstance, dimensions]);
+    
+    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
+      fgInstance.zoomToFit(400, padding, (n: any) => n.id === HOME_NODE_ID);
+    } else {
+      console.error('[GraphComponent] zoomToFit is NOT a function or fgInstance is not set.', { fgInstance });
+    }
+  }, [fgInstance, dimensions, graphData.nodes]);
 
   // Reliable focusing system with timeout fallback and viewType debugging
   const performFocusBasedOnViewType = useCallback((targetPath?: string, attemptCount = 0) => {
@@ -407,33 +425,27 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
           targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM;
         }
         
-        // Adjust zoom based on actual node size for consistent visual appearance
-        const actualNodeSize = currentNode.type === 'Home' ? GRAPH_LAYOUT_CONFIG.HOME_NODE_SIZE :
-                              currentNode.type === 'Category' ? GRAPH_LAYOUT_CONFIG.CATEGORY_NODE_SIZE :
-                              GRAPH_LAYOUT_CONFIG.POST_NODE_SIZE;
-        
-        const finalZoom = targetZoom * (ZOOM_CONFIG.BASE_NODE_SIZE / actualNodeSize);
-        
-        console.log(`[GraphComponent] Node type: ${currentNode.type}, size: ${actualNodeSize}, zoom: ${finalZoom.toFixed(2)}`);
-        
         // Center on the node and apply calculated zoom
-        fgInstance.centerAt(currentNode.x, currentNode.y, 400);
+        fgInstance.centerAt(currentNode.x!, currentNode.y!, 400);
         setTimeout(() => {
-          fgInstance.zoom(finalZoom, 400);
+          fgInstance.zoom(targetZoom, 400);
         }, 100);
-        
       } else {
         console.log('[GraphComponent] SideNav - current node not found, focusing on home');
-        const homePadding = Math.max(40, minDimension * 0.2);
-        fgInstance.zoomToFit(400, homePadding, (n: any) => n.id === HOME_NODE_ID);
+        const homeNode = graphData.nodes.find(n => n.id === HOME_NODE_ID);
+        if (homeNode) {
+          const homePadding = Math.max(40, Math.min(dimensions.width, dimensions.height) * 0.2);
+          fgInstance.centerAt(homeNode.x!, homeNode.y!, 400);
+          fgInstance.zoom(ZOOM_CONFIG.HOME_NODE_ZOOM, 400);
+        }
       }
     } else {
       // Home: fit to all nodes
       console.log(`[GraphComponent] Home view - fitting to all nodes, path: ${currentPath}`);
-      const homePadding = Math.max(40, minDimension * 0.15);
+      const homePadding = Math.max(40, Math.min(dimensions.width, dimensions.height) * 0.15);
       fgInstance.zoomToFit(400, homePadding);
     }
-  }, [fgInstance, isGraphLoaded, viewType, router.asPath, graphData.nodes, dimensions]);
+  }, [fgInstance, graphData.nodes, router.asPath, viewType, dimensions]);
 
   // Initial load focus with delay
   useEffect(() => {
@@ -481,7 +493,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
           graphData={graphData}
           onReady={setFgInstance}
           nodeLabel="name"
-          nodeVal="val"
+
           warmupTicks={200}
           cooldownTicks={100}
           cooldownTime={15_000}
@@ -566,29 +578,31 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
               ctx.font = `600 ${HOME_NAME_FONT_SIZE}px Sans-Serif`;
               ctx.fillText(node.name, node.x!, node.y! + size / 2 + HOME_NAME_FONT_SIZE);
             } else {
+              // For Category, Post, and Home-type pages
+              const nodeSize = getNodeSize(node as GraphNode);
               ctx.beginPath();
-              let nodeSize: number;
+
               if (node.type === 'Category') {
-                nodeSize = CATEGORY_NODE_SIZE;
                 ctx.roundRect(node.x! - nodeSize / 2, node.y! - nodeSize / 2, nodeSize, nodeSize, CATEGORY_CORNER_RADIUS);
-              } else { // Post
-                nodeSize = POST_NODE_SIZE;
+              } else { // Post and Home-type pages are circular
                 ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI, false);
               }
+
               ctx.fillStyle = isTheHoveredNode ? colors.hover : colors.node;
               ctx.fill();
+
               if (node.img && node.img.complete) {
                 ctx.save();
-                // Create clipping path that matches the exact shape
+                // Create a clipping path that matches the node's shape
                 ctx.beginPath();
                 if (node.type === 'Category') {
                   ctx.roundRect(node.x! - nodeSize / 2, node.y! - nodeSize / 2, nodeSize, nodeSize, CATEGORY_CORNER_RADIUS);
-                } else { // Post - circular
+                } else { // Post and Home-type pages
                   ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI, false);
                 }
                 ctx.clip();
-                
-                // Draw image to completely fill the shape
+
+                // Draw the image to fill the shape
                 drawImageFillShape(
                   node.img,
                   node.x! - nodeSize / 2,
@@ -598,6 +612,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
                 );
                 ctx.restore();
               }
+
               const label = node.name || '';
               const fontSize = node.type === 'Category' ? CATEGORY_FONT_SIZE : POST_FONT_SIZE;
               ctx.font = `${fontSize}px Sans-Serif`;

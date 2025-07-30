@@ -25,7 +25,7 @@ interface CategoryItemProps {
 
 const countPostsRecursively = (item: PageInfo): number => {
   let count = 0
-  if (item.type === 'Post') {
+  if (item.type === 'Post' || item.type === 'Home') {
     count = 1
   }
   if (item.children && item.children.length > 0) {
@@ -39,7 +39,7 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   const router = useRouter()
 
   // Construct pageUrl without locale
-  const pageUrl = item.type === 'Post'
+  const pageUrl = item.type === 'Post' || item.type === 'Home'
     ? `/post/${item.slug}`
     : item.type === 'Category'
     ? `/category/${item.slug}`
@@ -51,7 +51,7 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   const isActive = cleanedAsPath === cleanedPageUrl;
 
   const postCount = isCategory ? countPostsRecursively(item) : 0
-  const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' ? styles.postItem : ''}`
+  const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' || item.type === 'Home' ? styles.postItem : ''}`
 
   return (
     <div className={styles.categoryItemContainer} style={{ paddingLeft: `${level * 16}px` }}>
