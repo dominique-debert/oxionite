@@ -6,6 +6,15 @@ import { MdFullscreen, MdFullscreenExit, MdMyLocation, MdHome } from 'react-icon
 import { PiGraphBold } from "react-icons/pi";
 import { FaTags } from 'react-icons/fa';
 import { createPortal } from 'react-dom';
+
+declare global {
+  interface Window {
+    setGraphView?: (view: 'post_view' | 'tag_view') => void;
+    graphView?: 'post_view' | 'tag_view';
+    openGraphModal?: () => void;
+    closeGraphModal?: () => void;
+  }
+}
 import type { NodeObject, LinkObject } from 'react-force-graph-2d';
 
 import type { SiteMap, PageInfo, Block } from '@/lib/types';
@@ -208,7 +217,7 @@ interface GraphViewProps {
   viewType?: 'home' | 'sidenav';
 }
 
-function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModal }: { siteMap?: SiteMap, isModal?: boolean, viewType?: 'home' | 'sidenav', closeModal?: () => void }) {
+function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModal, activeView, onViewChange }: { siteMap?: SiteMap, isModal?: boolean, viewType?: 'home' | 'sidenav', closeModal?: () => void, activeView?: 'post_view' | 'tag_view', onViewChange?: (view: 'post_view' | 'tag_view') => void }) {
   const router = useRouter();
   const locale = router.locale || 'ko';
 
@@ -509,6 +518,36 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
 
   return (
     <div className={styles.graphInner} ref={containerRef} onMouseLeave={handleCanvasMouseLeave}>
+      <div className={styles.viewNavContainer}>
+        <nav className={styles.viewNav}>
+          <button
+            className={`${styles.viewNavItem} ${isModal ? ((window.graphView === 'post_view') ? styles.active : '') : (activeView === 'post_view' ? styles.active : '')}`}
+            onClick={() => {
+              if (isModal) {
+                window.setGraphView?.('post_view')
+              } else {
+                onViewChange?.('post_view')
+              }
+            }}
+          >
+            <PiGraphBold className={styles.viewNavIcon} />
+            Graph View
+          </button>
+          <button
+            className={`${styles.viewNavItem} ${isModal ? ((window.graphView === 'tag_view') ? styles.active : '') : (activeView === 'tag_view' ? styles.active : '')}`}
+            onClick={() => {
+              if (isModal) {
+                window.setGraphView?.('tag_view')
+              } else {
+                onViewChange?.('tag_view')
+              }
+            }}
+          >
+            <FaTags className={styles.viewNavIcon} />
+            Tag View
+          </button>
+        </nav>
+      </div>
       <div className={styles.buttonContainer}>
         <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
           <MdMyLocation size={20} />
@@ -517,11 +556,11 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
           <MdHome size={20} />
         </button>
         {isModal ? (
-          <button onClick={() => (window as any).closeGraphModal()} className={styles.button} aria-label="Close fullscreen">
+          <button onClick={() => window.closeGraphModal?.()} className={styles.button} aria-label="Close fullscreen">
             <MdFullscreenExit size={20} />
           </button>
         ) : (
-          <button onClick={() => (window as any).openGraphModal()} className={styles.button} aria-label="Open in fullscreen">
+          <button onClick={() => window.openGraphModal?.()} className={styles.button} aria-label="Open in fullscreen">
             <MdFullscreen size={20} />
           </button>
         )}
@@ -748,10 +787,32 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
 
   const containerClasses = `${styles.graphContainer} ${viewType === 'home' ? styles.homeView : styles.sideNavView}`;
 
+  // Add view switching functions for modal
+  useEffect(() => {
+    if (isModalOpen) {
+      window.setGraphView = setActiveView
+      window.graphView = activeView
+    }
+    return () => {
+      delete window.setGraphView
+      delete window.graphView
+    }
+  }, [isModalOpen, activeView])
+
   const modalContent = (
     <div className={styles.modalOverlay} onClick={closeModal}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <GraphComponent siteMap={siteMap} isModal={true} viewType={viewType} closeModal={closeModal} />
+        {activeView === 'post_view' ? (
+          <GraphComponent siteMap={siteMap} isModal={true} viewType={viewType} closeModal={closeModal} activeView={activeView} onViewChange={setActiveView} />
+        ) : (
+          <TagGraphComponent 
+            tagGraphData={siteMap?.tagGraphData || { tagCounts: {}, tagRelationships: {}, tagPages: {}, totalPosts: 0, lastUpdated: Date.now() }}
+            viewType="fullscreen"
+            isModal={true}
+            activeView={activeView}
+            onViewChange={setActiveView}
+          />
+        )}
       </div>
     </div>
   );
@@ -787,27 +848,18 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
         </nav>
       </div>
       
-      <GraphComponent siteMap={siteMap} viewType={viewType} />
-
-      {activeView === 'tag_view' && (
+      {activeView === 'post_view' ? (
+        <GraphComponent siteMap={siteMap} viewType={viewType} activeView={activeView} onViewChange={setActiveView} />
+      ) : (
         <div className={styles.tagViewContainer}>
           {siteMap?.tagGraphData && (
             <TagGraphComponent 
               tagGraphData={siteMap.tagGraphData} 
-              viewType={viewType === 'home' ? 'fullscreen' : 'sidebar'} 
+              viewType={viewType === 'home' ? 'fullscreen' : 'sidebar'}
+              activeView={activeView}
+              onViewChange={setActiveView}
             />
           )}
-          <div className={styles.buttonContainer}>
-            <button className={styles.button} title="Center">
-              <MdMyLocation size={20} />
-            </button>
-            <button className={styles.button} title="Home">
-              <MdHome size={20} />
-            </button>
-            <button className={styles.button} title="Fullscreen">
-              <MdFullscreen size={20} />
-            </button>
-          </div>
         </div>
       )}
       

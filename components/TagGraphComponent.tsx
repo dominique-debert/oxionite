@@ -1,10 +1,23 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
+import { PiGraphBold } from "react-icons/pi"
+import { FaTags } from 'react-icons/fa'
+import { MdFullscreen, MdFullscreenExit, MdMyLocation, MdHome } from 'react-icons/md'
 import type { TagGraphData } from '@/lib/tag-graph'
+import type { GraphMethods } from './ForceGraphWrapper'
 import styles from '@/styles/components/GraphView.module.css'
 
-const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
+declare global {
+  interface Window {
+    setGraphView?: (view: 'post_view' | 'tag_view') => void;
+    graphView?: 'post_view' | 'tag_view';
+    openGraphModal?: () => void;
+    closeGraphModal?: () => void;
+  }
+}
+
+const ForceGraphWrapper = dynamic(() => import('./ForceGraphWrapper'), {
   ssr: false,
   loading: () => <div>Loading graph...</div>
 })
@@ -12,6 +25,9 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
 interface TagGraphComponentProps {
   tagGraphData: TagGraphData
   viewType: 'sidebar' | 'fullscreen'
+  activeView?: 'post_view' | 'tag_view'
+  onViewChange?: (view: 'post_view' | 'tag_view') => void
+  isModal?: boolean
 }
 
 interface TagNode {
@@ -29,23 +45,34 @@ interface TagLink {
 
 export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({ 
   tagGraphData, 
-  viewType 
+  viewType,
+  activeView = 'tag_view',
+  onViewChange,
+  isModal = false
 }) => {
   const router = useRouter()
-  const fgRef = useRef<any>(null)
+  const [fgInstance, setFgInstance] = useState<any>(null)
   const [graphData, setGraphData] = useState<{ nodes: TagNode[]; links: TagLink[] }>({ 
     nodes: [], 
     links: [] 
   })
   const [isGraphLoaded, setIsGraphLoaded] = useState(false)
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Prepare graph data from tag graph data
   useEffect(() => {
+    console.log('[TagGraphComponent] tagGraphData received:', {
+      tagCounts: Object.keys(tagGraphData.tagCounts).length,
+      tagRelationships: Object.keys(tagGraphData.tagRelationships).length,
+      totalPosts: tagGraphData.totalPosts
+    })
+    
     const nodes: TagNode[] = Object.entries(tagGraphData.tagCounts).map(([tag, count]) => ({
       id: tag,
       name: tag,
       count,
-      val: Math.max(1, Math.log(count + 1) * 5) // Scale size based on count
+      val: Math.max(count * 2, 1)
     }))
 
     const links: TagLink[] = []
@@ -59,6 +86,7 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
       })
     })
 
+    console.log('[TagGraphComponent] Prepared graph data:', { nodes: nodes.length, links: links.length })
     setGraphData({ nodes, links })
   }, [tagGraphData])
 
@@ -69,19 +97,37 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
     }
   }, [router])
 
-  // Initial camera setup
-  useEffect(() => {
-    if (fgRef.current && viewType === 'sidebar') {
-      fgRef.current.zoomToFit(400, 50)
+  // Handle control buttons
+  const handleFocusCurrentNode = useCallback(() => {
+    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
+      fgInstance.zoomToFit(400, 50)
     }
-  }, [viewType])
+  }, [fgInstance])
+
+  const handleFitToHome = useCallback(() => {
+    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
+      fgInstance.zoomToFit(400, 50)
+    }
+  }, [fgInstance])
 
   // Center graph when loaded
   useEffect(() => {
-    if (isGraphLoaded && fgRef.current) {
-      fgRef.current.zoomToFit(400, 50)
+    if (isGraphLoaded && fgInstance && typeof fgInstance.zoomToFit === 'function') {
+      try {
+        console.log('[TagGraphComponent] Centering graph, dimensions:', dimensions)
+        fgInstance.zoomToFit(dimensions.width || 400, dimensions.height || 300)
+      } catch (error) {
+        console.error('[TagGraphComponent] zoomToFit failed:', error)
+      }
     }
-  }, [isGraphLoaded])
+  }, [isGraphLoaded, fgInstance, dimensions])
+
+  // Initial camera setup
+  useEffect(() => {
+    if (fgInstance && viewType === 'sidebar') {
+      fgInstance.zoomToFit(400, 50)
+    }
+  }, [viewType, fgInstance])
 
   // Custom node rendering for pill-shaped nodes
   const nodeCanvasObject = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -150,34 +196,142 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
     setIsGraphLoaded(true)
   }, [])
 
+  // Handle dimensions for modal
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect()
+        console.log('[TagGraphComponent] Dimensions calculated:', { width, height, isModal, viewType })
+        
+        // Ensure minimum dimensions for modal
+        const finalWidth = Math.max(width, isModal ? 800 : 400)
+        const finalHeight = Math.max(height, isModal ? 600 : 300)
+        
+        setDimensions({ width: finalWidth, height: finalHeight })
+      } else {
+        // Fallback dimensions
+        console.log('[TagGraphComponent] Using fallback dimensions')
+        setDimensions({ 
+          width: isModal ? 800 : 400, 
+          height: isModal ? 600 : 300 
+        })
+      }
+    }
+
+    // Use multiple attempts to ensure DOM is ready
+    updateDimensions()
+    const timeoutId = setTimeout(updateDimensions, 50)
+    const longTimeoutId = setTimeout(updateDimensions, 200)
+    
+    window.addEventListener('resize', updateDimensions)
+    return () => {
+      clearTimeout(timeoutId)
+      clearTimeout(longTimeoutId)
+      window.removeEventListener('resize', updateDimensions)
+    }
+  }, [isModal, viewType])
+
   if (!graphData.nodes.length) {
     return (
-      <div className={styles.tagViewContainer}>
+      <div className={styles.tagViewContainer} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className={styles.tagViewPlaceholder}>
-          <div>No tags found</div>
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <FaTags size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+            <div>No tags found</div>
+            <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '0.5rem' }}>
+              {Object.keys(tagGraphData.tagCounts).length === 0 ? 'No tag data available' : 'No tags to display'}
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <ForceGraph2D
-      ref={fgRef}
-      graphData={graphData}
-      nodeCanvasObject={nodeCanvasObject}
-      nodeLabel=""
-      onNodeClick={handleNodeClick}
-      onEngineStop={handleEngineStop}
-      backgroundColor="transparent"
-      width={viewType === 'sidebar' ? 300 : undefined}
-      height={viewType === 'sidebar' ? 300 : undefined}
-      cooldownTicks={100}
-      warmupTicks={50}
-      linkWidth={1}
-      linkColor={() => '#94a3b8'}
-      linkDirectionalParticles={2}
-      linkDirectionalParticleWidth={0.5}
-      nodeVal="val"
-    />
+    <div className={styles.graphInner} ref={containerRef} style={{ 
+      width: '100%', 
+      height: '100%',
+      position: 'relative',
+      minHeight: isModal ? '400px' : '300px'
+    }}>
+      {isModal && (
+        <div className={styles.viewNavContainer}>
+          <nav className={styles.viewNav}>
+            <button
+              className={`${styles.viewNavItem} ${isModal ? ((window.graphView === 'post_view') ? styles.active : '') : (activeView === 'post_view' ? styles.active : '')}`}
+              onClick={() => {
+                if (isModal) {
+                  window.setGraphView?.('post_view')
+                } else {
+                  onViewChange?.('post_view')
+                }
+              }}
+            >
+              <PiGraphBold className={styles.viewNavIcon} />
+              Graph View
+            </button>
+            <button
+              className={`${styles.viewNavItem} ${isModal ? ((window.graphView === 'tag_view') ? styles.active : '') : (activeView === 'tag_view' ? styles.active : '')}`}
+              onClick={() => {
+                if (isModal) {
+                  window.setGraphView?.('tag_view')
+                } else {
+                  onViewChange?.('tag_view')
+                }
+              }}
+            >
+              <FaTags className={styles.viewNavIcon} />
+              Tag View
+            </button>
+          </nav>
+        </div>
+      )}
+      
+      <div className={styles.buttonContainer}>
+        <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current view">
+          <MdMyLocation size={20} />
+        </button>
+        <button onClick={handleFitToHome} className={styles.button} aria-label="Fit to home">
+          <MdHome size={20} />
+        </button>
+        {isModal ? (
+          <button onClick={() => window.closeGraphModal?.()} className={styles.button} aria-label="Close fullscreen">
+            <MdFullscreenExit size={20} />
+          </button>
+        ) : (
+          <button onClick={() => window.openGraphModal?.()} className={styles.button} aria-label="Open in fullscreen">
+            <MdFullscreen size={20} />
+          </button>
+        )}
+      </div>
+
+      <ForceGraphWrapper
+        key={`tag-graph-${isModal}-${dimensions.width}-${dimensions.height}`}
+        graphData={graphData}
+        nodeCanvasObject={nodeCanvasObject}
+        nodeLabel=""
+        onNodeClick={handleNodeClick}
+        onEngineStop={handleEngineStop}
+        onReady={setFgInstance}
+        backgroundColor="transparent"
+        width={isModal ? Math.max(dimensions.width, 400) : (viewType === 'sidebar' ? 300 : 800)}
+        height={isModal ? Math.max(dimensions.height, 300) : (viewType === 'sidebar' ? 300 : 600)}
+        cooldownTicks={100}
+        warmupTicks={50}
+        linkWidth={1}
+        linkColor={() => '#94a3b8'}
+        linkDirectionalParticles={2}
+        linkDirectionalParticleWidth={1}
+        linkDirectionalParticleSpeed={0.006}
+        nodeRelSize={4}
+        nodeVal="val"
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.3}
+        onNodeDragEnd={(node: any) => {
+          node.fx = undefined
+          node.fy = undefined
+        }}
+      />
+    </div>
   )
 }
