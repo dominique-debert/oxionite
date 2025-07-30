@@ -22,14 +22,13 @@ const GRAPH_LAYOUT_CONFIG = {
   LINK_WIDTH: 1,
   HOVER_OPACITY: 0.1,
   HOME_NAME_FONT_SIZE: 4,
-  HOME_DESC_FONT_SIZE: 2,
   CATEGORY_FONT_SIZE: 2,
   POST_FONT_SIZE: 1,
 };
 
 const ZOOM_CONFIG = {
   // Base zoom levels for different node types (normalized to POST_NODE_SIZE = 1)
-  HOME_NODE_ZOOM: 1,
+  HOME_NODE_ZOOM: 3,
   CATEGORY_NODE_ZOOM: 10,
   POST_NODE_ZOOM: 10,
   
@@ -307,19 +306,38 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
       console.log('[GraphComponent] focusOnNode: fgInstance is null or undefined.');
       return;
     }
-    console.log('[GraphComponent] focusOnNode called for node:', node.name);
-    console.log('[GraphComponent] dimensions:', dimensions);
+    console.log('[GraphComponent] focusOnNode called for node:', node.name, 'type:', node.type);
     
-    if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
-      // 캔버스 크기에 따라 동적으로 padding 계산
-      const minDimension = Math.min(dimensions.width, dimensions.height);
-      const dynamicPadding = Math.max(20, minDimension * 0.1); // 최소 20px, 최대 10%
-      
-      console.log('[GraphComponent] zoomToFit with dynamic padding:', dynamicPadding);
-      fgInstance.zoomToFit(400, dynamicPadding, (n: any) => n.id === node.id);
+    // Calculate zoom level based on node type using ZOOM_CONFIG
+    let targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM;
+    
+    if (node.type === 'Root' || node.id === HOME_NODE_ID) {
+      targetZoom = ZOOM_CONFIG.HOME_NODE_ZOOM;
+    } else if (node.type === 'Category') {
+      targetZoom = ZOOM_CONFIG.CATEGORY_NODE_ZOOM;
     } else {
-      console.error('[GraphComponent] zoomToFit is NOT a function or fgInstance is not set.', { fgInstance });
+      targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM;
     }
+    
+    // Calculate padding based on node type
+    const minDimension = Math.min(dimensions.width, dimensions.height);
+    let padding = Math.max(20, minDimension * 0.1);
+    
+    if (node.type === 'Root' || node.id === HOME_NODE_ID) {
+      padding = Math.max(40, minDimension * 0.15);
+    } else if (node.type === 'Category') {
+      padding = Math.max(30, minDimension * 0.12);
+    } else {
+      padding = Math.max(25, minDimension * 0.1);
+    }
+    
+    console.log('[GraphComponent] Focusing with zoom:', targetZoom, 'padding:', padding);
+    
+    // Center on the node and apply calculated zoom
+    fgInstance.centerAt(node.x!, node.y!, 400);
+    setTimeout(() => {
+      fgInstance.zoom(targetZoom, 400);
+    }, 100);
   }, [fgInstance, dimensions]);
 
   const handleFocusCurrentNode = useCallback(() => {
@@ -338,24 +356,18 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
       console.log('[GraphComponent] handleFitToHome: fgInstance is null');
       return;
     }
-    
-    const homeNode = graphData.nodes.find(n => n.id === HOME_NODE_ID);
-    if (!homeNode) {
-      console.log('[GraphComponent] handleFitToHome: home node not found');
-      return;
-    }
 
-    console.log('[GraphComponent] handleFitToHome: focusing on home node');
+    console.log('[GraphComponent] handleFitToHome: fitting to show all content');
     const minDimension = Math.min(dimensions.width, dimensions.height);
-    const zoomLevel = ZOOM_CONFIG.HOME_NODE_ZOOM;
-    const padding = Math.max(40, minDimension * 0.15);
+    const padding = Math.max(40, minDimension * 0.1); // Smaller padding for full view
     
     if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
-      fgInstance.zoomToFit(400, padding, (n: any) => n.id === HOME_NODE_ID);
+      // Use zoomToFit without filter to show all nodes
+      fgInstance.zoomToFit(400, padding);
     } else {
       console.error('[GraphComponent] zoomToFit is NOT a function or fgInstance is not set.', { fgInstance });
     }
-  }, [fgInstance, dimensions, graphData.nodes]);
+  }, [fgInstance, dimensions]);
 
   // Reliable focusing system with timeout fallback and viewType debugging
   const performFocusBasedOnViewType = useCallback((targetPath?: string, attemptCount = 0) => {
@@ -407,17 +419,17 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
     const minDimension = Math.min(dimensions.width, dimensions.height);
     
     if (viewType === 'sidenav') {
-      // SideNav: focus on current location with moderate zoom
+      // SideNav: focus on current location - use same logic as handleFocusCurrentNode
       const slug = currentPath.split('/').pop()?.split('?')[0] || '';
       const currentNode = graphData.nodes.find(n => n.page.slug === slug);
       console.log(`[GraphComponent] SideNav mode - looking for slug: ${slug}, found node: ${currentNode?.name || 'none'}`);
       if (currentNode) {
-        console.log('[GraphComponent] SideNav - focusing on current node with dynamic zoom:', currentNode.name);
+        console.log('[GraphComponent] SideNav - focusing on current node with ZOOM_CONFIG:', currentNode.name);
         
-        // Calculate dynamic zoom based on node type and size
-        let targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM; // Default for post
+        // Use the exact same logic as focusOnNode function
+        let targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM;
         
-        if (currentNode.type === 'Home') {
+        if (currentNode.type === 'Root' || currentNode.id === HOME_NODE_ID) {
           targetZoom = ZOOM_CONFIG.HOME_NODE_ZOOM;
         } else if (currentNode.type === 'Category') {
           targetZoom = ZOOM_CONFIG.CATEGORY_NODE_ZOOM;
@@ -425,7 +437,19 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
           targetZoom = ZOOM_CONFIG.POST_NODE_ZOOM;
         }
         
-        // Center on the node and apply calculated zoom
+        // Calculate padding based on node type (same as focusOnNode)
+        const minDimension = Math.min(dimensions.width, dimensions.height);
+        let padding = Math.max(20, minDimension * 0.1);
+        
+        if (currentNode.type === 'Root' || currentNode.id === HOME_NODE_ID) {
+          padding = Math.max(40, minDimension * 0.15);
+        } else if (currentNode.type === 'Category') {
+          padding = Math.max(30, minDimension * 0.12);
+        } else {
+          padding = Math.max(25, minDimension * 0.1);
+        }
+        
+        // Center on the node and apply calculated zoom (same as focusOnNode)
         fgInstance.centerAt(currentNode.x!, currentNode.y!, 400);
         setTimeout(() => {
           fgInstance.zoom(targetZoom, 400);
@@ -434,16 +458,26 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
         console.log('[GraphComponent] SideNav - current node not found, focusing on home');
         const homeNode = graphData.nodes.find(n => n.id === HOME_NODE_ID);
         if (homeNode) {
-          const homePadding = Math.max(40, Math.min(dimensions.width, dimensions.height) * 0.2);
+          // Use same logic as focusOnNode for home node
+          const minDimension = Math.min(dimensions.width, dimensions.height);
+          const padding = Math.max(40, minDimension * 0.15);
+          
           fgInstance.centerAt(homeNode.x!, homeNode.y!, 400);
-          fgInstance.zoom(ZOOM_CONFIG.HOME_NODE_ZOOM, 400);
+          setTimeout(() => {
+            fgInstance.zoom(ZOOM_CONFIG.HOME_NODE_ZOOM, 400);
+          }, 100);
         }
       }
     } else {
-      // Home: fit to all nodes
+      // Home: fit to all nodes - use same logic as handleFitToHome
       console.log(`[GraphComponent] Home view - fitting to all nodes, path: ${currentPath}`);
-      const homePadding = Math.max(40, Math.min(dimensions.width, dimensions.height) * 0.15);
-      fgInstance.zoomToFit(400, homePadding);
+      const minDimension = Math.min(dimensions.width, dimensions.height);
+      const padding = Math.max(40, minDimension * 0.1); // Same as handleFitToHome
+      
+      if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
+        // Use zoomToFit without filter to show all nodes (same as handleFitToHome)
+        fgInstance.zoomToFit(400, padding);
+      }
     }
   }, [fgInstance, graphData.nodes, router.asPath, viewType, dimensions]);
 
@@ -547,7 +581,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
               ctx.drawImage(img, x + offsetX, y + offsetY, drawWidth, drawHeight);
             };
 
-            if (node.type === 'Home') {
+            if (node.id === HOME_NODE_ID) {
               const size = HOME_NODE_SIZE;
               ctx.beginPath();
               ctx.roundRect(node.x! - size / 2, node.y! - size / 2, size, size, HOME_CORNER_RADIUS);
@@ -575,7 +609,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillStyle = colors.text;
-              ctx.font = `600 ${HOME_NAME_FONT_SIZE}px Sans-Serif`;
+              ctx.font = `500 ${HOME_NAME_FONT_SIZE}px Sans-Serif`;
               ctx.fillText(node.name, node.x!, node.y! + size / 2 + HOME_NAME_FONT_SIZE);
             } else {
               // For Category, Post, and Home-type pages
