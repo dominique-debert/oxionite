@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom'
 import type * as types from '@/lib/types'
 import { isSearchEnabled } from '@/lib/config'
 import { useI18n } from '@/lib/i18n'
+import { usePageRoute } from '@/lib/page-context'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SearchModal.module.css'
 
@@ -257,6 +258,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 }) => {
   const router = useRouter()
   const { siteMap, pageId } = pageProps
+  const { routePath, getFullPath } = usePageRoute()
 
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     const { pathname, query } = router
@@ -275,12 +277,21 @@ export const TopNav: React.FC<TopNavProps> = ({
       }
     }
 
-    // Handle other pages
+    // Use the hierarchical route for breadcrumbs
+    if (routePath && routePath.length > 0) {
+      return routePath.map((route) => ({
+        title: route.title,
+        pageInfo: { pageId: route.pageId, title: route.title } as types.PageInfo,
+        href: getFullPath(route.pageId)
+      }));
+    }
+
+    // Fallback to old method for direct access
     if (!siteMap || !pageId) return [];
     
     const path = findPagePath(pageId, siteMap.navigationTree || []);
     return path || [];
-  }, [siteMap, pageId, router]);
+  }, [siteMap, pageId, router, routePath, getFullPath]);
 
   return (
     <nav className="glass-nav">

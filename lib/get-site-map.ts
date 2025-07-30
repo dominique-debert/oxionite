@@ -148,7 +148,10 @@ async function getAllPagesFromDatabase(
         console.warn(`WARN: No block found for pageId: ${pageId}`)
         continue
       }
-
+      
+      // Use actual Notion page ID from the block
+      const actualNotionPageId = block.id
+      
       const title = getPageProperty<string>('Title', block, collectionRecordMap)
       const slug = getPageProperty<string>('Slug', block, collectionRecordMap)
       const pageType: PageInfo['type'] =
@@ -176,14 +179,14 @@ async function getAllPagesFromDatabase(
         collectionRecordMap
       )
 
-      // if (title) {
-      //   console.log(`- ${title} ${parentPageId ? `(Parent: ${parentPageId})` : ''}`)
-      // }
-
       if (!title || !slug || !pageType) {
         console.warn(
-          `WARN: Page "${pageId}" (title: "${title}") is missing required properties. Title: ${!!title}, Slug: ${!!slug}, Type: ${!!pageType}. It will be skipped.`
+          `WARN: Page "${actualNotionPageId}" (title: "${title}") is missing required properties. Title: ${!!title}, Slug: ${!!slug}, Type: ${!!pageType}. It will be skipped.`
         )
+        continue
+      }
+
+      if (!isPublic) {
         continue
       }
 
@@ -192,9 +195,9 @@ async function getAllPagesFromDatabase(
         ? mapImageUrl(coverImageUrl, block)
         : null
 
-      pageInfoMap[pageId] = {
+      pageInfoMap[actualNotionPageId] = {
+        pageId: actualNotionPageId,
         title,
-        pageId,
         slug,
         type: pageType,
         public: isPublic,

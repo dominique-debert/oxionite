@@ -80,38 +80,31 @@ export const getStaticPaths: GetStaticPaths = async () => {
         currentParentId = parentPageInfo.parentPageId
       }
 
-      // If this page belongs to a post or home page, generate nested path
+      // Generate the correct path based on page type
       if (parentPost) {
-        const buildNestedPath = (pageId: string): string[] => {
-          const path: string[] = []
-          let currentId: string | undefined = pageId
-          
-          while (currentId) {
-            const currentPageInfo = siteMap.pageInfoMap[currentId] as types.PageInfo
-            if (!currentPageInfo) break
-            
-            // Stop when we reach the parent post or home page
-            if (currentPageInfo.type === 'Post' || currentPageInfo.type === 'Home') {
-              break
-            }
-            
-            path.unshift(currentPageInfo.slug)
-            currentId = currentPageInfo.parentPageId || undefined
-          }
-          
-          // Add the parent post slug at the beginning
-          path.unshift(parentPost.slug)
-          return path
-        }
-
-        const nestedPath = buildNestedPath(pageId)
-        
-        // Add paths for each locale
+        // Subpage: /post/{root-slug}/{subpage-id}
+        console.log(`[BUILD] Generating path for subpage - pageId: ${pageId}, rootSlug: ${parentPost.slug}, actual Notion URL: https://www.notion.so/alemem64/Page-1-${pageId.replace(/-/g, '')}`)
         const locales: ('ko' | 'en')[] = ['ko', 'en']
         locales.forEach((locale: 'ko' | 'en') => {
           if (page.language === locale) {
             paths.push({
-              params: { slug: nestedPath },
+              params: {
+                slug: [parentPost.slug, pageId]
+              },
+              locale,
+            })
+            console.log(`[BUILD] Generated path: /post/${parentPost.slug}/${pageId}`)
+          }
+        })
+      } else {
+        // Root pages (Post/Home): /post/{slug}
+        const locales: ('ko' | 'en')[] = ['ko', 'en']
+        locales.forEach((locale: 'ko' | 'en') => {
+          if (page.language === locale) {
+            paths.push({
+              params: {
+                slug: [pageInfo.slug]
+              },
               locale,
             })
           }
@@ -119,7 +112,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
       }
     })
 
-    console.log(`Generated ${paths.length} post and home page paths`)
+    console.log(`[BUILD] Generated ${paths.length} post and home page paths`)
+    paths.forEach(path => console.log(`[BUILD] Path: /post/${path.params.slug.join('/')}`))
 
     return {
       paths,
@@ -140,10 +134,13 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
 
   try {
     const siteMap = await getCachedSiteMap()
+    console.log(`[SSR] getStaticProps called with slug: ${slug.join('/')}`)
+    console.log(`[SSR] Expected actual Notion page ID: 230f2d475c3180fa82b0f4de70b10b85`)
 
-    // The slug array should be [parent-post-slug, ...subpage-slugs]
+    // The slug array should be [parent-post-slug, ...subpage-title-ids]
     const parentPostSlug = slug[0]
-    const subpageSlugs = slug.slice(1)
+    const subpageTitleIds = slug.slice(1)
+    console.log(`[SSR] parentPostSlug: ${parentPostSlug}, subpageTitleIds: ${subpageTitleIds}`)
 
     // Find the parent post
     let parentPostPageId: string | null = null
@@ -166,28 +163,28 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
       }
     }
 
-    // Navigate through the subpage hierarchy
+    // For subpages, we need to handle title-id format
     let currentPageId = parentPostPageId
     let currentPageInfo = parentPostPageInfo
 
-    for (const subpageSlug of subpageSlugs) {
+    for (const subpageTitleId of subpageTitleIds) {
       let foundChild = false
       
-      // Find child page with matching slug
-      for (const [pageId, pageInfo] of Object.entries(siteMap.pageInfoMap)) {
-        const page = pageInfo as types.PageInfo
-        if (page.parentPageId === currentPageId && 
-            page.language === locale && 
-            page.slug === subpageSlug) {
-          currentPageId = pageId
-          currentPageInfo = page
-          foundChild = true
-          break
-        }
+      // Use the actual Notion page ID directly
+      // The URL format should be: /post/{root-slug}/{actual-notion-page-id}
+      const pageIdFromUrl = subpageTitleIds[0]
+      console.log(`[SSR] pageIdFromUrl: ${pageIdFromUrl}`)
+      
+      // For subpages, we accept any valid Notion page ID
+      // We don't require PageInfo entries for subpages
+      if (pageIdFromUrl) {
+        currentPageId = pageIdFromUrl
+        foundChild = true
+        break
       }
 
       if (!foundChild) {
-        console.log(`Subpage not found: locale=${locale}, parent=${currentPageId}, slug=${subpageSlug}`)
+        console.log(`Subpage not found: locale=${locale}, parent=${currentPageId}, titleId=${subpageTitleId}`)
         return {
           notFound: true,
           revalidate: site.isr?.revalidate ?? 60,
@@ -210,6 +207,7 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
     }
 
     // Fetch the page content
+    console.log(`[SSR] Fetching page with currentPageId: ${currentPageId}`)
     const recordMap = await getPage(currentPageId)
 
     return {

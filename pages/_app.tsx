@@ -27,6 +27,7 @@ import {
 } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { Noto_Sans_KR } from 'next/font/google'
+import { PageRouteProvider } from '@/lib/page-context'
 
 const notoKR = Noto_Sans_KR({
   subsets: ['latin'],
@@ -167,13 +168,14 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   }
 
   return (
-    <div className={notoKR.variable}>
-      <div id="modal-root"></div>
-      <Background
-        source={router.pathname === '/' ? backgroundAsset : notionImageUrl || null}
-        scrollProgress={scrollProgress}
-      />
+    <PageRouteProvider>
+      <style jsx global>{`
+        :root {
+          --font-noto-sans-kr: ${notoKR.style.fontFamily};
+        }
+      `}</style>
 
+      {/* Mobile menu overlay */}
       {isMobile && isMobileMenuOpen && (
         <div
           style={{
@@ -191,65 +193,73 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
         />
       )}
 
-      {/* Layer 1: Fixed elements that are independent of scroll */}
-      {siteMap && (
-        <SideNav
-          siteMap={siteMap}
-          isCollapsed={!showDesktopSideNav}
-          isMobileMenuOpen={isMobileMenuOpen}
+      <div className={notoKR.variable}>
+        <div id="modal-root"></div>
+        <Background
+          source={router.pathname === '/' ? backgroundAsset : notionImageUrl || null}
+          scrollProgress={scrollProgress}
         />
-      )}
-      {siteMap && (pageProps.pageId || router.pathname.startsWith('/tag/')) && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 16,
-            left: showDesktopSideNav ? 'calc(var(--sidenav-width) + 32px)' : 0,
-            right: 0,
-            zIndex: 1000
-          }}
-        >
-          <TopNav
-            pageProps={pageProps}
-            isMobile={isMobile}
-            isSideNavCollapsed={!showDesktopSideNav}
-            onToggleMobileMenu={toggleMobileMenu}
+
+        {/* Layer 1: Fixed elements that are independent of scroll */}
+        {siteMap && (
+          <SideNav
+            siteMap={siteMap}
+            isCollapsed={!showDesktopSideNav}
+            isMobileMenuOpen={isMobileMenuOpen}
           />
-        </div>
-      )}
+        )}
+        {siteMap && (pageProps.pageId || router.pathname.startsWith('/tag/')) && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 16,
+              left: showDesktopSideNav ? 'calc(var(--sidenav-width) + 32px)' : 0,
+              right: 0,
+              zIndex: 1000
+            }}
+          >
+            <TopNav
+              pageProps={pageProps}
+              isMobile={isMobile}
+              isSideNavCollapsed={!showDesktopSideNav}
+              onToggleMobileMenu={toggleMobileMenu}
+            />
+          </div>
+        )}
 
-      {/* Layer 2: The main content container, which handles layout and scrolling */}
-      <div
-        className={cs(showDesktopSideNav && styles.contentWithSideNav)}
-        style={{
-          '--main-content-margin-left': showDesktopSideNav ? 'calc(var(--sidenav-width) + 32px)' : '0px',
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-          paddingTop: '88px'
-        }}
-      >
-        <main
+        {/* Layer 2: The main content container, which handles layout and scrolling */}
+        <div
+          className={cs(showDesktopSideNav && styles.contentWithSideNav)}
           style={{
-            flex: '1 0 auto'
+            '--main-content-margin-left': showDesktopSideNav ? 'calc(var(--sidenav-width) + 32px)' : '0px',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh',
+            paddingTop: '88px'
           }}
         >
-          <div style={{ paddingRight }}>
-            <div className='glass-content-panel'>
-              <Component
-                {...pageProps}
-                isMobile={isMobile}
-                showTOC={showTOC}
-                setBackgroundAsset={setBackgroundAsset}
-                isHeroPaused={isHeroPaused}
-                setIsHeroPaused={setIsHeroPaused}
-              />
+          <main
+            style={{
+              flex: '1 0 auto'
+            }}
+          >
+            <div style={{ paddingRight }}>
+              <div className='glass-content-panel'>
+                <Component
+                  {...pageProps}
+                  isMobile={isMobile}
+                  showTOC={showTOC}
+                  setBackgroundAsset={setBackgroundAsset}
+                  isHeroPaused={isHeroPaused}
+                  setIsHeroPaused={setIsHeroPaused}
+                />
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
 
-        <Footer isMobile={isMobile} />
+          <Footer isMobile={isMobile} />
+        </div>
       </div>
-    </div>
+    </PageRouteProvider>
   )
 }

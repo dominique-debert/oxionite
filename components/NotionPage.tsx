@@ -8,7 +8,7 @@ import {
   getBlockTitle,
   getPageProperty,
 } from 'notion-utils'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   NotionRenderer
 } from 'react-notion-x'
@@ -17,6 +17,9 @@ import styles from 'styles/components/common.module.css'
 import type * as types from '@/lib/types'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
+import { PageRouteProvider, usePageRoute } from '@/lib/page-context'
+import { usePageNavigation } from '@/lib/use-page-navigation'
+import { getCanonicalPageId } from '@/lib/get-canonical-page-id'
 import { mapPageUrl } from '@/lib/map-page-url'
 import { buildPageUrl } from '@/lib/build-page-url'
 import { searchNotion } from '@/lib/search-notion'
@@ -180,7 +183,7 @@ const propertyTextValue = (
 
 
 
-export function NotionPage({
+export function NotionPageContent({
   site,
   recordMap,
   error,
@@ -200,32 +203,22 @@ export function NotionPage({
     setIsShowingComments(false)
   }, [pageId])
 
-  const siteMapPageUrl = useMemo(() => {
-    if (!site || !recordMap) return null
-    
-    // Get current page slug for subpage URL generation
-    const currentPageInfo = pageId ? siteMap?.pageInfoMap?.[pageId] : undefined
-    const currentPageSlug = currentPageInfo?.slug
-    
-    return (pageId = '') => {
-      if (!pageId) return '/'
-      
-      // Always use buildPageUrl when siteMap is available for proper slug values
-      if (siteMap) {
-        try {
-          return buildPageUrl(pageId, siteMap, currentPageSlug)
-        } catch (err) {
-          console.error('Error building page URL:', err)
-        }
+  // Manage page navigation and route state
+  usePageNavigation({ siteMap, pageId: pageId || '', recordMap })
+
+  const { routePath, rootSlug } = usePageRoute();
+  
+  const siteMapPageUrl = useCallback(
+    (pageId = '') => {
+      if (pageId && siteMap) {
+        const currentPageInfo = siteMap.pageInfoMap[pageId]
+        const rootSlug = currentPageInfo?.slug || ''
+        return buildPageUrl(pageId, siteMap, rootSlug)
       }
-      
-      // Fallback to original behavior
-      const searchParams = new URLSearchParams()
-      const { slug } = router.query
-      const basePath = Array.isArray(slug) ? slug.join('/') : ''
-      return mapPageUrl(site, recordMap, searchParams, basePath)(pageId)
-    }
-  }, [site, recordMap, siteMap, router.query, pageId])
+      return '/'
+    },
+    [siteMap]
+  )
 
   const { block, tweetId } = useMemo(() => {
     const block = recordMap?.block?.[pageId!]?.value
@@ -337,4 +330,8 @@ export function NotionPage({
       </div>
     </>
   )
+}
+
+export function NotionPage(props: types.PageProps) {
+  return <NotionPageContent {...props} />
 }
