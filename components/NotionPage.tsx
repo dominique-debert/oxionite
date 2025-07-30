@@ -17,10 +17,7 @@ import styles from 'styles/components/common.module.css'
 import type * as types from '@/lib/types'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
-import { PageRouteProvider, usePageRoute } from '@/lib/page-context'
-import { usePageNavigation } from '@/lib/use-page-navigation'
 import { getCanonicalPageId } from '@/lib/get-canonical-page-id'
-import { mapPageUrl } from '@/lib/map-page-url'
 import { buildPageUrl } from '@/lib/build-page-url'
 import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
@@ -203,22 +200,22 @@ export function NotionPageContent({
     setIsShowingComments(false)
   }, [pageId])
 
-  // Manage page navigation and route state
-  usePageNavigation({ siteMap, pageId: pageId || '', recordMap })
-
-  const { routePath, rootSlug } = usePageRoute();
+  // Current path context for hierarchical routing
   
   const siteMapPageUrl = useCallback(
     (pageId = '') => {
       if (pageId && siteMap) {
-        const currentPageInfo = siteMap.pageInfoMap[pageId]
-        const rootSlug = currentPageInfo?.slug || ''
-        return buildPageUrl(pageId, siteMap, rootSlug)
+        // Extract current path from URL for hierarchical routing
+        const pathSegments = router.asPath.split('/').filter(Boolean)
+        const postIndex = pathSegments.indexOf('post')
+        const currentPath = postIndex !== -1 ? pathSegments.slice(postIndex + 1) : []
+        
+        return buildPageUrl(pageId, siteMap, currentPath)
       }
       return '/'
     },
-    [siteMap]
-  )
+    [siteMap, router.asPath]
+  )   
 
   const { block, tweetId } = useMemo(() => {
     const block = recordMap?.block?.[pageId!]?.value

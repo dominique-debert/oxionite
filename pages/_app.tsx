@@ -27,7 +27,7 @@ import {
 } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { Noto_Sans_KR } from 'next/font/google'
-import { PageRouteProvider } from '@/lib/page-context'
+
 
 const notoKR = Noto_Sans_KR({
   subsets: ['latin'],
@@ -168,7 +168,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
   }
 
   return (
-    <PageRouteProvider>
+    <>
       <style jsx global>{`
         :root {
           --font-noto-sans-kr: ${notoKR.style.fontFamily};
@@ -260,6 +260,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           <Footer isMobile={isMobile} />
         </div>
       </div>
-    </PageRouteProvider>
+    </>
   )
 }

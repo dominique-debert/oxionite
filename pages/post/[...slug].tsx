@@ -46,12 +46,31 @@ export const getStaticPaths: GetStaticPaths = async () => {
     const siteMap = await getCachedSiteMap()
     const paths: Array<{ params: { slug: string[] }; locale?: string }> = []
 
-    // Generate paths for all posts, home pages, and their subpages
+    // Generate paths for root pages only (Post/Home type)
     Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
       const page = pageInfo as types.PageInfo
       
-      // Include posts and home pages themselves
+      // Skip pages without required properties
+      if (!pageId || !pageInfo.title || !pageInfo.type) {
+        console.log(`[BUILD] Skipping page - missing required properties: pageId=${pageId}, title=${pageInfo.title}, type=${pageInfo.type}`)
+        return
+      }
+
+      // Skip non-public pages
+      if (pageInfo.public === false) {
+        console.log(`[BUILD] Skipping private page: ${pageInfo.title}`)
+        return
+      }
+
+      // Skip subpages - they are not in sitemap and handled dynamically
+      if (pageInfo.parentPageId) {
+        console.log(`[BUILD] Skipping subpage (not in sitemap): ${pageInfo.title}`)
+        return
+      }
+
+      // Only generate paths for root pages (Post/Home type)
       if (page.type === 'Post' || page.type === 'Home') {
+        console.log(`[BUILD] Generating path for root page: ${pageInfo.title} (${pageInfo.slug})`)
         const locales: ('ko' | 'en')[] = ['ko', 'en']
         locales.forEach((locale: 'ko' | 'en') => {
           if (page.language === locale) {
@@ -61,59 +80,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
             })
           }
         })
-        return
-      }
-
-      // Handle subpages that belong to posts or home pages
-      let parentPost: types.PageInfo | null = null
-      let currentParentId = page.parentPageId
-      
-      while (currentParentId) {
-        const parentPageInfo = siteMap.pageInfoMap[currentParentId] as types.PageInfo
-        if (!parentPageInfo) break
-        
-        if (parentPageInfo.type === 'Post' || parentPageInfo.type === 'Home') {
-          parentPost = parentPageInfo
-          break
-        }
-        
-        currentParentId = parentPageInfo.parentPageId
-      }
-
-      // Generate the correct path based on page type
-      if (parentPost) {
-        // Subpage: /post/{root-slug}/{subpage-id}
-        console.log(`[BUILD] Generating path for subpage - pageId: ${pageId}, rootSlug: ${parentPost.slug}, actual Notion URL: https://www.notion.so/alemem64/Page-1-${pageId.replace(/-/g, '')}`)
-        const locales: ('ko' | 'en')[] = ['ko', 'en']
-        locales.forEach((locale: 'ko' | 'en') => {
-          if (page.language === locale) {
-            paths.push({
-              params: {
-                slug: [parentPost.slug, pageId]
-              },
-              locale,
-            })
-            console.log(`[BUILD] Generated path: /post/${parentPost.slug}/${pageId}`)
-          }
-        })
       } else {
-        // Root pages (Post/Home): /post/{slug}
-        const locales: ('ko' | 'en')[] = ['ko', 'en']
-        locales.forEach((locale: 'ko' | 'en') => {
-          if (page.language === locale) {
-            paths.push({
-              params: {
-                slug: [pageInfo.slug]
-              },
-              locale,
-            })
-          }
-        })
+        console.log(`[BUILD] Skipping non-Post/Home page: ${pageInfo.type}`)
       }
     })
 
     console.log(`[BUILD] Generated ${paths.length} post and home page paths`)
-    paths.forEach(path => console.log(`[BUILD] Path: /post/${path.params.slug.join('/')}`))
 
     return {
       paths,
@@ -142,73 +114,65 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
     const subpageTitleIds = slug.slice(1)
     console.log(`[SSR] parentPostSlug: ${parentPostSlug}, subpageTitleIds: ${subpageTitleIds}`)
 
-    // Find the parent post
+    // For root pages, find the parent post; for subpages, we'll extract page ID directly
     let parentPostPageId: string | null = null
     let parentPostPageInfo: types.PageInfo | null = null
 
-    for (const [pageId, pageInfo] of Object.entries(siteMap.pageInfoMap)) {
-      const page = pageInfo as types.PageInfo
-      if (page.language === locale && page.slug === parentPostSlug && (page.type === 'Post' || page.type === 'Home')) {
-        parentPostPageId = pageId
-        parentPostPageInfo = page
-        break
+    if (slug.length === 1) {
+      // Only validate parent for root pages
+      const parentPostSlug = slug[0]
+      for (const [pageId, pageInfo] of Object.entries(siteMap.pageInfoMap)) {
+        const page = pageInfo as types.PageInfo
+        if (page.language === locale && page.slug === parentPostSlug && (page.type === 'Post' || page.type === 'Home')) {
+          parentPostPageId = pageId
+          parentPostPageInfo = page
+          break
+        }
       }
     }
 
-    if (!parentPostPageId || !parentPostPageInfo) {
-      console.log(`Parent post not found: locale=${locale}, slug=${parentPostSlug}`)
-      return {
-        notFound: true,
-        revalidate: site.isr?.revalidate ?? 60,
-      }
-    }
-
-    // For subpages, we need to handle title-id format
-    let currentPageId = parentPostPageId
-    let currentPageInfo = parentPostPageInfo
-
-    for (const subpageTitleId of subpageTitleIds) {
-      let foundChild = false
-      
-      // Use the actual Notion page ID directly
-      // The URL format should be: /post/{root-slug}/{actual-notion-page-id}
-      const pageIdFromUrl = subpageTitleIds[0]
-      console.log(`[SSR] pageIdFromUrl: ${pageIdFromUrl}`)
-      
-      // For subpages, we accept any valid Notion page ID
-      // We don't require PageInfo entries for subpages
-      if (pageIdFromUrl) {
-        currentPageId = pageIdFromUrl
-        foundChild = true
-        break
-      }
-
-      if (!foundChild) {
-        console.log(`Subpage not found: locale=${locale}, parent=${currentPageId}, titleId=${subpageTitleId}`)
+    // Extract page ID from URL segments
+    let currentPageId: string
+    
+    if (slug.length === 1) {
+      // Root page: /post/{slug} - must exist in sitemap
+      if (!parentPostPageId || !parentPostPageInfo) {
+        console.log(`Parent post not found: locale=${locale}, slug=${slug[0]}`)
         return {
           notFound: true,
           revalidate: site.isr?.revalidate ?? 60,
         }
       }
-    }
-
-    // Check if the page is private
-    if (currentPageInfo.public === false) {
-      return {
-        props: {
-          site: siteMap.site,
-          siteMap,
-          pageId: currentPageId,
-          isPrivate: true,
-          slugPath: slug,
-        },
-        revalidate: site.isr?.revalidate ?? 60,
+      currentPageId = parentPostPageId
+    } else {
+      // Subpage: /post/{root-slug}/{...}/{title}-{pageId} - extract full UUID
+      const lastSegment = slug[slug.length - 1]
+      
+      // UUID format: 8-4-4-4-12 hex digits (36 chars total with hyphens)
+      const uuidRegex = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i
+      const match = lastSegment.match(uuidRegex)
+      
+      if (match) {
+        currentPageId = match[1]
+        console.log(`[SSR] Extracted subpage ID: ${currentPageId}`)
+      } else {
+        currentPageId = lastSegment
+        console.log(`[SSR] Using page ID directly: ${currentPageId}`)
       }
     }
 
     // Fetch the page content
-    console.log(`[SSR] Fetching page with currentPageId: ${currentPageId}`)
+    console.log(`[SSR] Fetching page with pageId: ${currentPageId}`)
     const recordMap = await getPage(currentPageId)
+
+    // Check if the page is private (if we have page info)
+    const pageInfo = siteMap.pageInfoMap[currentPageId]
+    if (pageInfo?.public === false) {
+      return {
+        notFound: true,
+        revalidate: site.isr?.revalidate ?? 60,
+      }
+    }
 
     return {
       props: {

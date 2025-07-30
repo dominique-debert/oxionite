@@ -12,8 +12,10 @@ import { createPortal } from 'react-dom'
 import type * as types from '@/lib/types'
 import { isSearchEnabled } from '@/lib/config'
 import { useI18n } from '@/lib/i18n'
-import { usePageRoute } from '@/lib/page-context'
+
 import { useDarkMode } from '@/lib/use-dark-mode'
+import { buildPageUrl } from '@/lib/build-page-url'
+import { getBlockTitle } from 'notion-utils'
 import styles from '@/styles/components/SearchModal.module.css'
 
 import siteConfig from '../site.config'
@@ -257,13 +259,11 @@ export const TopNav: React.FC<TopNavProps> = ({
   onToggleMobileMenu
 }) => {
   const router = useRouter()
-  const { siteMap, pageId } = pageProps
-  const { routePath, getFullPath } = usePageRoute()
-
+  const { siteMap, pageId, recordMap } = pageProps
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
-    const { pathname, query } = router
+    const { pathname, query, asPath } = router
 
-    // Handle tag pages via route
+    // Handle tag pages
     if (pathname.startsWith('/tag/')) {
       const tag = query.tag as string
       if (tag) {
@@ -273,25 +273,94 @@ export const TopNav: React.FC<TopNavProps> = ({
             pageInfo: { pageId: `tag-${tag}`, title: `#${tag}` } as types.PageInfo,
             href: `/tag/${tag}`
           }
-        ];
+        ]
       }
     }
 
-    // Use the hierarchical route for breadcrumbs
-    if (routePath && routePath.length > 0) {
-      return routePath.map((route) => ({
-        title: route.title,
-        pageInfo: { pageId: route.pageId, title: route.title } as types.PageInfo,
-        href: getFullPath(route.pageId)
-      }));
+    // Build hierarchical breadcrumbs from navigation tree and current page
+    if (!siteMap || !pageId) return []
+    
+    const breadcrumbs: BreadcrumbItem[] = []
+    
+    // Handle special pages
+    if (pathname.startsWith('/tag/')) {
+      const tag = query.tag as string
+      if (tag) {
+        return [{
+          title: `#${tag}`,
+          pageInfo: { pageId: `tag-${tag}`, title: `#${tag}` } as types.PageInfo,
+          href: `/tag/${tag}`
+        }]
+      }
     }
 
-    // Fallback to old method for direct access
-    if (!siteMap || !pageId) return [];
+    // Build breadcrumbs from navigation tree
+    const path = findPagePath(pageId, siteMap.navigationTree || [])
+    if (path && path.length > 0) {
+      return path
+    }
+
+    // Fallback: Build from URL structure
+    const pathSegments = asPath.split('/').filter(Boolean)
+    const postIndex = pathSegments.indexOf('post')
     
-    const path = findPagePath(pageId, siteMap.navigationTree || []);
-    return path || [];
-  }, [siteMap, pageId, router, routePath, getFullPath]);
+    if (postIndex !== -1) {
+      const postSegments = pathSegments.slice(postIndex + 1)
+      let currentPath = '/post'
+      
+      for (let i = 0; i < postSegments.length; i++) {
+        const segment = postSegments[i]
+        currentPath += `/${segment}`
+        
+        let pageInfo: types.PageInfo | undefined
+        let title: string
+        
+        if (i === 0) {
+          // Root page - find by slug
+          pageInfo = Object.values(siteMap.pageInfoMap).find(p => p.slug === segment)
+          title = pageInfo?.title || 'Untitled'
+        } else {
+          // Subpage - extract page ID and get actual title from recordMap
+          let extractedPageId: string
+          
+          if (segment.includes('-')) {
+            // Extract full UUID using regex
+            const uuidRegex = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i
+            const match = segment.match(uuidRegex)
+            if (match) {
+              extractedPageId = match[1]
+              
+              // Try to get title from recordMap first, then fallback to siteMap
+              const block = recordMap?.block?.[extractedPageId]?.value
+              title = (block ? getBlockTitle(block, recordMap) : undefined) || 
+                     siteMap.pageInfoMap[extractedPageId]?.title || 
+                     'Untitled'
+            } else {
+              extractedPageId = segment
+              const block = recordMap?.block?.[extractedPageId]?.value
+              title = (block ? getBlockTitle(block, recordMap) : undefined) || 
+                     siteMap.pageInfoMap[extractedPageId]?.title || 
+                     'Untitled'
+            }
+          } else {
+            extractedPageId = segment
+            const block = recordMap?.block?.[extractedPageId]?.value
+            title = (block ? getBlockTitle(block, recordMap) : undefined) || 
+                   siteMap.pageInfoMap[extractedPageId]?.title || 
+                   'Untitled'
+          }
+        }
+        
+        breadcrumbs.push({
+          title: title,
+          pageInfo: pageInfo || { pageId: segment, title: title } as types.PageInfo,
+          href: currentPath
+        })
+      }
+    }
+    
+    return breadcrumbs
+  }, [siteMap, pageId, router])
 
   return (
     <nav className="glass-nav">
