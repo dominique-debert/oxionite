@@ -96,6 +96,8 @@
   border: 1px solid var(--hover-border-color);
   background-color: var(--default-bg-color);
   box-shadow: 0 8px 32px 0 var(--shadow-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .viewNavContainer {
@@ -145,6 +147,14 @@
 
 .viewNavIcon {
   font-size: 1rem;
+}
+
+.modalGraphContainer {
+  flex: 1;
+  width: 100%;
+  min-height: 0; /* Important for flexbox children */
+  position: relative;
+  overflow: hidden;
 }
 
 .viewNavPill {

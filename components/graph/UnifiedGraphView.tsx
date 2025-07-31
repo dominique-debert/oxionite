@@ -79,15 +79,16 @@ const GraphContent: React.FC<{
           </nav>
         </div>
         
-        {state.currentView === 'post_view' ? (
-          <PostGraphView width={Math.max(width, 400)} height={Math.max(height, 400)} />
-        ) : (
-          <TagGraphView 
-            width={Math.max(width, 400)} 
-            height={Math.max(height, 400)} 
-            currentTag={currentTag} 
-          />
-        )}
+        <div className={styles.modalGraphContainer}>
+          {state.currentView === 'post_view' ? (
+            <PostGraphView className="w-full h-full" />
+          ) : (
+            <TagGraphView 
+              className="w-full h-full" 
+              currentTag={currentTag} 
+            />
+          )}
+        </div>
       </div>
     </div>
   );

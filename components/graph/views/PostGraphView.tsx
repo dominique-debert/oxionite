@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useGraphContext } from '../GraphProvider';
@@ -18,13 +18,15 @@ interface PostGraphViewProps {
 }
 
 export const PostGraphView: React.FC<PostGraphViewProps> = ({
-  width = 800,
-  height = 600,
+  width,
+  height,
   className = '',
 }) => {
   const router = useRouter();
   const { state, actions, data, instance } = useGraphContext();
   const { isDarkMode } = useDarkMode();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: width || 800, height: height || 600 });
 
   const { postGraphData } = data;
   const { graphRef, setGraphInstance } = instance;
@@ -106,33 +108,54 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     );
   }
 
+  // Handle responsive sizing
+  useEffect(() => {
+    if (!containerRef.current || (width && height)) return;
+
+    const resizeObserver = new ResizeObserver(entries => {
+      if (entries[0]) {
+        const { width: containerWidth, height: containerHeight } = entries[0].contentRect;
+        setDimensions({ width: containerWidth, height: containerHeight });
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [width, height]);
+
+  const containerStyle = (width && height) ? { width, height } : { width: '100%', height: '100%' };
+  const graphWidth = width || dimensions.width;
+  const graphHeight = height || dimensions.height;
+
   return (
-    <div className={className} style={{ width, height }}>
-      <ForceGraphWrapper
-        ref={graphRef}
-        graphData={postGraphData}
-        nodeCanvasObject={nodeCanvasObject as any}
-        linkCanvasObject={linkCanvasObject as any}
-        onNodeClick={handleNodeClick as any}
-        onZoom={handleZoom}
-        onZoomEnd={handleZoom}
-        onEngineStop={() => actions.setIsGraphLoaded(true)}
-        onReady={setGraphInstance}
-        backgroundColor="transparent"
-        width={width}
-        height={height}
-        cooldownTicks={GRAPH_CONFIG.physics.cooldownTicks}
-        warmupTicks={GRAPH_CONFIG.physics.warmupTicks}
-        linkWidth={GRAPH_CONFIG.visual.LINK_WIDTH}
-        linkColor={() => isDarkMode ? GRAPH_COLORS.dark.link : GRAPH_COLORS.light.link}
-        nodeRelSize={GRAPH_CONFIG.visual.POST_NODE_SIZE}
-        d3AlphaDecay={GRAPH_CONFIG.physics.d3AlphaDecay}
-        d3VelocityDecay={GRAPH_CONFIG.physics.d3VelocityDecay}
-        onNodeDragEnd={(node: any) => {
-          node.fx = undefined;
-          node.fy = undefined;
-        }}
-      />
+    <div ref={containerRef} className={className} style={containerStyle}>
+      {(graphWidth > 0 && graphHeight > 0) && (
+        <ForceGraphWrapper
+          ref={graphRef}
+          graphData={postGraphData}
+          nodeCanvasObject={nodeCanvasObject as any}
+          linkCanvasObject={linkCanvasObject as any}
+          onNodeClick={handleNodeClick as any}
+          onZoom={handleZoom}
+          onZoomEnd={handleZoom}
+          onEngineStop={() => actions.setIsGraphLoaded(true)}
+          onReady={setGraphInstance}
+          backgroundColor="transparent"
+          width={graphWidth}
+          height={graphHeight}
+          cooldownTicks={GRAPH_CONFIG.physics.cooldownTicks}
+          warmupTicks={GRAPH_CONFIG.physics.warmupTicks}
+          linkWidth={GRAPH_CONFIG.visual.LINK_WIDTH}
+          linkColor={() => isDarkMode ? GRAPH_COLORS.dark.link : GRAPH_COLORS.light.link}
+          nodeRelSize={GRAPH_CONFIG.visual.POST_NODE_SIZE}
+          d3AlphaDecay={GRAPH_CONFIG.physics.d3AlphaDecay}
+          d3VelocityDecay={GRAPH_CONFIG.physics.d3VelocityDecay}
+          onNodeDragEnd={(node: any) => {
+            node.fx = undefined;
+            node.fy = undefined;
+          }}
+        />
+      )}
     </div>
   );
 };
