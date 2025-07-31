@@ -2,9 +2,9 @@ import type { ExtendedRecordMap, PageBlock } from 'notion-types'
 import { getPageProperty } from 'notion-utils'
 
 import type { CanonicalPageMap, PageInfo, SiteMap } from './types'
-import * as config from './config'
-import { mapImageUrl } from './map-image-url'
-import { notion } from './notion-api'
+import * as config from '../config'
+import { mapImageUrl } from '../map-image-url'
+import { notion } from '../notion-api'
 import { buildTagGraphData } from './tag-graph'
 
 // Custom function to parse Notion relation properties

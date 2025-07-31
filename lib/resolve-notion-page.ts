@@ -1,12 +1,12 @@
 import { type ExtendedRecordMap } from 'notion-types'
 import { parsePageId } from 'notion-utils'
 
-import type { PageProps } from './types'
+import type { PageProps } from './context/types'
 import * as acl from './acl'
 import { environment, pageUrlAdditions, pageUrlOverrides, site } from './config'
 import { db } from './db'
 import { getPage } from './notion'
-import { getCachedSiteMap } from './site-cache'
+import { getCachedSiteMap } from './context/site-cache'
 
 export async function resolveNotionPage(
   domain: string,

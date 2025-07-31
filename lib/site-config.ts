@@ -1,4 +1,4 @@
-import type * as types from './types'
+import type * as types from './context/types'
 
 export interface SiteConfig {
   rootNotionPageId: string

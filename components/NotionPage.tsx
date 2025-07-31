@@ -14,10 +14,10 @@ import {
 } from 'react-notion-x'
 import styles from 'styles/components/common.module.css'
 
-import type * as types from '@/lib/types'
+import type * as types from '@/lib/context/types'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
-import { buildPageUrl } from '@/lib/build-page-url'
+import { buildPageUrl } from '@/lib/context/build-page-url'
 import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
 

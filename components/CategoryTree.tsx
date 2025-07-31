@@ -7,7 +7,7 @@ import { useRouter } from 'next/router'
 import React from 'react'
 import styles from 'styles/components/CategoryTree.module.css'
 
-import type { PageInfo } from '@/lib/types'
+import type { PageInfo } from '@/lib/context/types'
 
 interface CategoryTreeProps {
   items: PageInfo[]

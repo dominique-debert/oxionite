@@ -1,10 +1,10 @@
 import { type GetStaticProps } from 'next'
 
-import type { ExtendedRecordMap, PageProps } from '@/lib/types'
+import type { ExtendedRecordMap, PageProps } from '@/lib/context/types'
 import { Home } from '@/components/home/Home'
 import { site } from '@/lib/config'
 import { getPage } from '@/lib/notion'
-import { getCachedSiteMap } from '@/lib/site-cache'
+import { getCachedSiteMap } from '@/lib/context/site-cache'
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   const locale = context.locale || 'ko'

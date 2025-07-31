@@ -8,9 +8,9 @@ import {
 import RSS from 'rss'
 
 import * as config from '@/lib/config'
-import { getSiteMap } from '@/lib/get-site-map'
+import { getSiteMap } from '@/lib/context/get-site-map'
 import { getSocialImageUrl } from '@/lib/get-social-image-url'
-import { buildPageUrl } from '@/lib/build-page-url'
+import { buildPageUrl } from '@/lib/context/build-page-url'
 import { notion } from '@/lib/notion-api'
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {

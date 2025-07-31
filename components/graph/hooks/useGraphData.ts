@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { SiteMap } from '@/lib/types';
+import type { SiteMap } from '@/lib/context/types';
 import { 
   createPostGraphData, 
   createTagGraphData, 

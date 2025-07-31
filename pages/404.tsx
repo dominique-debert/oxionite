@@ -2,7 +2,7 @@ import { ErrorPage } from '@/components/ErrorPage'
 import { PageHead } from 'components/PageHead'
 import * as React from 'react'
 
-import type { Site } from '@/lib/types'
+import type { Site } from '@/lib/context/types'
 
 import site from '../site.config'
 

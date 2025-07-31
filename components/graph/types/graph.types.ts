@@ -1,5 +1,5 @@
 import type { NodeObject, LinkObject } from 'react-force-graph-2d';
-import type { PageInfo, SiteMap } from '@/lib/types';
+import type { PageInfo, SiteMap } from '@/lib/context/types';
 
 
 export interface GraphNode extends NodeObject {

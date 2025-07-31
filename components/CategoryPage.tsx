@@ -2,7 +2,7 @@ import { useRouter } from 'next/router'
 import * as React from 'react'
 
 import { PostList } from '@/components/PostList'
-import type * as types from '@/lib/types'
+import type * as types from '@/lib/context/types'
 import { useI18n } from '@/lib/i18n'
 import { useDarkMode } from '@/lib/use-dark-mode'
 

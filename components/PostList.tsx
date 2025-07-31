@@ -2,7 +2,7 @@ import * as React from 'react'
 import Link from 'next/link'
 
 import { mapImageUrl } from '@/lib/map-image-url'
-import type * as types from '@/lib/types'
+import type * as types from '@/lib/context/types'
 import styles from '@/styles/components/PostList.module.css'
 
 export interface PostListProps {

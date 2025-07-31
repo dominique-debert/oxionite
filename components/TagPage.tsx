@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useRouter } from 'next/router'
 
 import { PostList } from '@/components/PostList'
-import type * as types from '@/lib/types'
+import type * as types from '@/lib/context/types'
 import { useI18n } from '@/lib/i18n'
 
 export interface TagPageProps {

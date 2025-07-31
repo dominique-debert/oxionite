@@ -1,7 +1,7 @@
 import * as React from 'react'
 import styles from 'styles/components/common.module.css'
 
-import type { Site } from '@/lib/types'
+import type { Site } from '@/lib/context/types'
 
 import { PageHead } from './PageHead'
 

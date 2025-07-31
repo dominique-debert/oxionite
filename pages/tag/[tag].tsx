@@ -2,8 +2,8 @@ import { GetStaticPaths, GetStaticProps } from 'next'
 import * as React from 'react'
 
 import { TagPage } from '@/components/TagPage'
-import type * as types from '@/lib/types'
-import { getCachedSiteMap } from '@/lib/site-cache'
+import type * as types from '@/lib/context/types'
+import { getCachedSiteMap } from '@/lib/context/site-cache'
 import { site } from '@/lib/config'
 
 export interface TagPageProps {

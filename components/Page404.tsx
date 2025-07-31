@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import styles from 'styles/components/common.module.css'
 
-import type * as types from '@/lib/types'
+import type * as types from '@/lib/context/types'
 
 import { PageHead } from './PageHead'
 

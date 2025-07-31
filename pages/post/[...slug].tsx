@@ -2,8 +2,8 @@ import { GetStaticPaths, GetStaticProps } from 'next'
 import * as React from 'react'
 
 import { NotionPage } from '@/components/NotionPage'
-import type * as types from '@/lib/types'
-import { getCachedSiteMap } from '@/lib/site-cache'
+import type * as types from '@/lib/context/types'
+import { getCachedSiteMap } from '@/lib/context/site-cache'
 import { getPage } from '@/lib/notion'
 import { site } from '@/lib/config'
 

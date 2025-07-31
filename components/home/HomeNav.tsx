@@ -2,7 +2,7 @@ import cs from 'classnames'
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import styles from 'styles/components/home.module.css'
 
-import type { PageInfo } from '@/lib/types'
+import type { PageInfo } from '@/lib/context/types'
 
 interface HomeNavProps {
   homePages: PageInfo[]

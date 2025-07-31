@@ -9,7 +9,7 @@ import Link from 'next/link'
 import React from 'react'
 import { createPortal } from 'react-dom'
 
-import type * as types from '@/lib/types'
+import type * as types from '@/lib/context/types'
 import { isSearchEnabled } from '@/lib/config'
 import { useI18n } from '@/lib/i18n'
 

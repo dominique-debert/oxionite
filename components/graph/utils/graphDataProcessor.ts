@@ -1,5 +1,5 @@
-import type { SiteMap } from '@/lib/types';
-import type { LocaleTagGraphData } from '@/lib/tag-graph';
+import type { SiteMap } from '@/lib/context/types';
+import type { LocaleTagGraphData } from '@/lib/context/tag-graph';
 import type { GraphData, GraphNode, GraphLink } from '../types/graph.types';
 import { HOME_NODE_ID, GRAPH_CONFIG } from './graphConfig';
 import siteConfig from 'site.config';

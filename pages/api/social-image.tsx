@@ -13,7 +13,7 @@ import * as libConfig from '@/lib/config'
 import interSemiBoldFont from '@/lib/fonts/inter-semibold'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { notion } from '@/lib/notion-api'
-import { type PageError,type PageInfo } from '@/lib/types'
+import { type PageError,type PageInfo } from '@/lib/context/types'
 
 export const runtime = 'edge'
 

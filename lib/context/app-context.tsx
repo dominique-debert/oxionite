@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type * as types from '@/lib/types'
+import type * as types from '@/lib/context/types'
 
 export interface AppContextType {
   siteMap: types.SiteMap

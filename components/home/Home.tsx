@@ -1,7 +1,7 @@
 import React, { useMemo,useState } from 'react'
 import styles from 'styles/components/home.module.css'
 
-import type { PageInfo, PageProps } from '@/lib/types'
+import type { PageInfo, PageProps } from '@/lib/context/types'
 
 import { NotionPage } from '../../components/NotionPage'
 import { PageHead } from '../../components/PageHead'

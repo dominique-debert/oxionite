@@ -6,7 +6,7 @@ import { MdFullscreen, MdMyLocation, MdHome, MdOutlineFullscreenExit } from 'rea
 import { PiGraphBold } from "react-icons/pi";
 import { FaTags } from 'react-icons/fa';
 import styles from '@/styles/components/GraphView.module.css';
-import type { SiteMap } from '@/lib/types';
+import type { SiteMap } from '@/lib/context/types';
 import { PostGraphView } from './views/PostGraphView';
 import { TagGraphView } from './views/TagGraphView';
 

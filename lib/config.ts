@@ -18,7 +18,7 @@ import {
   type PageUrlOverridesInverseMap,
   type PageUrlOverridesMap,
   type Site
-} from './types'
+} from './context/types'
 
 export const rootNotionPageId: string | null =
   parsePageId(getSiteConfig('rootNotionPageId'), { uuid: false }) ?? null

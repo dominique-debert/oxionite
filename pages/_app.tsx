@@ -13,7 +13,7 @@ import { posthog } from 'posthog-js'
 import * as React from 'react'
 import styles from 'styles/components/common.module.css'
 
-import type * as types from '@/lib/types'
+import type * as types from '@/lib/context/types'
 import Background from '@/components/Background'
 import { Footer } from '@/components/Footer'
 import { SideNav } from '@/components/SideNav'

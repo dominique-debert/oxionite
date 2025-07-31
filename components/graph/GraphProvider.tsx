@@ -3,7 +3,7 @@ import type { GraphContextValue } from './types/graph.types';
 import { useGraphState } from './hooks/useGraphState';
 import { useGraphData } from './hooks/useGraphData';
 import { useGraphInstance } from './hooks/useGraphInstance';
-import type { SiteMap } from '@/lib/types';
+import type { SiteMap } from '@/lib/context/types';
 
 const GraphContext = createContext<GraphContextValue | undefined>(undefined);
 

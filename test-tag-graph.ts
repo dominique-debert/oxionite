@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 // Test script to verify tag graph data generation
-import { getSiteMap } from './lib/get-site-map'
-import { buildTagGraphData } from './lib/tag-graph'
+import { getSiteMap } from './lib/context/get-site-map'
+import { buildTagGraphData } from './lib/context/tag-graph'
 
 async function testTagGraph() {
   console.log('Testing tag graph data generation...')
