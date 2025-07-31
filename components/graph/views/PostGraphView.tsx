@@ -334,6 +334,16 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     return () => resizeObserver.disconnect();
   }, [width, height]);
 
+  // Initialize dimensions from container when no explicit dimensions provided
+  useEffect(() => {
+    if (!containerRef.current || (width && height)) return;
+    
+    const { clientWidth, clientHeight } = containerRef.current;
+    if (clientWidth > 0 && clientHeight > 0) {
+      setDimensions({ width: clientWidth, height: clientHeight });
+    }
+  }, [width, height]);
+
   const containerStyle = (width && height) ? { width, height } : { width: '100%', height: '100%' };
   const graphWidth = width || dimensions.width;
   const graphHeight = height || dimensions.height;

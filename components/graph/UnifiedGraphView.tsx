@@ -138,7 +138,7 @@ const GraphContent: React.FC<{
         </nav>
       </div>
 
-      <div className="relative">
+      <div className={styles.graphCanvasWrapper}>
         <div className={styles.buttonContainer}>
           <button 
             onClick={handleFocusCurrent} 
@@ -165,15 +165,27 @@ const GraphContent: React.FC<{
 
         {state.currentView === 'post_view' ? (
           dimensions ? (
-            <PostGraphView width={dimensions.width} height={dimensions.height} />
+            <PostGraphView 
+              className={styles.graphInner}
+              width={dimensions.width} 
+              height={dimensions.height} 
+            />
           ) : (
-            <PostGraphView className={`w-full ${styles.homeView}`} />
+            <PostGraphView className={styles.graphInner} />
           )
         ) : (
           dimensions ? (
-            <TagGraphView width={dimensions.width} height={dimensions.height} currentTag={currentTag} />
+            <TagGraphView 
+              className={styles.graphInner}
+              width={dimensions.width} 
+              height={dimensions.height} 
+              currentTag={currentTag} 
+            />
           ) : (
-            <TagGraphView className={`w-full ${styles.homeView}`} currentTag={currentTag} />
+            <TagGraphView 
+              className={styles.graphInner} 
+              currentTag={currentTag} 
+            />
           )
         )}
       </div>

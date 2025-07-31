@@ -6,9 +6,18 @@
   overflow: hidden;
   background-color: var(--default-bg-color);
   box-shadow: 0 0 32px 0 var(--shadow-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .graphInner {
+  width: 100%;
+  height: 100%;
+}
+
+.graphCanvasWrapper {
+  flex: 1;
+  position: relative;
   width: 100%;
   height: 100%;
 }
