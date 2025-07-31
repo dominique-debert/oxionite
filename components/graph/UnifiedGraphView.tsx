@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
 import { useGraphContext, GraphProvider } from './GraphProvider';
-import { MdFullscreen, MdMyLocation, MdHome } from 'react-icons/md';
+import { MdFullscreen, MdMyLocation, MdHome, MdOutlineFullscreenExit } from 'react-icons/md';
 import { PiGraphBold } from "react-icons/pi";
 import { FaTags } from 'react-icons/fa';
 import styles from '@/styles/components/GraphView.module.css';
@@ -80,6 +80,30 @@ const GraphContent: React.FC<{
         </div>
         
         <div className={styles.modalGraphContainer}>
+          <div className={styles.buttonContainer}>
+            <button 
+              onClick={handleFocusCurrent} 
+              className={styles.button}
+              aria-label="Focus on current"
+            >
+              <MdMyLocation size={20} />
+            </button>
+            <button 
+              onClick={handleFitToHome} 
+              className={styles.button} 
+              aria-label="Fit to home"
+            >
+              <MdHome size={20} />
+            </button>
+            <button 
+              onClick={handleModalToggle} 
+              className={styles.button} 
+              aria-label="Close fullscreen"
+            >
+              <MdOutlineFullscreenExit size={20} />
+            </button>
+          </div>
+          
           {state.currentView === 'post_view' ? (
             <PostGraphView className="w-full h-full" />
           ) : (
@@ -135,7 +159,7 @@ const GraphContent: React.FC<{
             className={styles.button} 
             aria-label="Open in fullscreen"
           >
-            <MdFullscreen size={20} />
+            {state.isModalOpen ? <MdOutlineFullscreenExit size={20} /> : <MdFullscreen size={20} />}
           </button>
         </div>
 
