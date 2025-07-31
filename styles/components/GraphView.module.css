@@ -107,6 +107,7 @@
   box-shadow: 0 8px 32px 0 var(--shadow-color);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .viewNavContainer {
