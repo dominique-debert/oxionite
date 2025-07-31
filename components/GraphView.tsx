@@ -229,6 +229,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
 
   const [isGraphLoaded, setIsGraphLoaded] = useState(false);
   const [fgInstance, setFgInstance] = useState<any>(null);
+  const [currentNodeExists, setCurrentNodeExists] = useState(false);
 
   const colors = useMemo(() => {
     const colors = isDarkMode ? {
@@ -275,6 +276,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
   }, []);
 
   const handleEngineStop = useCallback(() => {
+    console.log('[GraphComponent] Engine stopped, graph is now loaded');
     setIsGraphLoaded(true);
   }, [setIsGraphLoaded]);
 
@@ -360,9 +362,11 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
   }, [fgInstance, dimensions]);
 
   const handleFocusCurrentNode = useCallback(() => {
-    if (!fgInstance) return;
-    const slug = router.asPath.split('/').pop()?.split('?')[0] || '';
-    const currentNode = graphData.nodes.find(n => n.page.slug === slug);
+    if (!fgInstance || graphData.nodes.length === 0) return;
+    const pathParts = router.asPath.split('/');
+    const slug = pathParts.pop()?.split('?')[0] || '';
+    const decodedSlug = decodeURIComponent(slug);
+    const currentNode = graphData.nodes.find(n => n.page.slug === decodedSlug);
     if (currentNode) {
       focusOnNode(currentNode);
     } else {
@@ -388,60 +392,51 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
     }
   }, [fgInstance, dimensions]);
 
-  // Reliable focusing system with timeout fallback and viewType debugging
+  // Reliable focusing system with retry mechanism
   const performFocusBasedOnViewType = useCallback((targetPath?: string, attemptCount = 0) => {
-    if (!fgInstance || !isGraphLoaded) {
-      console.log('[GraphComponent] Cannot focus - fgInstance or isGraphLoaded not ready');
+    // Check if we have actual graph data from the ForceGraph instance
+    const actualGraphData = fgInstance?.graphData?.();
+    const actualNodes = actualGraphData?.nodes || graphData.nodes;
+    
+    console.log(`[GraphComponent] Checking focus conditions: fgInstance=${!!fgInstance}, isGraphLoaded=${isGraphLoaded}, nodes=${actualNodes.length}`);
+    
+    if (!fgInstance || !isGraphLoaded || actualNodes.length === 0) {
+      if (attemptCount < 1) {
+        console.log(`[GraphComponent] Focus delayed - waiting for graph data, attempt: ${attemptCount + 1}`);
+        console.log(`[GraphComponent] Graph data available: ${actualNodes.length} nodes`);
+        setTimeout(() => {
+          performFocusBasedOnViewType(targetPath, attemptCount + 1);
+        }, 150);
+      } else {
+        console.log('[GraphComponent] Max attempts reached, falling back to home view');
+        console.log(`[GraphComponent] Final state: fgInstance=${!!fgInstance}, isGraphLoaded=${isGraphLoaded}, nodes=${actualNodes.length}`);
+        // Force fallback to home view
+        handleFitToHome();
+      }
       return;
     }
+    
+    // Use actual graph data for node lookup
+    const currentNodes = actualGraphData?.nodes || graphData.nodes;
 
     console.log(`[GraphComponent] === FOCUS ATTEMPT === viewType: ${viewType}, path: ${targetPath || router.asPath}`);
 
-    const MAX_ATTEMPTS = 20; // 2 seconds max wait (100ms * 20)
-    
-    // Try to get actual engine state
-    let isEngineRunning = false;
-    try {
-      // Check if we can access the engine directly
-      if (fgInstance._destructor) {
-        // ForceGraph2D instance
-        const alpha = fgInstance.d3Alpha?.() || fgInstance.alpha?.();
-        isEngineRunning = alpha !== undefined && alpha > 0.01;
-      } else {
-        // Fallback: check if nodes are still moving
-        const nodes = fgInstance.graphData?.()?.nodes;
-        if (nodes && nodes.length > 0) {
-          const movingNodes = nodes.filter((n: any) => 
-            (n.vx && Math.abs(n.vx) > 0.01) || 
-            (n.vy && Math.abs(n.vy) > 0.01)
-          );
-          isEngineRunning = movingNodes.length > 0;
-        }
-      }
-    } catch {
-      console.warn('[GraphComponent] Error checking physics engine state');
-      return false;
-    }
-
-    if (isEngineRunning && attemptCount < MAX_ATTEMPTS) {
-      console.log(`[GraphComponent] Engine running, attempt ${attemptCount + 1}/${MAX_ATTEMPTS}, viewType: ${viewType}`);
-      setTimeout(() => {
-        performFocusBasedOnViewType(targetPath, attemptCount + 1);
-      }, 100);
-      return;
-    }
-
-    // Engine stopped or max attempts reached
-    console.log(`[GraphComponent] Proceeding with focus, viewType: ${viewType}`);
-    
     const currentPath = targetPath || router.asPath;
     const _minDimension = Math.min(dimensions.width, dimensions.height);
     
     if (viewType === 'sidenav') {
       // SideNav: focus on current location - use same logic as handleFocusCurrentNode
-      const slug = currentPath.split('/').pop()?.split('?')[0] || '';
-      const currentNode = graphData.nodes.find(n => n.page.slug === slug);
-      console.log(`[GraphComponent] SideNav mode - looking for slug: ${slug}, found node: ${currentNode?.name || 'none'}`);
+      if (currentNodes.length === 0) {
+        console.log('[GraphComponent] SideNav - no graph data available yet');
+        handleFitToHome();
+        return;
+      }
+      
+      const pathParts = currentPath.split('/');
+      const slug = pathParts.pop()?.split('?')[0] || '';
+      const decodedSlug = decodeURIComponent(slug);
+      const currentNode = currentNodes.find((n: any) => n.page?.slug === decodedSlug);
+      console.log(`[GraphComponent] SideNav mode - looking for slug: ${decodedSlug}, found node: ${currentNode?.name || 'none'}`);
       if (currentNode) {
         console.log('[GraphComponent] SideNav - focusing on current node with ZOOM_CONFIG:', currentNode.name);
         
@@ -473,17 +468,8 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
           fgInstance.zoom(targetZoom, 400);
         }, 100);
       } else {
-        console.log('[GraphComponent] SideNav - current node not found, focusing on home');
-        const homeNode = graphData.nodes.find(n => n.id === HOME_NODE_ID);
-        if (homeNode) {
-          // Use same logic as focusOnNode for home node
-          const _padding = 80; // Fixed padding for home node
-          
-          fgInstance.centerAt(homeNode.x!, homeNode.y!, 400);
-          setTimeout(() => {
-            fgInstance.zoom(ZOOM_CONFIG.HOME_NODE_ZOOM, 400);
-          }, 100);
-        }
+        console.log('[GraphComponent] SideNav - current node not found, fitting to home view');
+        handleFitToHome();
       }
     } else {
       // Home: fit to all nodes - use same logic as handleFitToHome
@@ -495,26 +481,51 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
         fgInstance.zoomToFit(400, padding);
       }
     }
-  }, [fgInstance, graphData.nodes, router.asPath, viewType, dimensions]);
+  }, [fgInstance, graphData.nodes, router.asPath, viewType, dimensions, handleFitToHome]);
 
-  // Initial load focus with delay
+  // Initial load focus - runs when everything is ready
   useEffect(() => {
     if (isGraphLoaded && fgInstance) {
-      console.log('[GraphComponent] Initial load detected, waiting for engine...');
-      // Add extra delay for initial load to ensure graph is fully ready
-      setTimeout(() => {
-        performFocusBasedOnViewType();
-      }, 500);
+      const actualGraphData = fgInstance?.graphData?.();
+      const actualNodes = actualGraphData?.nodes || graphData.nodes;
+      
+      if (actualNodes.length > 0) {
+        console.log('[GraphComponent] Graph ready, performing initial focus...');
+        
+        // Ensure we have data before attempting focus
+        setTimeout(() => {
+          performFocusBasedOnViewType();
+        }, 500);
+      }
     }
-  }, [isGraphLoaded, fgInstance, performFocusBasedOnViewType]);
+  }, [isGraphLoaded, fgInstance, graphData.nodes, performFocusBasedOnViewType]);
 
-  // Route change handler
+  // Route change handler - simplified
   useEffect(() => {
     if (isGraphLoaded && fgInstance) {
-      console.log('[GraphComponent] Route change detected:', router.asPath);
-      performFocusBasedOnViewType(router.asPath);
+      const actualGraphData = fgInstance?.graphData?.();
+      const actualNodes = actualGraphData?.nodes || graphData.nodes;
+      
+      if (actualNodes.length > 0) {
+        console.log('[GraphComponent] Route change detected:', router.asPath);
+        setTimeout(() => {
+          performFocusBasedOnViewType(router.asPath);
+        }, 100);
+      }
     }
-  }, [router.asPath, isGraphLoaded, fgInstance, performFocusBasedOnViewType]);
+  }, [router.asPath, isGraphLoaded, fgInstance, graphData.nodes, performFocusBasedOnViewType]);
+
+  // Update current node existence based on route
+  useEffect(() => {
+    if (graphData.nodes.length === 0) return;
+    
+    const pathParts = router.asPath.split('/');
+    const slug = pathParts.pop()?.split('?')[0] || '';
+    const decodedSlug = decodeURIComponent(slug);
+    
+    const currentNode = graphData.nodes.find(n => n.page.slug === decodedSlug);
+    setCurrentNodeExists(!!currentNode);
+  }, [router.asPath, graphData.nodes]);
 
   return (
     <div className={styles.graphInner} ref={containerRef} onMouseLeave={handleCanvasMouseLeave}>
@@ -549,7 +560,12 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
         </nav>
       </div>
       <div className={styles.buttonContainer}>
-        <button onClick={handleFocusCurrentNode} className={styles.button} aria-label="Focus on current node">
+        <button 
+          onClick={handleFocusCurrentNode} 
+          className={`${styles.button} ${!currentNodeExists ? styles.disabled : ''}`} 
+          aria-label="Focus on current node"
+          disabled={!currentNodeExists}
+        >
           <MdMyLocation size={20} />
         </button>
         <button onClick={handleFitToHome} className={styles.button} aria-label="Fit to home">

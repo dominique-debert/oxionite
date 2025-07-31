@@ -46,19 +46,25 @@
 }
 
 .button:hover {
-  background: var(--hover-bg-color);
-  border-color: var(--hover-border-color);
+  background: rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
-.button:disabled {
+.button:active {
+  transform: translateY(0);
+}
+
+.button:disabled,
+.button.disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: var(--default-bg-color);
-  border-color: var(--border-color);
+  pointer-events: none;
 }
 
-.button:disabled:hover {
-  background: var(--default-bg-color);
+.button:disabled:hover,
+.button.disabled:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: none;
   border-color: var(--border-color);
 }
 
