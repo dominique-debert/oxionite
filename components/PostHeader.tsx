@@ -7,11 +7,13 @@ import styles from 'styles/components/PostHeader.module.css'
 
 import { mapImageUrl } from '@/lib/map-image-url'
 
-import { PageAuthor } from './PageAuthor'
+import { AuthorButton } from './AuthorButton'
+import { TagButton } from './TagButton'
 
 interface PostHeaderProps {
   block: any
   recordMap: any
+  siteMap?: any
   isBlogPost: boolean // Kept for logic, but rendering is controlled by variant
   isMobile?: boolean
   variant?: 'full' | 'simple'
@@ -20,6 +22,7 @@ interface PostHeaderProps {
 export function PostHeader({ 
   block, 
   recordMap, 
+  siteMap,
   isBlogPost,
   isMobile = false,
   variant = 'full' // Default to 'full'
@@ -89,7 +92,7 @@ export function PostHeader({
                   {authors
                     .filter((name) => name && name.trim() !== '')
                     .map((authorName) => (
-                    <PageAuthor key={authorName} authorName={authorName} />
+                    <AuthorButton key={authorName} authorName={authorName} />
                   ))}
                 </div>
               )}
@@ -102,12 +105,10 @@ export function PostHeader({
           {tags.length > 0 && (
             <div className={styles.tagContainer}>
               {tags.map((tag, index) => (
-                <span
+                <TagButton 
                   key={index}
-                  className="notion-tag"
-                >
-                  {tag}
-                </span>
+                  tag={tag}
+                />
               ))}
             </div>
           )}

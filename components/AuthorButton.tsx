@@ -2,9 +2,9 @@ import Image from 'next/image'
 import React, { useState } from 'react'
 import siteConfig from 'site.config'
 
-import styles from '@/styles/components/PageAuthor.module.css'
+import styles from '@/styles/components/AuthorButton.module.css'
 
-export function PageAuthor({ authorName }: { authorName: string }) {
+export function AuthorButton({ authorName }: { authorName: string }) {
   const [isImageError, setIsImageError] = useState(false)
 
   if (!authorName || authorName.trim() === '') {
@@ -18,7 +18,7 @@ export function PageAuthor({ authorName }: { authorName: string }) {
 
   const authorComponent = (
     <div
-      className={`${styles.pageAuthor} ${hasAvatar ? styles.withAvatar : ''}`}
+      className={`${styles.authorButton} ${hasAvatar ? styles.withAvatar : ''}`}
     >
       {hasAvatar && (
         <Image

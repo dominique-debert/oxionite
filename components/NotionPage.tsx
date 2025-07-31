@@ -270,6 +270,7 @@ export function NotionPageContent({
               <PostHeader
                 block={block}
                 recordMap={recordMap}
+                siteMap={siteMap}
                 isBlogPost={isBlogPost} // Still needed for internal logic in PostHeader
                 isMobile={isMobile}
                 variant={isBlogPost ? 'full' : 'simple'}

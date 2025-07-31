@@ -26,6 +26,7 @@ import {
   posthogId
 } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
+import { AppContext } from '@/lib/context/app-context'
 import { Noto_Sans_KR } from 'next/font/google'
 
 
@@ -167,8 +168,17 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     return null
   }
 
+  if (!siteMap) {
+    return <Component {...pageProps} />
+  }
+
+  const appContextValue = {
+    siteMap,
+    pageInfo
+  }
+
   return (
-    <>
+    <AppContext.Provider value={appContextValue}>
       <style jsx global>{`
         :root {
           --font-noto-sans-kr: ${notoKR.style.fontFamily};
@@ -260,6 +270,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
           <Footer isMobile={isMobile} />
         </div>
       </div>
-    </>
+    </AppContext.Provider>
   )
 }

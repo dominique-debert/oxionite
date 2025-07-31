@@ -1,4 +1,4 @@
-.pageAuthor {
+.authorButton {
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
@@ -10,9 +10,10 @@
   text-decoration: none; /* Remove underline from links */
 }
 
-.pageAuthor:hover {
+.authorButton:hover {
   background-color: var(--hover-bg-color);
   border-color: var(--hover-border-color);
+  transform: translateY(-1px);
 }
 
 .avatar {
@@ -26,7 +27,7 @@
 .name {
   font-size: 15px;
   font-weight: 500;
-  color: var(--fg-color);
+  color: var(--primary-text-color);
 }
 
 .withAvatar .name {

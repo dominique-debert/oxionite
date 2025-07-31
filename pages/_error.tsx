@@ -1,5 +1,5 @@
 import type { NextPageContext } from 'next'
-import { ErrorPage } from 'components/ErrorPage'
+import { ErrorPage } from '@/components/ErrorPage'
 import * as React from 'react'
 import site from 'site.config'
 
