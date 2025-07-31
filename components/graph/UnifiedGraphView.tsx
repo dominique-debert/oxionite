@@ -29,11 +29,11 @@ const GraphContent: React.FC<{
         return { width: 300, height: 300 };
       case 'home':
       default:
-        return { width: 800, height: 600 };
+        return null; // Use CSS classes for responsive sizing
     }
   };
 
-  const { width, height } = getDimensions();
+  const dimensions = getDimensions();
 
   const handleViewChange = useCallback((view: 'post_view' | 'tag_view') => {
     actions.setCurrentView(view);
@@ -118,7 +118,7 @@ const GraphContent: React.FC<{
   );
 
   return (
-    <div className={styles.graphContainer}>
+    <div className={`${styles.graphContainer} ${viewType === 'home' ? styles.homeView : ''}`}>
       <div className={styles.viewNavContainer}>
         <nav className={styles.viewNav}>
           <button
@@ -164,9 +164,17 @@ const GraphContent: React.FC<{
         </div>
 
         {state.currentView === 'post_view' ? (
-          <PostGraphView width={width} height={height} />
+          dimensions ? (
+            <PostGraphView width={dimensions.width} height={dimensions.height} />
+          ) : (
+            <PostGraphView className={`w-full ${styles.homeView}`} />
+          )
         ) : (
-          <TagGraphView width={width} height={height} currentTag={currentTag} />
+          dimensions ? (
+            <TagGraphView width={dimensions.width} height={dimensions.height} currentTag={currentTag} />
+          ) : (
+            <TagGraphView className={`w-full ${styles.homeView}`} currentTag={currentTag} />
+          )
         )}
       </div>
 

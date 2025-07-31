@@ -5,7 +5,7 @@ import type { PageInfo, PageProps } from '@/lib/types'
 
 import { NotionPage } from '../../components/NotionPage'
 import { PageHead } from '../../components/PageHead'
-import GraphView from '../GraphView'
+import { UnifiedGraphView } from '../graph/UnifiedGraphView'
 import Hero from './Hero'
 import HomeNav from './HomeNav'
 import RecentPosts from './RecentPosts'
@@ -59,7 +59,7 @@ export function Home({
       case 'Recent Posts':
         return <RecentPosts siteMap={siteMap} />
       case 'Graph View':
-        return <GraphView siteMap={siteMap} />
+        return <UnifiedGraphView siteMap={siteMap} viewType="home" />
       default:
         return <RecentPosts siteMap={siteMap} />
     }
