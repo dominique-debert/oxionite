@@ -195,7 +195,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   }, [isDarkMode, currentTag, hoveredNode, highlightedNodeIds]);
 
   // Link styling with hover effects
-  const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D) => {
+  const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
 
     // Handle hover opacity for links
@@ -209,7 +209,8 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     ctx.moveTo(link.source.x, link.source.y);
     ctx.lineTo(link.target.x, link.target.y);
     ctx.strokeStyle = colors.link;
-    ctx.lineWidth = GRAPH_CONFIG.visual.LINK_WIDTH;
+    // Use screen-space width (1.5px) divided by zoom level to maintain consistent visual size
+    ctx.lineWidth = 1.5 / globalScale;
     ctx.stroke();
 
     ctx.globalAlpha = 1;
@@ -272,7 +273,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
           height={graphHeight}
           cooldownTicks={GRAPH_CONFIG.physics.cooldownTicks}
           warmupTicks={GRAPH_CONFIG.physics.warmupTicks}
-          linkWidth={GRAPH_CONFIG.visual.LINK_WIDTH}
+
           linkColor={() => isDarkMode ? GRAPH_COLORS.dark.link : GRAPH_COLORS.light.link}
           nodeRelSize={1} // Use fixed size instead of relative
           d3AlphaDecay={GRAPH_CONFIG.physics.d3AlphaDecay}
