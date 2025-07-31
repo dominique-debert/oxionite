@@ -1,9 +1,7 @@
-import { useRef, useCallback, useEffect } from 'react';
-
+import { useRef, useCallback } from 'react';
 
 export const useGraphInstance = () => {
   const graphRef = useRef<any>(null);
-  const zoomTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const setGraphInstance = useCallback((instance: any) => {
     graphRef.current = instance;
@@ -14,12 +12,12 @@ export const useGraphInstance = () => {
     padding = 50,
     nodeFilter?: (node: any) => boolean
   ) => {
-    if (!graphRef.current) return;
-    
-    try {
-      graphRef.current.zoomToFit(duration, padding, nodeFilter);
-    } catch (err) {
-      console.error('Error zooming to fit:', err);
+    if (graphRef.current && typeof graphRef.current.zoomToFit === 'function') {
+      try {
+        graphRef.current.zoomToFit(duration, padding, nodeFilter);
+      } catch (err) {
+        console.error('Error zooming to fit:', err);
+      }
     }
   }, []);
 
@@ -28,86 +26,51 @@ export const useGraphInstance = () => {
     duration = 400,
     padding = 50
   ) => {
-    if (!graphRef.current) return;
-    
-    try {
-      graphRef.current.zoomToFit(duration, padding, (node: any) => node.id === nodeId);
-    } catch (err) {
-      console.error('Error zooming to node:', err);
+    if (graphRef.current && typeof graphRef.current.zoomToFit === 'function') {
+      try {
+        graphRef.current.zoomToFit(duration, padding, (node: any) => node.id === nodeId);
+      } catch (err) {
+        console.error('Error zooming to node:', err);
+      }
     }
   }, []);
 
   const getZoomState = useCallback(() => {
-    if (!graphRef.current) return null;
-    
-    try {
-      return {
-        zoom: graphRef.current.zoom(),
-        center: graphRef.current.centerAt(),
-      };
-    } catch (err) {
-      console.error('Error getting zoom state:', err);
-      return null;
+    if (graphRef.current && typeof graphRef.current.zoom === 'function' && typeof graphRef.current.centerAt === 'function') {
+      try {
+        const center = graphRef.current.centerAt();
+        const zoom = graphRef.current.zoom();
+        if (center && typeof zoom === 'number') {
+          return { zoom, center };
+        }
+      } catch (err) {
+        console.error('Error getting zoom state:', err);
+      }
     }
+    return null;
   }, []);
 
-  const setZoomState = useCallback((zoom: number, center: { x: number; y: number }) => {
-    if (!graphRef.current) return;
-    
-    try {
-      graphRef.current.zoom(zoom);
-      graphRef.current.centerAt(center.x, center.y);
-    } catch (err) {
-      console.error('Error applying zoom state:', err);
-    }
-  }, []);
-
-  const applyZoomState = (_view: string) => {
-    // Implementation moved to useGraphState
-  };
-
-  const saveZoomState = (_view: string) => {
-    // Implementation moved to useGraphState
-  };
-
-  const refresh = useCallback(() => {
-    if (!graphRef.current) return;
-    
-    try {
-      graphRef.current.refresh();
-    } catch (err) {
-      console.error('Error refreshing graph:', err);
+  const setZoomState = useCallback((zoom: number, center: { x: number; y: number }, ms = 0) => {
+    if (graphRef.current && typeof graphRef.current.zoom === 'function' && typeof graphRef.current.centerAt === 'function') {
+      try {
+        graphRef.current.centerAt(center.x, center.y, ms);
+        graphRef.current.zoom(zoom, ms);
+      } catch (err) {
+        console.error('Error applying zoom state:', err);
+      }
     }
   }, []);
 
   const pauseAnimation = useCallback(() => {
-    if (!graphRef.current) return;
-    
-    try {
+    if (graphRef.current && typeof graphRef.current.pauseAnimation === 'function') {
       graphRef.current.pauseAnimation();
-    } catch (err) {
-      console.warn('Failed to pause animation:', err);
     }
   }, []);
 
   const resumeAnimation = useCallback(() => {
-    if (!graphRef.current) return;
-    
-    try {
+    if (graphRef.current && typeof graphRef.current.resumeAnimation === 'function') {
       graphRef.current.resumeAnimation();
-    } catch (err) {
-      console.warn('Failed to resume animation:', err);
     }
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    const timeoutRef = zoomTimeoutRef.current;
-    return () => {
-      if (timeoutRef) {
-        clearTimeout(timeoutRef);
-      }
-    };
   }, []);
 
   return {
@@ -120,9 +83,6 @@ export const useGraphInstance = () => {
       zoomToNode,
       getZoomState,
       setZoomState,
-      applyZoomState,
-      saveZoomState,
-      refresh,
       pauseAnimation,
       resumeAnimation,
     },

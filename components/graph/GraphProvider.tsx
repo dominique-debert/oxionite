@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useCallback } from 'react';
 import type { GraphContextValue } from './types/graph.types';
 import { useGraphState } from './hooks/useGraphState';
 import { useGraphData } from './hooks/useGraphData';
@@ -13,27 +13,45 @@ export interface GraphProviderProps {
   locale?: string;
 }
 
-export const GraphProvider: React.FC<GraphProviderProps> = ({
-  children,
-  siteMap,
-  locale = 'en',
+export const GraphProvider: React.FC<GraphProviderProps> = ({ 
+  children, 
+  siteMap, 
+  locale = 'en' 
 }) => {
-  const graphState = useGraphState();
+  const { state, actions: stateActions } = useGraphState();
   const graphData = useGraphData(siteMap, locale);
-  const graphInstance = useGraphInstance();
+  const { instance, actions: instanceActions } = useGraphInstance();
+
+  const saveCurrentZoom = useCallback(() => {
+    const zoomState = instanceActions.getZoomState();
+    if (zoomState) {
+      stateActions.setZoomStateForView(state.currentView, zoomState);
+    }
+  }, [instanceActions, stateActions, state.currentView]);
+
+  const applyCurrentZoom = useCallback((fitView = false) => {
+    const savedZoom = state.zoomState[state.currentView];
+    if (savedZoom && !fitView) {
+      instanceActions.setZoomState(savedZoom.zoom, savedZoom.center);
+    } else {
+      instanceActions.zoomToFit();
+    }
+  }, [instanceActions, state.zoomState, state.currentView]);
 
   const contextValue: GraphContextValue = {
-    state: graphState.state,
+    state,
     actions: {
-      ...graphState.actions,
-      ...graphInstance.actions,
+      ...stateActions,
+      ...instanceActions,
+      saveCurrentZoom,
+      applyCurrentZoom,
     },
     data: {
       siteMap: siteMap!,
       postGraphData: graphData.data.postGraph,
       tagGraphData: graphData.data.tagGraph,
     },
-    instance: graphInstance.instance,
+    instance,
   };
 
   return (

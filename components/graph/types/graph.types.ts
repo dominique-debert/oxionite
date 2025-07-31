@@ -31,11 +31,16 @@ export interface GraphData {
 export type GraphViewType = 'post_view' | 'tag_view';
 export type GraphDisplayType = 'sidebar' | 'fullscreen' | 'home';
 
+export interface ZoomState {
+  zoom: number;
+  center: { x: number; y: number };
+}
+
 export interface GraphState {
   currentView: GraphViewType;
   displayType: GraphDisplayType;
   isModalOpen: boolean;
-  zoomState: Record<string, { zoom: number; center: { x: number; y: number } }>;
+  zoomState: Record<string, ZoomState>;
   isGraphLoaded: boolean;
   currentTag?: string;
 }
@@ -46,17 +51,18 @@ export interface GraphContextValue {
     setCurrentView: (view: GraphViewType) => void;
     setDisplayType: (type: GraphDisplayType) => void;
     setIsModalOpen: (open: boolean) => void;
-    applyZoomState: (view: GraphViewType) => void;
     setIsGraphLoaded: (loaded: boolean) => void;
     setCurrentTag: (tag?: string) => void;
+    
+    // Instance actions
     zoomToFit: (duration?: number, padding?: number, nodeFilter?: (node: any) => boolean) => void;
     zoomToNode: (nodeId: string, duration?: number, padding?: number) => void;
-    getZoomState: () => { zoom: number; center: { x: number; y: number } } | null;
-    saveZoomState: (view: GraphViewType) => void;
-    resetZoomState: (view?: GraphViewType) => void;
-
     pauseAnimation: () => void;
     resumeAnimation: () => void;
+
+    // Combined actions
+    saveCurrentZoom: () => void;
+    applyCurrentZoom: (fitView?: boolean) => void;
   };
   data: {
     siteMap: SiteMap;
