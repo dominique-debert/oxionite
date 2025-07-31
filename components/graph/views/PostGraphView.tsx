@@ -32,6 +32,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   const { graphRef, setGraphInstance } = instance;
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
+  const [highlightedLinks, setHighlightedLinks] = useState<Set<any>>(new Set());
 
   // Handle node click for navigation
   const handleNodeClick = useCallback((node: GraphNode) => {
@@ -52,16 +53,29 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   // Handle node hover
   const handleNodeHover = useCallback((node: GraphNode | null) => {
     setHoveredNode(node);
-    const newIds = new Set<string>();
+
+    const newHighlightedNodeIds = new Set<string>();
+    const newHighlightedLinks = new Set<any>();
+
     if (node) {
-      newIds.add(node.id as string);
-      // Add connected nodes to highlight
+      newHighlightedNodeIds.add(node.id as string);
       postGraphData?.links.forEach(link => {
-        if (link.source === node.id) newIds.add(link.target as string);
-        if (link.target === node.id) newIds.add(link.source as string);
+        const sourceId = typeof link.source === 'string' ? link.source : (link.source as GraphNode)?.id;
+        const targetId = typeof link.target === 'string' ? link.target : (link.target as GraphNode)?.id;
+
+        if (sourceId === node.id) {
+          newHighlightedNodeIds.add(targetId as string);
+          newHighlightedLinks.add(link);
+        }
+        if (targetId === node.id) {
+          newHighlightedNodeIds.add(sourceId as string);
+          newHighlightedLinks.add(link);
+        }
       });
     }
-    setHighlightedNodeIds(newIds);
+
+    setHighlightedNodeIds(newHighlightedNodeIds);
+    setHighlightedLinks(newHighlightedLinks);
   }, [postGraphData]);
 
   const handleCanvasMouseLeave = useCallback(() => {
@@ -270,34 +284,28 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     ctx.globalAlpha = 1;
   }, [isDarkMode, hoveredNode, highlightedNodeIds, drawImageFillShape]);
 
-  // Link styling with hover effects
-  const linkCanvasObject = useCallback((
-    link: any,
-    ctx: CanvasRenderingContext2D,
-    globalScale: number
-  ) => {
+  // Link canvas object with hover effects
+  const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
-    
-    const sourceId = typeof link.source === 'string' ? link.source : (link.source as GraphNode)?.id;
-    const targetId = typeof link.target === 'string' ? link.target : (link.target as GraphNode)?.id;
-    
+
     // Handle hover opacity for links
     if (hoveredNode) {
-      const isConnected = sourceId === hoveredNode.id || targetId === hoveredNode.id;
-      ctx.globalAlpha = isConnected ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
+      ctx.globalAlpha = highlightedLinks.has(link) ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
     } else {
       ctx.globalAlpha = 1;
     }
-    
+
     ctx.beginPath();
     ctx.moveTo(link.source.x, link.source.y);
     ctx.lineTo(link.target.x, link.target.y);
     ctx.strokeStyle = colors.link;
     ctx.lineWidth = GRAPH_CONFIG.visual.LINK_WIDTH;
     ctx.stroke();
-    
+
     ctx.globalAlpha = 1;
-  }, [isDarkMode, hoveredNode]);
+  }, [isDarkMode, hoveredNode, highlightedLinks]);
+
+
 
   if (!postGraphData || postGraphData.nodes.length === 0) {
     return (

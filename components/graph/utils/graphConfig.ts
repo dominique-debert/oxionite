@@ -61,8 +61,6 @@ export const HOME_NODE_ID = '__HOME__';
 export const GRAPH_COLORS = {
   light: {
     link: 'rgba(0, 0, 0, 0.3)',
-    linkHover: 'rgba(0, 0, 0, 0.1)',
-    linkMinor: 'rgba(0, 0, 0, 0.05)',
     text: 'rgb(50, 48, 44)',
     highlight: '#f59e0b',
     node: 'rgba(255, 255, 255, 0.25)',
@@ -70,16 +68,11 @@ export const GRAPH_COLORS = {
     nodeOuterBorder: 'rgba(0, 0, 0, 0.1)',
   },
   dark: {
-    link: 'rgba(255, 255, 255, 0.1)',
-    linkHover: 'rgba(255, 255, 255, 0.1)',
-    linkMinor: 'rgba(255, 255, 255, 0.05)',
+    link: 'rgba(255, 255, 255, 0.2)',
     text: 'rgba(255, 255, 255, 0.9)',
     highlight: '#fbbf24',
     node: 'rgba(0, 0, 0, 0.3)',
     nodeInnerBorder: 'rgba(0, 0, 0, 0.3)',
     nodeOuterBorder: 'rgba(255, 255, 255, 0.1)',
-    // node: 'rgba(0, 0, 255, 0.1)',
-    // nodeInnerBorder: 'rgba(255, 0, 0, 0.1)',
-    // nodeOuterBorder: 'rgba(0, 255, 0, 0.1)',
   },
 };
