@@ -32,6 +32,8 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
 
   const { tagGraphData } = data;
   const { graphRef, setGraphInstance } = instance;
+  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
 
   // Handle node click for tag navigation
   const handleNodeClick = useCallback((node: GraphNode) => {
@@ -47,6 +49,25 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     }
   }, [state.currentView, state.isGraphLoaded, actions, graphRef]);
 
+  // Handle node hover
+  const handleNodeHover = useCallback((node: GraphNode | null) => {
+    setHoveredNode(node);
+    const newIds = new Set<string>();
+    if (node) {
+      newIds.add(node.id as string);
+      // Add connected nodes to highlight
+      tagGraphData?.links.forEach(link => {
+        if (link.source === node.id) newIds.add(link.target as string);
+        if (link.target === node.id) newIds.add(link.source as string);
+      });
+    }
+    setHighlightedNodeIds(newIds);
+  }, [tagGraphData]);
+
+  const handleCanvasMouseLeave = useCallback(() => {
+    handleNodeHover(null);
+  }, [handleNodeHover]);
+
   // Focus on current tag if provided
   useEffect(() => {
     if (currentTag && state.isGraphLoaded && graphRef.current) {
@@ -61,52 +82,90 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     void actions.saveZoomState('tag_view');
   }, [actions]);
 
-  // Node canvas object for tag visualization
+  // Helper function to draw image that completely fills the shape (crop to fill)
+  const drawImageFillShape = useCallback((
+    img: HTMLImageElement,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
+    const imgAspect = img.width / img.height;
+    const containerAspect = width / height;
+    
+    let drawWidth, drawHeight, offsetX, offsetY;
+    
+    if (imgAspect > containerAspect) {
+      // Image is wider, crop sides to fit height
+      drawHeight = height;
+      drawWidth = height * imgAspect;
+      offsetX = (width - drawWidth) / 2;
+      offsetY = 0;
+    } else {
+      // Image is taller, crop top/bottom to fit width
+      drawWidth = width;
+      drawHeight = width / imgAspect;
+      offsetX = 0;
+      offsetY = (height - drawHeight) / 2;
+    }
+    
+    return { drawWidth, drawHeight, offsetX, offsetY };
+  }, []);
+
+  // Node canvas object for tag visualization with glassmorphism
   const nodeCanvasObject = useCallback((
     node: GraphNode,
     ctx: CanvasRenderingContext2D,
     globalScale: number
   ) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
-    const label = node.name;
-    const fontSize = GRAPH_CONFIG.visual.TAG_NAME_FONT_SIZE;
     
-    ctx.font = `${fontSize / globalScale}px sans-serif`;
+    // Handle hover opacity effect
+    const isHighlighted = highlightedNodeIds.has(node.id as string);
+    if (!hoveredNode) {
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.globalAlpha = isHighlighted ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
+    }
+
+    const isCurrentTag = currentTag === node.id;
+    const label = node.name;
+    
+    // Fixed node size (not affected by zoom)
+    const baseSize = GRAPH_CONFIG.visual.TAG_NODE_SIZE;
+    const nodeSize = baseSize + (node.count || 0) * 0.5; // Scale by tag count
+    
+    // Draw glassmorphism background
+    ctx.fillStyle = isCurrentTag ? colors.highlight : colors.bg;
+    ctx.strokeStyle = isCurrentTag ? colors.highlight : colors.border;
+    ctx.lineWidth = isCurrentTag ? 2 : 1;
+
+    // Draw circular node
+    ctx.beginPath();
+    ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw label with fixed size (scales with zoom)
+    const fontSize = GRAPH_CONFIG.visual.TAG_NAME_FONT_SIZE;
+    ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.fillStyle = colors.text;
     
-    // Highlight current tag
-    const isCurrentTag = currentTag === node.id;
-    const nodeColor = isCurrentTag ? colors.highlight : colors.node;
+    const textYOffset = nodeSize / 2 + 8;
+    ctx.fillText(label, node.x!, node.y! + textYOffset);
     
-    // Draw node circle with size based on tag count
-    const radius = Math.max((node.val || 1) * 2, 1) / globalScale;
-    ctx.beginPath();
-    ctx.arc(node.x!, node.y!, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = nodeColor;
-    ctx.fill();
-    
-    // Add border for current tag
-    if (isCurrentTag) {
-      ctx.strokeStyle = colors.highlight;
-      ctx.lineWidth = 2 / globalScale;
-      ctx.stroke();
+    // Show count
+    if (node.count && globalScale >= 1.5) {
+      ctx.font = `${fontSize - 1}px sans-serif`;
+      ctx.fillText(`(${node.count})`, node.x!, node.y! + textYOffset + 12);
     }
     
-    // Draw label
-    if (globalScale >= 1.2) {
-      ctx.fillStyle = colors.text;
-      ctx.fillText(label, node.x!, node.y! + radius + 5);
-      
-      // Show count
-      if (node.count && globalScale >= 2) {
-        ctx.font = `${(fontSize - 1) / globalScale}px sans-serif`;
-        ctx.fillText(`(${node.count})`, node.x!, node.y! + radius + 15);
-      }
-    }
-  }, [isDarkMode, currentTag]);
+    ctx.globalAlpha = 1;
+  }, [isDarkMode, currentTag, hoveredNode, highlightedNodeIds]);
 
-  // Link styling for tag relationships
+  // Link styling with hover effects
   const linkCanvasObject = useCallback((
     link: any,
     ctx: CanvasRenderingContext2D,
@@ -114,15 +173,26 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   ) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
     
+    const sourceId = typeof link.source === 'string' ? link.source : (link.source as GraphNode)?.id;
+    const targetId = typeof link.target === 'string' ? link.target : (link.target as GraphNode)?.id;
+    
+    // Handle hover opacity for links
+    if (hoveredNode) {
+      const isConnected = sourceId === hoveredNode.id || targetId === hoveredNode.id;
+      ctx.globalAlpha = isConnected ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
+    } else {
+      ctx.globalAlpha = 0.6;
+    }
+    
     ctx.beginPath();
     ctx.moveTo(link.source.x, link.source.y);
     ctx.lineTo(link.target.x, link.target.y);
     ctx.strokeStyle = colors.link;
-    ctx.lineWidth = GRAPH_CONFIG.visual.LINK_WIDTH / globalScale;
-    ctx.globalAlpha = 0.6;
+    ctx.lineWidth = GRAPH_CONFIG.visual.LINK_WIDTH;
     ctx.stroke();
+    
     ctx.globalAlpha = 1;
-  }, [isDarkMode]);
+  }, [isDarkMode, hoveredNode]);
 
   if (!tagGraphData || tagGraphData.nodes.length === 0) {
     return (
@@ -176,12 +246,14 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
           warmupTicks={GRAPH_CONFIG.physics.warmupTicks}
           linkWidth={GRAPH_CONFIG.visual.LINK_WIDTH}
           linkColor={() => isDarkMode ? GRAPH_COLORS.dark.link : GRAPH_COLORS.light.link}
-          nodeRelSize={GRAPH_CONFIG.visual.TAG_NODE_SIZE}
+          nodeRelSize={1} // Use fixed size instead of relative
           d3AlphaDecay={GRAPH_CONFIG.physics.d3AlphaDecay}
           d3VelocityDecay={GRAPH_CONFIG.physics.d3VelocityDecay}
           linkDirectionalParticles={2}
           linkDirectionalParticleWidth={1}
           linkDirectionalParticleSpeed={0.006}
+          onNodeHover={handleNodeHover as any}
+          onBackgroundClick={() => handleNodeHover(null)}
           onNodeDragEnd={(node: any) => {
             node.fx = undefined;
             node.fy = undefined;

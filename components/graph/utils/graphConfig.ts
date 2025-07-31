@@ -7,7 +7,7 @@ export const GRAPH_CONFIG = {
     TAG_NODE_SIZE: 6,
     HOME_CORNER_RADIUS: 16,
     CATEGORY_CORNER_RADIUS: 2,
-    LINK_WIDTH: 1,
+    LINK_WIDTH: 0.3,
     HOVER_OPACITY: 0.1,
     HOME_NAME_FONT_SIZE: 4,
     CATEGORY_FONT_SIZE: 2,
@@ -55,20 +55,30 @@ export const GRAPH_CONFIG = {
 
 export const HOME_NODE_ID = '__HOME__';
 
-// Color schemes for different themes
+// Color schemes for different themes with glassmorphism
 export const GRAPH_COLORS = {
   light: {
     background: '#ffffff',
     link: '#94a3b8',
+    linkHover: '#3b82f6',
+    linkMinor: '#cbd5e1',
     node: '#3b82f6',
     text: '#1e293b',
     highlight: '#f59e0b',
+    bg: 'rgba(255, 255, 255, 0.25)',
+    border: 'rgba(255, 255, 255, 0.18)',
+    shadow: 'rgba(0, 0, 0, 0.1)',
   },
   dark: {
     background: '#0f172a',
     link: '#475569',
+    linkHover: '#60a5fa',
+    linkMinor: '#334155',
     node: '#60a5fa',
     text: '#e2e8f0',
     highlight: '#fbbf24',
+    bg: 'rgba(30, 41, 59, 0.4)',
+    border: 'rgba(255, 255, 255, 0.1)',
+    shadow: 'rgba(0, 0, 0, 0.3)',
   },
 };

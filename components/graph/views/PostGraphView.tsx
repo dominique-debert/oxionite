@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useGraphContext } from '../GraphProvider';
 import { useDarkMode } from '@/lib/use-dark-mode';
-import { GRAPH_CONFIG, GRAPH_COLORS } from '../utils/graphConfig';
+import { GRAPH_CONFIG, GRAPH_COLORS, HOME_NODE_ID } from '../utils/graphConfig';
 import type { GraphNode } from '../types/graph.types';
 
 const ForceGraphWrapper = dynamic(() => import('../../ForceGraphWrapper'), {
@@ -30,6 +30,8 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
 
   const { postGraphData } = data;
   const { graphRef, setGraphInstance } = instance;
+  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
 
   // Handle node click for navigation
   const handleNodeClick = useCallback((node: GraphNode) => {
@@ -47,41 +49,178 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     }
   }, [state.currentView, state.isGraphLoaded, actions, graphRef]);
 
+  // Handle node hover
+  const handleNodeHover = useCallback((node: GraphNode | null) => {
+    setHoveredNode(node);
+    const newIds = new Set<string>();
+    if (node) {
+      newIds.add(node.id as string);
+      // Add connected nodes to highlight
+      postGraphData?.links.forEach(link => {
+        if (link.source === node.id) newIds.add(link.target as string);
+        if (link.target === node.id) newIds.add(link.source as string);
+      });
+    }
+    setHighlightedNodeIds(newIds);
+  }, [postGraphData]);
+
+  const handleCanvasMouseLeave = useCallback(() => {
+    handleNodeHover(null);
+  }, [handleNodeHover]);
+
   // Save zoom state on interaction
   const handleZoom = useCallback(() => {
     void actions.saveZoomState('post_view');
   }, [actions]);
 
-  // Node canvas object for custom rendering
+  // Helper function to draw image that completely fills the shape (crop to fill)
+  const drawImageFillShape = useCallback((
+    img: HTMLImageElement,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
+    const imgAspect = img.width / img.height;
+    const containerAspect = width / height;
+    
+    let drawWidth, drawHeight, offsetX, offsetY;
+    
+    if (imgAspect > containerAspect) {
+      // Image is wider, crop sides to fit height
+      drawHeight = height;
+      drawWidth = height * imgAspect;
+      offsetX = (width - drawWidth) / 2;
+      offsetY = 0;
+    } else {
+      // Image is taller, crop top/bottom to fit width
+      drawWidth = width;
+      drawHeight = width / imgAspect;
+      offsetX = 0;
+      offsetY = (height - drawHeight) / 2;
+    }
+    
+    return { drawWidth, drawHeight, offsetX, offsetY };
+  }, []);
+
+  // Node canvas object for custom rendering with glassmorphism
   const nodeCanvasObject = useCallback((
     node: GraphNode,
     ctx: CanvasRenderingContext2D,
     globalScale: number
   ) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
+    
+    // Handle hover opacity effect
+    const isHighlighted = highlightedNodeIds.has(node.id as string);
+    if (!hoveredNode) {
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.globalAlpha = isHighlighted ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
+    }
+
+    const isTheHoveredNode = hoveredNode && hoveredNode.id === node.id;
     const label = node.name;
+    
+    // Fixed node sizes (not affected by zoom)
+    let nodeSize: number;
+    let cornerRadius: number;
+    
+    if (node.id === HOME_NODE_ID) {
+      nodeSize = GRAPH_CONFIG.visual.HOME_NODE_SIZE;
+      cornerRadius = GRAPH_CONFIG.visual.HOME_CORNER_RADIUS;
+    } else if (node.type === 'Category') {
+      nodeSize = GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE;
+      cornerRadius = GRAPH_CONFIG.visual.CATEGORY_CORNER_RADIUS;
+    } else { // Post and Home-type pages
+      nodeSize = GRAPH_CONFIG.visual.POST_NODE_SIZE;
+      cornerRadius = nodeSize / 2; // Make it circular
+    }
+
+    // Draw glassmorphism background
+    ctx.fillStyle = colors.bg;
+    ctx.strokeStyle = colors.border;
+    ctx.lineWidth = 1;
+
+    if (node.type === 'Category') {
+      // Category nodes are rectangular
+      ctx.beginPath();
+      ctx.roundRect(
+        node.x! - nodeSize / 2,
+        node.y! - nodeSize / 2,
+        nodeSize,
+        nodeSize,
+        cornerRadius
+      );
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      // Home and Post nodes are circular
+      ctx.beginPath();
+      ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // Draw cover image or favicon
+    if (node.imageUrl && node.img && node.img.complete) {
+      ctx.save();
+      
+      // Create clipping path that matches the exact shape
+      if (node.type === 'Category') {
+        ctx.beginPath();
+        ctx.roundRect(
+          node.x! - nodeSize / 2,
+          node.y! - nodeSize / 2,
+          nodeSize,
+          nodeSize,
+          cornerRadius
+        );
+      } else {
+        ctx.beginPath();
+        ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI);
+      }
+      ctx.clip();
+      
+      // Draw image to completely fill the shape
+      const { drawWidth, drawHeight, offsetX, offsetY } = drawImageFillShape(
+        node.img,
+        node.x! - nodeSize / 2,
+        node.y! - nodeSize / 2,
+        nodeSize,
+        nodeSize
+      );
+      ctx.drawImage(node.img, node.x! + offsetX - nodeSize / 2, node.y! + offsetY - nodeSize / 2, drawWidth, drawHeight);
+      ctx.restore();
+    } else if (node.id === HOME_NODE_ID) {
+      // Draw favicon for home node
+      const faviconSize = nodeSize * 0.6;
+      ctx.fillStyle = colors.text;
+      ctx.font = `${faviconSize}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🏠', node.x!, node.y!);
+    }
+
+    // Draw label with fixed size (scales with zoom)
     const fontSize = node.type === 'Root' 
       ? GRAPH_CONFIG.visual.HOME_NAME_FONT_SIZE 
+      : node.type === 'Category'
+      ? GRAPH_CONFIG.visual.CATEGORY_FONT_SIZE
       : GRAPH_CONFIG.visual.POST_FONT_SIZE;
     
-    ctx.font = `${fontSize / globalScale}px sans-serif`;
+    ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = colors.text;
     
-    // Draw node circle
-    ctx.beginPath();
-    ctx.arc(node.x!, node.y!, Math.max(node.val || 1, 1) / globalScale, 0, 2 * Math.PI);
-    ctx.fillStyle = colors.node;
-    ctx.fill();
+    const textYOffset = nodeSize / 2 + 8;
+    ctx.fillText(label, node.x!, node.y! + textYOffset);
     
-    // Draw label
-    if (globalScale >= 1.5) {
-      ctx.fillText(label, node.x!, node.y! + (node.val || 1) / globalScale + 5);
-    }
-  }, [isDarkMode]);
+    ctx.globalAlpha = 1;
+  }, [isDarkMode, hoveredNode, highlightedNodeIds, drawImageFillShape]);
 
-  // Link styling
+  // Link styling with hover effects
   const linkCanvasObject = useCallback((
     link: any,
     ctx: CanvasRenderingContext2D,
@@ -89,13 +228,26 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   ) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
     
+    const sourceId = typeof link.source === 'string' ? link.source : (link.source as GraphNode)?.id;
+    const targetId = typeof link.target === 'string' ? link.target : (link.target as GraphNode)?.id;
+    
+    // Handle hover opacity for links
+    if (hoveredNode) {
+      const isConnected = sourceId === hoveredNode.id || targetId === hoveredNode.id;
+      ctx.globalAlpha = isConnected ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
+    } else {
+      ctx.globalAlpha = 1;
+    }
+    
     ctx.beginPath();
     ctx.moveTo(link.source.x, link.source.y);
     ctx.lineTo(link.target.x, link.target.y);
     ctx.strokeStyle = colors.link;
-    ctx.lineWidth = GRAPH_CONFIG.visual.LINK_WIDTH / globalScale;
+    ctx.lineWidth = GRAPH_CONFIG.visual.LINK_WIDTH;
     ctx.stroke();
-  }, [isDarkMode]);
+    
+    ctx.globalAlpha = 1;
+  }, [isDarkMode, hoveredNode]);
 
   if (!postGraphData || postGraphData.nodes.length === 0) {
     return (
@@ -147,9 +299,11 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
           warmupTicks={GRAPH_CONFIG.physics.warmupTicks}
           linkWidth={GRAPH_CONFIG.visual.LINK_WIDTH}
           linkColor={() => isDarkMode ? GRAPH_COLORS.dark.link : GRAPH_COLORS.light.link}
-          nodeRelSize={GRAPH_CONFIG.visual.POST_NODE_SIZE}
+          nodeRelSize={1} // Use fixed size instead of relative
           d3AlphaDecay={GRAPH_CONFIG.physics.d3AlphaDecay}
           d3VelocityDecay={GRAPH_CONFIG.physics.d3VelocityDecay}
+          onNodeHover={handleNodeHover as any}
+          onBackgroundClick={() => handleNodeHover(null)}
           onNodeDragEnd={(node: any) => {
             node.fx = undefined;
             node.fy = undefined;

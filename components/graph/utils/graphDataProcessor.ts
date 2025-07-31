@@ -36,7 +36,8 @@ export const createPostGraphData = (
     return { nodes: [], links: [] };
   }
 
-  // Create home node
+  // Create home node with favicon
+  const homeImageUrl = '/favicon.ico';
   const homeNode: GraphNode = {
     id: HOME_NODE_ID,
     name: siteConfig.name,
@@ -46,7 +47,19 @@ export const createPostGraphData = (
     color: '#8B5CF6',
     size: GRAPH_CONFIG.visual.HOME_NODE_SIZE,
     val: GRAPH_CONFIG.visual.HOME_NODE_SIZE,
+    imageUrl: homeImageUrl,
   };
+  
+  // Preload home node image
+  if (homeImageUrl) {
+    preloadImage(homeImageUrl).then(img => {
+      homeNode.img = img;
+    }).catch(() => {
+      // Fallback to favicon emoji if image fails to load
+      console.warn('Failed to load home node image');
+    });
+  }
+  
   nodes.push(homeNode);
 
   // Create nodes for all pages
@@ -54,6 +67,8 @@ export const createPostGraphData = (
     if (processedPages.has(pageId)) return;
     if (pageInfo.language !== locale) return;
 
+    const imageUrl = pageInfo.coverImage || pageInfo.image || undefined;
+    
     const node: GraphNode = {
       id: pageId,
       name: pageInfo.title || 'Untitled',
@@ -63,11 +78,21 @@ export const createPostGraphData = (
       size: pageInfo.type === 'Category' 
         ? GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE 
         : GRAPH_CONFIG.visual.POST_NODE_SIZE,
-      imageUrl: pageInfo.image || undefined,
+      imageUrl: imageUrl,
       val: pageInfo.type === 'Category' 
         ? GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE 
         : GRAPH_CONFIG.visual.POST_NODE_SIZE,
     };
+
+    // Preload cover images
+    if (imageUrl) {
+      preloadImage(imageUrl).then(img => {
+        node.img = img;
+      }).catch(() => {
+        // Image failed to load, will use default styling
+        console.warn(`Failed to load image for ${pageInfo.title}: ${imageUrl}`);
+      });
+    }
 
     nodes.push(node);
     processedPages.add(pageId);
