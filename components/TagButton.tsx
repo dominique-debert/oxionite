@@ -40,7 +40,7 @@ export function TagButton({ tag }: TagButtonProps) {
       type="button"
     >
       <span className={styles.tagName}>
-        {tag}
+        # {tag}
         {tagCount && tagCount > 0 && (
           <span className={styles.tagCount}>
             {tagCount}

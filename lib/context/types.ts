@@ -127,6 +127,14 @@ export interface PageUrlOverridesMap {
   [pagePath:string]: string
 }
 
+export interface BreadcrumbItem {
+  title: string;
+  pageId?: string;
+  pageInfo?: PageInfo;
+  href?: string;
+  icon?: React.ReactNode;
+}
+
 export interface PageUrlOverridesInverseMap {
   // maps from a notion page id to the URL path the page should be resolved to
   // (this overrides the built-in URL path generation for these pages)

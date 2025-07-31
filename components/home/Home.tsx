@@ -1,4 +1,5 @@
 import React, { useMemo,useState } from 'react'
+
 import styles from 'styles/components/home.module.css'
 
 import type { PageInfo, PageProps } from '@/lib/context/types'
@@ -9,6 +10,7 @@ import { UnifiedGraphView } from '../graph/UnifiedGraphView'
 import Hero from './Hero'
 import HomeNav from './HomeNav'
 import RecentPosts from './RecentPosts'
+import { TagList } from '../TagList'
 
 export function Home({
   setBackgroundAsset,
@@ -60,6 +62,8 @@ export function Home({
         return <RecentPosts siteMap={siteMap} />
       case 'Graph View':
         return <UnifiedGraphView siteMap={siteMap} viewType="home" />
+      case 'All Tags':
+        return <TagList />
       default:
         return <RecentPosts siteMap={siteMap} />
     }

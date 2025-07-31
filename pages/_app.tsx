@@ -229,10 +229,12 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
             }}
           >
             <TopNav
-              pageProps={pageProps}
-              isMobile={isMobile}
-              isSideNavCollapsed={!showDesktopSideNav}
-              onToggleMobileMenu={toggleMobileMenu}
+              site={siteMap.site}
+              recordMap={recordMap}
+              pageInfo={pageInfo}
+              pathname={router.pathname}
+              isShowingSearch={isShowingSearch}
+              toggleSearch={toggleSearch}
             />
           </div>
         )}
