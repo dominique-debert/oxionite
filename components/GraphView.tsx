@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import { createPortal } from 'react-dom';
+import type { NodeObject, LinkObject } from 'react-force-graph-2d';
+
 import siteConfig from 'site.config';
 import { MdFullscreen, MdFullscreenExit, MdMyLocation, MdHome } from 'react-icons/md';
 import { PiGraphBold } from "react-icons/pi";
 import { FaTags } from 'react-icons/fa';
-import { createPortal } from 'react-dom';
+import type { SiteMap, PageInfo, Block } from '@/lib/types';
+import { mapImageUrl } from '@/lib/map-image-url';
+import { useDarkMode } from '@/lib/use-dark-mode';
+import styles from '@/styles/components/GraphView.module.css';
 
 declare global {
   interface Window {
@@ -15,12 +21,6 @@ declare global {
     closeGraphModal?: () => void;
   }
 }
-import type { NodeObject, LinkObject } from 'react-force-graph-2d';
-
-import type { SiteMap, PageInfo, Block } from '@/lib/types';
-import { mapImageUrl } from '@/lib/map-image-url';
-import { useDarkMode } from '@/lib/use-dark-mode';
-import styles from '@/styles/components/GraphView.module.css';
 
 const ForceGraphWrapper = dynamic(() => import('./ForceGraphWrapper').then(mod => mod.default), {
   ssr: false,
@@ -481,7 +481,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
         fgInstance.zoomToFit(400, padding);
       }
     }
-  }, [fgInstance, graphData.nodes, router.asPath, viewType, dimensions, handleFitToHome]);
+  }, [fgInstance, graphData.nodes, router.asPath, viewType, dimensions, handleFitToHome, isGraphLoaded]);
 
   // Initial load focus - runs when everything is ready
   useEffect(() => {
@@ -542,7 +542,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
             }}
           >
             <PiGraphBold className={styles.viewNavIcon} />
-            Graph View
+            Post View
           </button>
           <button
             className={`${styles.viewNavItem} ${isModal ? ((window.graphView === 'tag_view') ? styles.active : '') : (activeView === 'tag_view' ? styles.active : '')}`}
@@ -856,7 +856,7 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
             onClick={() => setActiveView('post_view')}
           >
             <PiGraphBold className={styles.viewNavIcon} />
-            Graph View
+            Post View
           </button>
           <button
             ref={(el) => { itemRefs.current[1] = el }}

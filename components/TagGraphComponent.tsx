@@ -5,7 +5,7 @@ import { PiGraphBold } from "react-icons/pi"
 import { FaTags } from 'react-icons/fa'
 import { MdFullscreen, MdFullscreenExit, MdMyLocation, MdHome } from 'react-icons/md'
 import type { TagGraphData } from '@/lib/tag-graph'
-import type { GraphMethods } from './ForceGraphWrapper'
+
 import styles from '@/styles/components/GraphView.module.css'
 
 declare global {
@@ -101,7 +101,7 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
   // Handle node click to navigate to tag page
   const handleNodeClick = useCallback((node: any) => {
     if (node?.id) {
-      router.push(`/tag/${encodeURIComponent(node.id)}`)
+      void router.push(`/tag/${encodeURIComponent(node.id)}`)
     }
   }, [router])
 
@@ -111,13 +111,13 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
     
     const targetNode = graphData.nodes.find(node => node.id === currentTag)
     if (targetNode && fgInstance && typeof fgInstance.zoomToFit === 'function') {
-      fgInstance.zoomToFit(1000, 50, (node: any) => node.id === currentTag)
+      void fgInstance.zoomToFit(1000, 50, (node: any) => node.id === currentTag)
     }
   }, [fgInstance, graphData.nodes, currentTag])
 
   const handleFitToHome = useCallback(() => {
     if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
-      fgInstance.zoomToFit(400, 50)
+      void fgInstance.zoomToFit(400, 50)
     }
   }, [fgInstance])
 
@@ -130,15 +130,10 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
           const targetNode = graphData.nodes.find(node => node.id === currentTag)
           if (targetNode) {
             console.log('[TagGraphComponent] Focusing on current tag:', currentTag)
-            // Use zoomToFit with a filter to focus on the specific tag
-            setTimeout(() => {
-              if (fgInstance && typeof fgInstance.zoomToFit === 'function') {
-                fgInstance.zoomToFit(1000, 50, (node: any) => node.id === currentTag)
-              }
-            }, 500) // Delay to allow graph to stabilize
+            fgInstance.zoomToFit(1000, 50, (node: any) => node.id === currentTag)
           } else {
-            // Tag not found, fallback to home
-            console.log('[TagGraphComponent] Tag not found, falling back to home view')
+            console.log('[TagGraphComponent] Current tag not found, fitting to home')
+            fgInstance.zoomToFit(400, 50)
             handleFitToHome()
           }
         } else {
@@ -146,12 +141,12 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
           console.log('[TagGraphComponent] No current tag, using home view')
           handleFitToHome()
         }
-      } catch (error) {
-        console.error('[TagGraphComponent] Initial zoom failed:', error)
+      } catch (err) {
+        console.error('[TagGraphComponent] Initial zoom failed:', err)
         handleFitToHome()
       }
     }
-  }, [isGraphLoaded, fgInstance, graphData.nodes, currentTag])
+  }, [isGraphLoaded, fgInstance, graphData.nodes, currentTag, handleFitToHome])
 
   // Sidebar initial setup
   useEffect(() => {
@@ -299,7 +294,7 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
               }}
             >
               <PiGraphBold className={styles.viewNavIcon} />
-              Graph View
+              Post View
             </button>
             <button
               className={`${styles.viewNavItem} ${isModal ? ((window.graphView === 'tag_view') ? styles.active : '') : (activeView === 'tag_view' ? styles.active : '')}`}
@@ -320,8 +315,8 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
       <div className={styles.buttonContainer}>
         <button 
           onClick={handleFocusCurrentNode} 
-          className={`${styles.button} ${(!currentTag || !graphData.nodes.find(node => node.id === currentTag)) ? styles.disabled : ''}`}
-          disabled={!currentTag || !graphData.nodes.find(node => node.id === currentTag)}
+          className={`${styles.button} ${(!currentTag || !graphData.nodes.some(node => node.id === currentTag)) ? styles.disabled : ''}`}
+          disabled={!currentTag || !graphData.nodes.some(node => node.id === currentTag)}
           aria-label="Focus on current tag"
         >
           <MdMyLocation size={20} />

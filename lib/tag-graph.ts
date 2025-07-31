@@ -79,7 +79,7 @@ export function buildTagGraphData(siteMap: SiteMap): TagGraphData {
   }
 }
 
-export function getTopTags(tagGraphData: TagGraphData, limit: number = 20): Array<[string, number]> {
+export function getTopTags(tagGraphData: TagGraphData, limit = 20): Array<[string, number]> {
   return Object.entries(tagGraphData.tagCounts)
     .sort(([, countA], [, countB]) => countB - countA)
     .slice(0, limit)
