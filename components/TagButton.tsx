@@ -35,18 +35,16 @@ export function TagButton({ tag }: TagButtonProps) {
 
   return (
     <button
-      className={styles.tagButton}
+      className={`${styles.tagButton} ${tagCount && tagCount > 0 ? styles.hasBadge : ''}`}
       onClick={handleClick}
       type="button"
     >
-      <span className={styles.tagName}>
-        # {tag}
+      <div className={styles.tagContent}>
+        <span className={styles.tagName}># {tag}</span>
         {tagCount && tagCount > 0 && (
-          <span className={styles.tagCount}>
-            {tagCount}
-          </span>
+          <span className={styles.tagCount}>{tagCount}</span>
         )}
-      </span>
+      </div>
     </button>
   )
 }
