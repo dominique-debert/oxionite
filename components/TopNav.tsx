@@ -262,11 +262,33 @@ export const TopNav: React.FC<TopNavProps> = ({
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     const { pathname, query, asPath } = router
 
+    // Handle /all-tags page
+    if (pathname === '/all-tags') {
+      return [
+        {
+          title: siteConfig.name,
+          href: '/'
+        },
+        {
+          title: 'All Tags',
+          href: '/all-tags'
+        }
+      ]
+    }
+
     // Handle tag pages
     if (pathname.startsWith('/tag/')) {
       const tag = query.tag as string
       if (tag) {
         return [
+          {
+            title: siteConfig.name,
+            href: '/'
+          },
+          {
+            title: 'All Tags',
+            href: '/all-tags'
+          },
           {
             title: `#${tag}`,
             pageInfo: { pageId: `tag-${tag}`, title: `#${tag}` } as types.PageInfo,
@@ -280,18 +302,6 @@ export const TopNav: React.FC<TopNavProps> = ({
     if (!siteMap || !pageId) return []
     
     const breadcrumbs: BreadcrumbItem[] = []
-    
-    // Handle special pages
-    if (pathname.startsWith('/tag/')) {
-      const tag = query.tag as string
-      if (tag) {
-        return [{
-          title: `#${tag}`,
-          pageInfo: { pageId: `tag-${tag}`, title: `#${tag}` } as types.PageInfo,
-          href: `/tag/${tag}`
-        }]
-      }
-    }
 
     // Build breadcrumbs from navigation tree
     const path = findPagePath(pageId, siteMap.navigationTree || [])
