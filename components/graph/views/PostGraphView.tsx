@@ -6,7 +6,7 @@ import { useDarkMode } from '@/lib/use-dark-mode';
 import { GRAPH_CONFIG, GRAPH_COLORS, HOME_NODE_ID } from '../utils/graphConfig';
 import type { GraphNode } from '../types/graph.types';
 
-const ForceGraphWrapper = dynamic(() => import('../../ForceGraphWrapper'), {
+const ForceGraphWrapper = dynamic(() => import('../ForceGraphWrapper'), {
   ssr: false,
   loading: () => <div>Loading graph...</div>
 });
@@ -137,64 +137,114 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
       cornerRadius = nodeSize / 2; // Make it circular
     }
 
-    // Draw glassmorphism background
-    ctx.fillStyle = colors.bg;
-    ctx.strokeStyle = colors.border;
-    ctx.lineWidth = 1;
+    const W_OUTER = GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
+    const W_INNER = GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
+    // --- 1. Draw Outer Border ---
+    ctx.strokeStyle = colors.nodeOuterBorder;
+    ctx.lineWidth = W_OUTER;
     if (node.type === 'Category') {
-      // Category nodes are rectangular
+      const outerPathX = node.x! - (nodeSize / 2) + (W_OUTER / 2);
+      const outerPathY = node.y! - (nodeSize / 2) + (W_OUTER / 2);
+      const outerPathSize = nodeSize - W_OUTER;
+      const outerPathRadius = cornerRadius - (W_OUTER / 2);
       ctx.beginPath();
-      ctx.roundRect(
-        node.x! - nodeSize / 2,
-        node.y! - nodeSize / 2,
-        nodeSize,
-        nodeSize,
-        cornerRadius
-      );
-      ctx.fill();
+      ctx.roundRect(outerPathX, outerPathY, outerPathSize, outerPathSize, outerPathRadius > 0 ? outerPathRadius : 0);
       ctx.stroke();
     } else {
-      // Home and Post nodes are circular
+      const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
       ctx.beginPath();
-      ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI);
-      ctx.fill();
+      ctx.arc(node.x!, node.y!, outerPathRadius > 0 ? outerPathRadius : 0, 0, 2 * Math.PI);
       ctx.stroke();
+    }
+
+    // --- 2. Draw Inner Border ---
+    ctx.strokeStyle = colors.nodeInnerBorder;
+    ctx.lineWidth = W_INNER;
+    if (node.type === 'Category') {
+      const innerPathX = node.x! - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
+      const innerPathY = node.y! - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
+      const innerPathSize = nodeSize - (2 * W_OUTER) - W_INNER;
+      const innerPathRadius = cornerRadius - W_OUTER - (W_INNER / 2);
+      ctx.beginPath();
+      ctx.roundRect(innerPathX, innerPathY, innerPathSize, innerPathSize, innerPathRadius > 0 ? innerPathRadius : 0);
+      ctx.stroke();
+    } else {
+      const innerPathRadius = (nodeSize / 2) - W_OUTER - (W_INNER / 2);
+      ctx.beginPath();
+      ctx.arc(node.x!, node.y!, innerPathRadius > 0 ? innerPathRadius : 0, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+
+    // --- 3. Draw Node Background ---
+    ctx.fillStyle = colors.node;
+    if (node.type === 'Category') {
+      const fillX = node.x! - (nodeSize / 2) + W_OUTER + W_INNER;
+      const fillY = node.y! - (nodeSize / 2) + W_OUTER + W_INNER;
+      const fillSize = nodeSize - 2 * (W_OUTER + W_INNER);
+      const fillRadius = cornerRadius - W_OUTER - W_INNER;
+      ctx.beginPath();
+      ctx.roundRect(fillX, fillY, fillSize, fillSize, fillRadius > 0 ? fillRadius : 0);
+      ctx.fill();
+    } else {
+      const fillRadius = (nodeSize / 2) - W_OUTER - W_INNER;
+      ctx.beginPath();
+      ctx.arc(node.x!, node.y!, fillRadius > 0 ? fillRadius : 0, 0, 2 * Math.PI);
+      ctx.fill();
     }
 
     // Draw cover image or favicon
     if (node.imageUrl && node.img && node.img.complete) {
       ctx.save();
       
-      // Create clipping path that matches the exact shape
+      // Define the image area, which is the node's fill area
+      const imageAreaOffset = W_OUTER + W_INNER;
+      const imageAreaSize = nodeSize - 2 * imageAreaOffset;
+
+      if (imageAreaSize <= 0) {
+        ctx.restore();
+        return; // Don't draw if the area is non-existent
+      }
+
+      // Create a clipping path that matches the node's fill area
       if (node.type === 'Category') {
+        const imageCornerRadius = cornerRadius - imageAreaOffset;
         ctx.beginPath();
         ctx.roundRect(
-          node.x! - nodeSize / 2,
-          node.y! - nodeSize / 2,
-          nodeSize,
-          nodeSize,
-          cornerRadius
+          node.x! - imageAreaSize / 2,
+          node.y! - imageAreaSize / 2,
+          imageAreaSize,
+          imageAreaSize,
+          imageCornerRadius > 0 ? imageCornerRadius : 0
         );
-      } else {
+      } else { // Post and Home-type pages
+        const imageRadius = imageAreaSize / 2;
         ctx.beginPath();
-        ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI);
+        ctx.arc(node.x!, node.y!, imageRadius, 0, 2 * Math.PI);
       }
       ctx.clip();
-      
-      // Draw image to completely fill the shape
+
+      // Draw the image, scaled to fill the clipped area
       const { drawWidth, drawHeight, offsetX, offsetY } = drawImageFillShape(
         node.img,
-        node.x! - nodeSize / 2,
-        node.y! - nodeSize / 2,
-        nodeSize,
-        nodeSize
+        node.x! - imageAreaSize / 2,
+        node.y! - imageAreaSize / 2,
+        imageAreaSize,
+        imageAreaSize
       );
-      ctx.drawImage(node.img, node.x! + offsetX - nodeSize / 2, node.y! + offsetY - nodeSize / 2, drawWidth, drawHeight);
+      ctx.drawImage(
+        node.img,
+        node.x! + offsetX - imageAreaSize / 2,
+        node.y! + offsetY - imageAreaSize / 2,
+        drawWidth,
+        drawHeight
+      );
       ctx.restore();
     } else if (node.id === HOME_NODE_ID) {
       // Draw favicon for home node
-      const faviconSize = nodeSize * 0.6;
+      const innerOffset = GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
+      const innerSize = nodeSize - 2 * innerOffset;
+      const faviconSize = innerSize * 0.8;
       ctx.fillStyle = colors.text;
       ctx.font = `${faviconSize}px Arial`;
       ctx.textAlign = 'center';
@@ -214,7 +264,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     ctx.textBaseline = 'middle';
     ctx.fillStyle = colors.text;
     
-    const textYOffset = nodeSize / 2 + 8;
+    const textYOffset = nodeSize / 2 + 3;
     ctx.fillText(label, node.x!, node.y! + textYOffset);
     
     ctx.globalAlpha = 1;

@@ -6,7 +6,7 @@ import { useDarkMode } from '@/lib/use-dark-mode';
 import { GRAPH_CONFIG, GRAPH_COLORS } from '../utils/graphConfig';
 import type { GraphNode } from '../types/graph.types';
 
-const ForceGraphWrapper = dynamic(() => import('../../ForceGraphWrapper'), {
+const ForceGraphWrapper = dynamic(() => import('../ForceGraphWrapper'), {
   ssr: false,
   loading: () => <div>Loading tag graph...</div>
 });
@@ -135,16 +135,31 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     const baseSize = GRAPH_CONFIG.visual.TAG_NODE_SIZE;
     const nodeSize = baseSize + (node.count || 0) * 0.5; // Scale by tag count
     
-    // Draw glassmorphism background
-    ctx.fillStyle = isCurrentTag ? colors.highlight : colors.bg;
-    ctx.strokeStyle = isCurrentTag ? colors.highlight : colors.border;
-    ctx.lineWidth = isCurrentTag ? 2 : 1;
+    const W_OUTER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
+    const W_INNER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
-    // Draw circular node
+    // --- 1. Draw Outer Border ---
+    ctx.strokeStyle = isCurrentTag ? colors.highlight : colors.nodeOuterBorder;
+    ctx.lineWidth = W_OUTER;
+    const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
     ctx.beginPath();
-    ctx.arc(node.x!, node.y!, nodeSize / 2, 0, 2 * Math.PI);
-    ctx.fill();
+    ctx.arc(node.x!, node.y!, outerPathRadius > 0 ? outerPathRadius : 0, 0, 2 * Math.PI);
     ctx.stroke();
+
+    // --- 2. Draw Inner Border ---
+    ctx.strokeStyle = isCurrentTag ? colors.highlight : colors.nodeInnerBorder;
+    ctx.lineWidth = W_INNER;
+    const innerPathRadius = (nodeSize / 2) - W_OUTER - (W_INNER / 2);
+    ctx.beginPath();
+    ctx.arc(node.x!, node.y!, innerPathRadius > 0 ? innerPathRadius : 0, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // --- 3. Draw Node Background ---
+    ctx.fillStyle = isCurrentTag ? colors.highlight : colors.node;
+    const fillRadius = (nodeSize / 2) - W_OUTER - W_INNER;
+    ctx.beginPath();
+    ctx.arc(node.x!, node.y!, fillRadius > 0 ? fillRadius : 0, 0, 2 * Math.PI);
+    ctx.fill();
 
     // Draw label with fixed size (scales with zoom)
     const fontSize = GRAPH_CONFIG.visual.TAG_NAME_FONT_SIZE;

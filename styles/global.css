@@ -40,7 +40,7 @@ body.light-mode {
   --hover-border-color: rgba(0, 0, 0, 0.1);
 
   /* Shadow Colors */
-  --shadow-color: rgba(0, 0, 0, 0.1);
+  --shadow-color: rgba(83, 73, 73, 0.1);
   --shadow-bg-color: rgba(0, 0, 0, 0.2);
 }
 

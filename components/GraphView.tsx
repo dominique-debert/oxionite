@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-const ForceGraphWrapper = dynamic(() => import('./ForceGraphWrapper').then(mod => mod.default), {
+const ForceGraphWrapper = dynamic(() => import('./graph/ForceGraphWrapper').then(mod => mod.default), {
   ssr: false,
   loading: () => <div>Loading graph...</div>
 });
