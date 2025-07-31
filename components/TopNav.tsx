@@ -1,8 +1,5 @@
-import { IoCloseCircleOutline } from '@react-icons/all-files/io5/IoCloseCircleOutline'
-import { IoMenuOutline } from '@react-icons/all-files/io5/IoMenuOutline'
-import { IoMoonSharp } from '@react-icons/all-files/io5/IoMoonSharp'
-import { IoSearchOutline } from '@react-icons/all-files/io5/IoSearchOutline'
-import { IoSunnyOutline } from '@react-icons/all-files/io5/IoSunnyOutline'
+import { IoMoonSharp, IoSunnyOutline, IoSearchOutline, IoCloseCircleOutline, IoMenuOutline } from 'react-icons/io5'
+import { FaTags } from 'react-icons/fa'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
@@ -386,28 +383,43 @@ export const TopNav: React.FC<TopNavProps> = ({
           <MobileMenuButton onToggle={onToggleMobileMenu} />
         )}
         <div className="glass-breadcrumb">
-          <Link href="/" className="breadcrumb-item">
-            {siteConfig.name}
-          </Link>
           {!isMobile &&
             breadcrumbs.map((crumb, index) => {
               const isLastCrumb = index === breadcrumbs.length - 1
+              const isFirstCrumb = index === 0
+              const { pathname } = router
+              
               return (
                 <React.Fragment key={index}>
-                  <span className="breadcrumb-separator">›</span>
+                  {!isFirstCrumb && <span className="breadcrumb-separator">›</span>}
                   {isLastCrumb || !crumb.href ? (
-                    <span className="breadcrumb-item is-active">
-                      {crumb.title}
+                    <span className="breadcrumb-item active">
+                      {(index === 1 && pathname.startsWith('/tag/') && crumb.title === 'All Tags') || 
+                       (index === 1 && pathname === '/all-tags' && crumb.title === 'All Tags') ? (
+                        <>
+                          <FaTags style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
+                          {crumb.title}
+                        </>
+                      ) : (
+                        crumb.title
+                      )}
                     </span>
                   ) : (
                     <Link href={crumb.href} className="breadcrumb-item">
-                      {crumb.title}
+                      {(index === 1 && pathname.startsWith('/tag/') && crumb.title === 'All Tags') || 
+                       (index === 1 && pathname === '/all-tags' && crumb.title === 'All Tags') ? (
+                        <>
+                          <FaTags style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
+                          {crumb.title}
+                        </>
+                      ) : (
+                        crumb.title
+                      )}
                     </Link>
                   )}
                 </React.Fragment>
               )
             })}
-            
         </div>
       </div>
 

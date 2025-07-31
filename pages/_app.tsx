@@ -218,7 +218,7 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
             isMobileMenuOpen={isMobileMenuOpen}
           />
         )}
-        {siteMap && (pageProps.pageId || router.pathname.startsWith('/tag/')) && (
+        {siteMap && (pageProps.pageId || router.pathname.startsWith('/tag/') || router.pathname === '/all-tags') && (
           <div
             style={{
               position: 'fixed',
