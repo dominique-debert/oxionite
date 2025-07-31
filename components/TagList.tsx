@@ -15,12 +15,21 @@ export function TagList() {
       return [];
     }
     
-    // Try to get tags for current locale, fallback to English if not available
     const currentLocaleData = siteMap.tagGraphData.locales[locale];
     const fallbackLocaleData = siteMap.tagGraphData.locales['en'];
     
     const tagCounts = currentLocaleData?.tagCounts || fallbackLocaleData?.tagCounts || {};
-    return Object.keys(tagCounts).sort((a, b) => a.localeCompare(b));
+    const tags = Object.keys(tagCounts)
+      .filter(tag => tag && tag.trim() !== '') // Filter out empty strings
+      .sort((a, b) => {
+        // Sort by count (desc) then by name (asc)
+        const countA = tagCounts[a] || 0;
+        const countB = tagCounts[b] || 0;
+        if (countB !== countA) return countB - countA;
+        return a.localeCompare(b);
+      });
+    
+    return tags;
   }, [siteMap, locale]);
 
   if (allTags.length === 0) {

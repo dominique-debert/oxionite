@@ -11,7 +11,7 @@ interface TagButtonProps {
 export function TagButton({ tag }: TagButtonProps) {
   const router = useRouter()
   const { siteMap, pageInfo } = useAppContext()
-  const locale = pageInfo?.language || 'en'
+  const locale = router.locale || pageInfo?.language || 'en'
 
   if (!tag || tag.trim() === '') {
     return null
@@ -20,28 +20,30 @@ export function TagButton({ tag }: TagButtonProps) {
   // Get tag count from siteMap using existing tag graph data
   const getTagCount = () => {
     try {
-      return siteMap?.tagGraphData?.locales?.[locale]?.tagCounts?.[tag] || null
+      const count = siteMap?.tagGraphData?.locales?.[locale]?.tagCounts?.[tag] || 
+                   siteMap?.tagGraphData?.locales?.['en']?.tagCounts?.[tag] || 0;
+      return count;
     } catch (error) {
       console.warn('Error accessing tag count:', error)
-      return null
+      return 0
     }
   }
 
   const tagCount = getTagCount()
-
+  
   const handleClick = () => {
     void router.push(`/tag/${encodeURIComponent(tag)}`)
   }
 
   return (
     <button
-      className={`${styles.tagButton} ${tagCount && tagCount > 0 ? styles.hasBadge : ''}`}
+      className={`${styles.tagButton} ${tagCount > 0 ? styles.hasBadge : ''}`}
       onClick={handleClick}
       type="button"
     >
       <div className={styles.tagContent}>
         <span className={styles.tagName}># {tag}</span>
-        {tagCount && tagCount > 0 && (
+        {tagCount > 0 && (
           <span className={styles.tagCount}>{tagCount}</span>
         )}
       </div>
