@@ -341,7 +341,14 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
           onZoom={handleZoom}
           onZoomEnd={handleZoom}
           onEngineStop={() => actions.setIsGraphLoaded(true)}
-          onReady={setGraphInstance}
+          onReady={(instance) => {
+            setGraphInstance(instance);
+            // Apply physics forces using the instance's built-in methods
+            instance.d3Force('link')
+              .distance(GRAPH_CONFIG.physics.linkDistance)
+              .strength(GRAPH_CONFIG.physics.linkStrength);
+            instance.d3Force('charge').strength(-GRAPH_CONFIG.physics.nodeRepulsion);
+          }}
           backgroundColor="transparent"
           width={graphWidth}
           height={graphHeight}

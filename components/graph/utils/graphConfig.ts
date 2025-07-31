@@ -1,7 +1,7 @@
 export const GRAPH_CONFIG = {
   // Visual styling
   visual: {
-    HOME_NODE_SIZE: 24,
+    HOME_NODE_SIZE: 16,
     CATEGORY_NODE_SIZE: 10,
     POST_NODE_SIZE: 4,
     TAG_NODE_SIZE: 6,
@@ -61,7 +61,7 @@ export const HOME_NODE_ID = '__HOME__';
 export const GRAPH_COLORS = {
   light: {
     link: 'rgba(0, 0, 0, 0.3)',
-    linkHover: 'rgba(0, 0, 0, 0.3)',
+    linkHover: 'rgba(0, 0, 0, 0.1)',
     linkMinor: 'rgba(0, 0, 0, 0.05)',
     text: 'rgb(50, 48, 44)',
     highlight: '#f59e0b',
