@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/router';
 import { useGraphContext, GraphProvider } from './GraphProvider';
 import { MdFullscreen, MdMyLocation, MdHome } from 'react-icons/md';
 import { PiGraphBold } from "react-icons/pi";
@@ -156,8 +157,11 @@ export const UnifiedGraphView: React.FC<UnifiedGraphViewProps> = ({
   className,
   currentTag,
 }) => {
+  const router = useRouter();
+  const locale = router.locale || 'en';
+  
   return (
-    <GraphProvider siteMap={siteMap} locale="en">
+    <GraphProvider siteMap={siteMap} locale={locale}>
       <div className={className}>
         <GraphContent viewType={viewType} currentTag={currentTag} />
       </div>

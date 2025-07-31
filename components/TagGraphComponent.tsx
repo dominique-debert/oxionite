@@ -29,6 +29,7 @@ interface TagGraphComponentProps {
   onViewChange?: (view: 'post_view' | 'tag_view') => void
   isModal?: boolean
   currentTag?: string
+  locale?: string
 }
 
 interface TagNode {
@@ -53,10 +54,11 @@ interface TagLink {
 export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({ 
   tagGraphData, 
   viewType,
-  activeView = 'tag_view',
+  isModal,
+  activeView,
   onViewChange,
-  isModal = false,
-  currentTag
+  currentTag,
+  locale
 }) => {
   const router = useRouter()
   const [fgInstance, setFgInstance] = useState<any>(null)
@@ -68,15 +70,27 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Prepare graph data from tag graph data
+  // Use locale prop or fallback to router locale
+  const { locale: routerLocale = 'en' } = router
+  const currentLocale = locale || routerLocale
+  
+  // Prepare graph data from tag graph data for current locale
   useEffect(() => {
-    console.log('[TagGraphComponent] tagGraphData received:', {
-      tagCounts: Object.keys(tagGraphData.tagCounts).length,
-      tagRelationships: Object.keys(tagGraphData.tagRelationships).length,
-      totalPosts: tagGraphData.totalPosts
+    const localeData = tagGraphData.locales[currentLocale as string]
+    if (!localeData) {
+      console.log('[TagGraphComponent] No locale data for:', currentLocale)
+      setGraphData({ nodes: [], links: [] })
+      return
+    }
+
+    console.log('[TagGraphComponent] localeData received:', {
+      locale: currentLocale,
+      tagCounts: Object.keys(localeData.tagCounts).length,
+      tagRelationships: Object.keys(localeData.tagRelationships).length,
+      totalPosts: localeData.totalPosts
     })
     
-    const nodes: TagNode[] = Object.entries(tagGraphData.tagCounts).map(([tag, count]) => ({
+    const nodes: TagNode[] = Object.entries(localeData.tagCounts).map(([tag, count]) => ({
       id: tag,
       name: tag,
       count,
@@ -84,7 +98,7 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
     }))
 
     const links: TagLink[] = []
-    Object.entries(tagGraphData.tagRelationships).forEach(([tag, relatedTags]) => {
+    Object.entries(localeData.tagRelationships || {}).forEach(([tag, relatedTags]) => {
       relatedTags.forEach(relatedTag => {
         links.push({
           source: tag,
@@ -94,9 +108,9 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
       })
     })
 
-    console.log('[TagGraphComponent] Prepared graph data:', { nodes: nodes.length, links: links.length })
+    console.log('[TagGraphComponent] Prepared graph data:', { nodes: nodes.length, links: links.length, locale: currentLocale })
     setGraphData({ nodes, links })
-  }, [tagGraphData])
+  }, [tagGraphData, currentLocale])
 
   // Handle node click to navigate to tag page
   const handleNodeClick = useCallback((node: any) => {
@@ -265,7 +279,7 @@ export const TagGraphComponent: React.FC<TagGraphComponentProps> = ({
             <FaTags size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
             <div>No tags found</div>
             <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '0.5rem' }}>
-              {Object.keys(tagGraphData.tagCounts).length === 0 ? 'No tag data available' : 'No tags to display'}
+              {Object.keys(tagGraphData.locales[currentLocale as string]?.tagCounts || {}).length === 0 ? 'No tag data available' : 'No tags to display'}
             </div>
           </div>
         </div>

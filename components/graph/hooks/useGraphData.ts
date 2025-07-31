@@ -41,9 +41,12 @@ export const useGraphData = (siteMap?: SiteMap, locale = 'en') => {
       setIsLoading(true);
       setError(null);
       
-      const cacheKey = `tag-graph-${Object.keys(siteMap.tagGraphData.tagCounts).length}`;
+      const localeTagData = siteMap.tagGraphData.locales[locale];
+      if (!localeTagData) return { nodes: [], links: [] };
+      
+      const cacheKey = `tag-graph-${locale}-${Object.keys(localeTagData.tagCounts).length}`;
       const data = getCachedGraphData(cacheKey, () => 
-        createTagGraphData(siteMap.tagGraphData)
+        createTagGraphData(localeTagData)
       );
       
       setIsLoading(false);
@@ -53,7 +56,7 @@ export const useGraphData = (siteMap?: SiteMap, locale = 'en') => {
       setIsLoading(false);
       return { nodes: [], links: [] };
     }
-  }, [siteMap?.tagGraphData]);
+  }, [siteMap?.tagGraphData, locale]);
 
   // Invalidate cache when siteMap changes significantly
   useEffect(() => {

@@ -1,5 +1,5 @@
 import type { SiteMap } from '@/lib/types';
-import type { TagGraphData } from '@/lib/tag-graph';
+import type { LocaleTagGraphData } from '@/lib/tag-graph';
 import type { GraphData, GraphNode, GraphLink } from '../types/graph.types';
 import { HOME_NODE_ID, GRAPH_CONFIG } from './graphConfig';
 import siteConfig from 'site.config';
@@ -94,7 +94,7 @@ export const createPostGraphData = (
   return { nodes, links };
 };
 
-export const createTagGraphData = (tagGraphData: TagGraphData | undefined): GraphData => {
+export const createTagGraphData = (tagGraphData: LocaleTagGraphData | undefined): GraphData => {
   if (!tagGraphData) return { nodes: [], links: [] };
 
   const nodes: GraphNode[] = [];

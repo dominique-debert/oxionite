@@ -728,6 +728,7 @@ function GraphComponent({ siteMap, isModal = false, viewType = 'home', closeModa
 
 export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps) {
   const router = useRouter();
+  const locale = router.locale || 'en';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [activeView, setActiveView] = useState<'post_view' | 'tag_view'>('post_view');
@@ -823,15 +824,25 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
     <div className={styles.modalOverlay} onClick={closeModal}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         {activeView === 'post_view' ? (
-          <GraphComponent siteMap={siteMap} isModal={true} viewType={viewType} closeModal={closeModal} activeView={activeView} onViewChange={setActiveView} />
+          <GraphComponent 
+            key={`post-${locale}`}
+            siteMap={siteMap} 
+            isModal={true} 
+            viewType={viewType} 
+            closeModal={closeModal} 
+            activeView={activeView} 
+            onViewChange={setActiveView} 
+          />
         ) : (
           <TagGraphComponent 
+            key={`tag-${locale}`}
             tagGraphData={siteMap?.tagGraphData || { tagCounts: {}, tagRelationships: {}, tagPages: {}, totalPosts: 0, lastUpdated: Date.now() }}
             viewType="fullscreen"
             isModal={true}
             activeView={activeView}
             onViewChange={setActiveView}
             currentTag={currentTag}
+            locale={locale}
           />
         )}
       </div>
@@ -870,16 +881,24 @@ export default function GraphView({ siteMap, viewType = 'home' }: GraphViewProps
       </div>
       
       {activeView === 'post_view' ? (
-        <GraphComponent siteMap={siteMap} viewType={viewType} activeView={activeView} onViewChange={setActiveView} />
+        <GraphComponent 
+          key={`post-${locale}`}
+          siteMap={siteMap} 
+          viewType={viewType} 
+          activeView={activeView} 
+          onViewChange={setActiveView} 
+        />
       ) : (
         <div className={styles.tagViewContainer}>
           {siteMap?.tagGraphData && (
             <TagGraphComponent 
+              key={`tag-${locale}`}
               tagGraphData={siteMap.tagGraphData} 
               viewType={viewType === 'home' ? 'fullscreen' : 'sidebar'}
               activeView={activeView}
               onViewChange={setActiveView}
               currentTag={currentTag}
+              locale={locale}
             />
           )}
         </div>

@@ -91,10 +91,16 @@ export interface PageInfo {
   detail?: string
 }
 
-export interface TagGraphData {
+export interface LocaleTagGraphData {
   tagCounts: Record<string, number>
   tagRelationships: Record<string, string[]>
   tagPages: Record<string, string[]>
+  totalPosts: number
+  lastUpdated: number
+}
+
+export interface TagGraphData {
+  locales: Record<string, LocaleTagGraphData>
   totalPosts: number
   lastUpdated: number
 }

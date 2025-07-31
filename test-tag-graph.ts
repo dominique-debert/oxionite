@@ -12,28 +12,43 @@ async function testTagGraph() {
     console.log(`Total pages: ${Object.keys(siteMap.pageInfoMap).length}`)
     
     if (siteMap.tagGraphData) {
-      const { tagCounts, tagRelationships, tagPages, totalPosts } = siteMap.tagGraphData
+      console.log('\n=== Tag Graph Data by Locale ===')
+      console.log(`Total posts: ${siteMap.tagGraphData.totalPosts}`)
+      console.log(`Available locales: ${Object.keys(siteMap.tagGraphData.locales).join(', ')}`)
       
-      console.log('\n=== Tag Graph Data ===')
-      console.log(`Total posts with tags: ${totalPosts}`)
-      console.log(`Unique tags: ${Object.keys(tagCounts).length}`)
-      
-      console.log('\n=== Top 10 Tags by Frequency ===')
-      Object.entries(tagCounts)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 10)
-        .forEach(([tag, count], index) => {
-          console.log(`${index + 1}. ${tag}: ${count} occurrences`)
+      // Test English locale by default
+      const enData = siteMap.tagGraphData.locales['en']
+      if (enData) {
+        const { tagCounts, tagRelationships, tagPages, totalPosts } = enData
+        
+        console.log('\n=== English Locale Data ===')
+        console.log(`Total posts with tags: ${totalPosts}`)
+        console.log(`Unique tags: ${Object.keys(tagCounts).length}`)
+        
+        console.log('\n=== Top 10 Tags by Frequency ===')
+        Object.entries(tagCounts)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 10)
+          .forEach(([tag, count], index) => {
+            console.log(`${index + 1}. ${tag}: ${count} occurrences`)
+          })
+        
+        console.log('\n=== Tag Relationships ===')
+        Object.entries(tagRelationships).slice(0, 5).forEach(([tag, related]) => {
+          console.log(`${tag}: ${related.join(', ')}`)
         })
+        
+        console.log('\n=== Tag Pages (first 5 tags) ===')
+        Object.entries(tagPages).slice(0, 5).forEach(([tag, pages]) => {
+          console.log(`${tag}: ${pages.length} pages`)
+        })
+      }
       
-      console.log('\n=== Tag Relationships ===')
-      Object.entries(tagRelationships).slice(0, 5).forEach(([tag, related]) => {
-        console.log(`${tag} → [${related.join(', ')}]`)
-      })
-      
-      console.log('\n=== Sample Tag Pages ===')
-      Object.entries(tagPages).slice(0, 3).forEach(([tag, pages]) => {
-        console.log(`${tag}: ${pages.length} pages`)
+      // Show summary for all locales
+      Object.entries(siteMap.tagGraphData.locales).forEach(([locale, data]) => {
+        console.log(`\n=== ${locale.toUpperCase()} Locale Summary ===`)
+        console.log(`Tags: ${Object.keys(data.tagCounts).length}`)
+        console.log(`Posts: ${data.totalPosts}`)
       })
     } else {
       console.log('No tag graph data found')
