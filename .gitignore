@@ -3,6 +3,7 @@
 # cursor
 *.mdc
 
+
 # dependencies
 /node_modules
 /.pnp
