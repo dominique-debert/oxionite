@@ -96,8 +96,10 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     const isCurrentTag = currentTag === node.id;
     const label = node.name;
     
-    const baseSize = GRAPH_CONFIG.visual.TAG_NODE_SIZE;
-    const nodeSize = baseSize + (node.count || 0) * 0.5;
+    // Use node.val for dynamic sizing, with a base size and scaling factor
+    const baseSize = 2;
+    const scalingFactor = 0.5;
+    const nodeSize = baseSize + (node.val || 1) * scalingFactor;
     
     const W_OUTER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
     const W_INNER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
@@ -201,18 +203,19 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
           }}
           onReady={(instance) => {
             setGraphInstance(instance);
+            const physics = GRAPH_CONFIG.physics.tag;
             instance.d3Force('link')
-              .distance(GRAPH_CONFIG.physics.linkDistance)
-              .strength(GRAPH_CONFIG.physics.linkStrength);
-            instance.d3Force('charge').strength(-GRAPH_CONFIG.physics.nodeRepulsion);
+              .distance(physics.linkDistance)
+              .strength(physics.linkStrength);
+            instance.d3Force('charge').strength(-physics.nodeRepulsion);
           }}
           backgroundColor="transparent"
           width={graphWidth}
           height={graphHeight}
-          cooldownTicks={GRAPH_CONFIG.physics.cooldownTicks}
-          warmupTicks={GRAPH_CONFIG.physics.warmupTicks}
-          d3AlphaDecay={GRAPH_CONFIG.physics.d3AlphaDecay}
-          d3VelocityDecay={GRAPH_CONFIG.physics.d3VelocityDecay}
+          cooldownTicks={GRAPH_CONFIG.physics.tag.cooldownTicks}
+          warmupTicks={GRAPH_CONFIG.physics.tag.warmupTicks}
+          d3AlphaDecay={GRAPH_CONFIG.physics.tag.d3AlphaDecay}
+          d3VelocityDecay={GRAPH_CONFIG.physics.tag.d3VelocityDecay}
           onNodeHover={handleNodeHover as any}
           onBackgroundClick={() => handleNodeHover(null)}
           onNodeDragEnd={(node: any) => {

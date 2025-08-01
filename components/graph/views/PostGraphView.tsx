@@ -257,16 +257,17 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
           }}
           onReady={(instance) => {
             setGraphInstance(instance);
-            instance.d3Force('link').distance(GRAPH_CONFIG.physics.linkDistance).strength(GRAPH_CONFIG.physics.linkStrength);
-            instance.d3Force('charge').strength(-GRAPH_CONFIG.physics.nodeRepulsion);
+            const physics = GRAPH_CONFIG.physics.post;
+            instance.d3Force('link').distance(physics.linkDistance).strength(physics.linkStrength);
+            instance.d3Force('charge').strength(-physics.nodeRepulsion);
           }}
           backgroundColor="transparent"
           width={graphWidth}
           height={graphHeight}
-          cooldownTicks={GRAPH_CONFIG.physics.cooldownTicks}
-          warmupTicks={GRAPH_CONFIG.physics.warmupTicks}
-          d3AlphaDecay={GRAPH_CONFIG.physics.d3AlphaDecay}
-          d3VelocityDecay={GRAPH_CONFIG.physics.d3VelocityDecay}
+          cooldownTicks={GRAPH_CONFIG.physics.post.cooldownTicks}
+          warmupTicks={GRAPH_CONFIG.physics.post.warmupTicks}
+          d3AlphaDecay={GRAPH_CONFIG.physics.post.d3AlphaDecay}
+          d3VelocityDecay={GRAPH_CONFIG.physics.post.d3VelocityDecay}
           onNodeHover={handleNodeHover as any}
           onBackgroundClick={() => handleNodeHover(null)}
           onNodeDragEnd={(node: any) => {

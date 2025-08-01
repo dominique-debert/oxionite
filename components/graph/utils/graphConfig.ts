@@ -4,7 +4,6 @@ export const GRAPH_CONFIG = {
     HOME_NODE_SIZE: 16,
     CATEGORY_NODE_SIZE: 10,
     POST_NODE_SIZE: 4,
-    TAG_NODE_SIZE: 6,
     NODE_INNER_BORDER_WIDTH: 0.3,
     NODE_OUTER_BORDER_WIDTH: 0.3,
     HOME_CORNER_RADIUS: 16,
@@ -30,13 +29,24 @@ export const GRAPH_CONFIG = {
 
   // Physics engine
   physics: {
-    cooldownTicks: 100,
-    warmupTicks: 50,
-    d3AlphaDecay: 0.02,
-    d3VelocityDecay: 0.3,
-    linkDistance: 30,
-    linkStrength: 1,
-    nodeRepulsion: 15,
+    post: {
+      cooldownTicks: 100,
+      warmupTicks: 50,
+      d3AlphaDecay: 0.02,
+      d3VelocityDecay: 0.3,
+      linkDistance: 30,
+      linkStrength: 1,
+      nodeRepulsion: 15,
+    },
+    tag: {
+      cooldownTicks: 100,
+      warmupTicks: 50,
+      d3AlphaDecay: 0.025,
+      d3VelocityDecay: 0.4,
+      linkDistance: 60,
+      linkStrength: 0.7,
+      nodeRepulsion: 50,
+    },
   },
 
   // Performance
@@ -56,6 +66,7 @@ export const GRAPH_CONFIG = {
 } as const;
 
 export const HOME_NODE_ID = '__HOME__';
+export const ALL_TAGS_NODE_ID = '__ALL_TAGS__';
 
 // Color schemes for different themes with glassmorphism
 export const GRAPH_COLORS = {

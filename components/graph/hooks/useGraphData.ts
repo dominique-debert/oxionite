@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'next-i18next';
 import localeConfig from '../../../site.locale.json';
 import type { SiteMap } from '@/lib/context/types';
 import { 
@@ -9,6 +10,7 @@ import {
 } from '../utils/graphDataProcessor';
 
 export const useGraphData = (siteMap?: SiteMap, locale = localeConfig.defaultLocale) => {
+  const { t } = useTranslation('common');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -47,7 +49,7 @@ export const useGraphData = (siteMap?: SiteMap, locale = localeConfig.defaultLoc
       
       const cacheKey = `tag-graph-${locale}-${Object.keys(localeTagData.tagCounts).length}`;
       const data = getCachedGraphData(cacheKey, () => 
-        createTagGraphData(localeTagData)
+        createTagGraphData(localeTagData, t, locale)
       );
       
       setIsLoading(false);

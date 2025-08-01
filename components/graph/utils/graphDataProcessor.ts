@@ -1,7 +1,7 @@
 import type { SiteMap } from '@/lib/context/types';
 import type { LocaleTagGraphData } from '@/lib/context/tag-graph';
 import type { GraphData, GraphNode, GraphLink } from '../types/graph.types';
-import { HOME_NODE_ID, GRAPH_CONFIG } from './graphConfig';
+import { HOME_NODE_ID, ALL_TAGS_NODE_ID, GRAPH_CONFIG } from './graphConfig';
 import siteConfig from 'site.config';
 
 // Image cache for better performance
@@ -119,34 +119,62 @@ export const createPostGraphData = (
   return { nodes, links };
 };
 
-export const createTagGraphData = (tagGraphData: LocaleTagGraphData | undefined): GraphData => {
+export const createTagGraphData = (
+  tagGraphData: LocaleTagGraphData | undefined,
+  t: (key: string) => string,
+  locale: string
+): GraphData => {
   if (!tagGraphData) return { nodes: [], links: [] };
 
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
 
-  // Create tag nodes
-  Object.entries(tagGraphData.tagCounts || {}).forEach(([tag, count]) => {
-    nodes.push({
+  const tagCounts = tagGraphData.tagCounts || {};
+  const totalTags = Object.keys(tagCounts).length;
+
+  // Create the 'All Tags' node
+  const allTagsNode: GraphNode = {
+    id: ALL_TAGS_NODE_ID,
+    name: t('allTags'),
+    type: 'Root' as any,
+    url: `/${locale}/tags`,
+    color: '#059669', // A darker shade for the main node
+    val: totalTags, // Size based on the number of unique tags
+    count: totalTags,
+  };
+  nodes.push(allTagsNode);
+
+  // Create individual tag nodes
+  Object.entries(tagCounts).forEach(([tag, count]) => {
+    const tagNode: GraphNode = {
       id: tag,
       name: tag,
-      url: `/tag/${encodeURIComponent(tag)}`,
+      url: `/${locale}/tag/${encodeURIComponent(tag)}`,
       type: 'Tag' as any,
       color: '#10B981',
-      size: GRAPH_CONFIG.visual.TAG_NODE_SIZE,
+      val: count, // Size based on the number of posts with this tag
       count: count || 0,
-      val: GRAPH_CONFIG.visual.TAG_NODE_SIZE,
+    };
+    nodes.push(tagNode);
+
+    // Link each tag to the 'All Tags' node
+    links.push({
+      source: ALL_TAGS_NODE_ID,
+      target: tag,
+      color: '#D1D5DB',
+      width: 0.5,
     });
   });
 
-  // Create tag relationships
+  // Create links for tag relationships (co-occurrences)
   Object.entries(tagGraphData.tagRelationships || {}).forEach(([tag, relatedTags]) => {
     relatedTags.forEach(relatedTag => {
-      if (nodes.some(n => n.id === tag) && nodes.some(n => n.id === relatedTag)) {
+      // Ensure both nodes exist before creating a link
+      if (tagCounts[tag] && tagCounts[relatedTag]) {
         links.push({
           source: tag,
           target: relatedTag,
-          color: '#D1D5DB',
+          color: '#9CA3AF',
           width: 1,
         });
       }
