@@ -37,8 +37,8 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   const [highlightedLinks, setHighlightedLinks] = useState<Set<any>>(new Set());
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    if (node.id) {
-      void router.push(`/tag/${encodeURIComponent(node.id)}`);
+    if (node.url && node.url !== '#') {
+      void router.push(node.url);
     }
   }, [router]);
 

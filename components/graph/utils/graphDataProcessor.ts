@@ -129,15 +129,22 @@ export const createTagGraphData = (
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
 
-  const tagCounts = tagGraphData.tagCounts || {};
+  // Filter out empty tags before processing
+  const validTagCounts = Object.fromEntries(
+    Object.entries(tagGraphData.tagCounts || {}).filter(([tag]) => tag !== '')
+  );
+  const tagCounts = validTagCounts;
   const totalTags = Object.keys(tagCounts).length;
 
   // Create the 'All Tags' node
+  // Use the translated string for the 'All Tags' node name
+  const allTagsNodeName = t('allTags');
+
   const allTagsNode: GraphNode = {
     id: ALL_TAGS_NODE_ID,
-    name: t('allTags'),
+    name: allTagsNodeName,
     type: 'Root' as any,
-    url: `/${locale}/tags`,
+    url: `/${locale}/all-tags`,
     color: '#059669', // A darker shade for the main node
     val: totalTags, // Size based on the number of unique tags
     count: totalTags,
