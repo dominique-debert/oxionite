@@ -4,9 +4,31 @@ import { getBlockTitle } from 'notion-utils'
 
 import type * as types from '../../lib/context/types'
 import { buildPageUrl } from '../../lib/context/build-page-url'
-import { getPageBreadcrumb } from '../../lib/context/get-page-breadcrumb'
+
 import { getSiteMap } from '../../lib/context/get-site-map'
 import { search } from '../../lib/notion'
+
+const buildBreadcrumbFromSiteMap = (
+  pageId: string,
+  siteMap: types.SiteMap
+): Array<{ title: string }> | null => {
+  const breadcrumbs: Array<{ title: string }> = []
+  let currentPageId: string | undefined = pageId
+
+  while (currentPageId) {
+    const pageInfo: types.PageInfo | undefined = siteMap.pageInfoMap[currentPageId]
+    if (pageInfo) {
+      breadcrumbs.unshift({ title: pageInfo.title })
+    }
+    currentPageId = pageInfo?.parentPageId || undefined
+  }
+
+  if (breadcrumbs.length > 0) {
+    breadcrumbs.unshift({ title: siteMap.site.name })
+  }
+
+  return breadcrumbs.length > 0 ? breadcrumbs : null
+}
 
 export default async function searchNotion(
   req: NextApiRequest,
@@ -42,7 +64,7 @@ export default async function searchNotion(
       const title = getBlockTitle(block, recordMap)
       const url = buildPageUrl(result.id, siteMap)
       const type = pageInfo.type
-      const breadcrumb = getPageBreadcrumb(result.id, siteMap)
+      const breadcrumb = buildBreadcrumbFromSiteMap(result.id, siteMap)
 
       if (!title) {
         return null

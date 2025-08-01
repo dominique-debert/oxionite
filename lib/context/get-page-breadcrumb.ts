@@ -3,13 +3,16 @@ import type * as types from './types'
 export const getPageBreadcrumb = (
   recordMap: types.ExtendedRecordMap | undefined,
   site: types.Site,
-  pageInfo?: types.PageInfo | null
+  pageInfo?: types.PageInfo | null,
+  startPageId?: string
 ): types.BreadcrumbItem[] | null => {
   if (!recordMap || !site) {
     return null
   }
 
-  const block = recordMap.block[Object.keys(recordMap.block)[0]]?.value
+  const blockId = startPageId || Object.keys(recordMap.block)[0]
+  const block = recordMap.block[blockId]?.value
+
   if (!block) {
     return null
   }
@@ -40,5 +43,5 @@ export const getPageBreadcrumb = (
     breadcrumbs[0].title = site.name
   }
 
-  return breadcrumbs.length > 1 ? breadcrumbs : null
+  return breadcrumbs.length > 0 ? breadcrumbs : null
 }

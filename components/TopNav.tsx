@@ -51,7 +51,7 @@ interface SearchResult {
   title: string
   type: string
   url: string
-  breadcrumb: string | null
+  breadcrumb: Array<{ title: string }> | null
 }
 
 interface NotionSearchResponse {
@@ -97,6 +97,7 @@ function SearchButton() {
       })
       if (response.ok) {
         const data = (await response.json()) as NotionSearchResponse
+        console.log('Search results from API:', data.results)
         setResults(data.results || [])
       }
     } catch (err) {
@@ -175,10 +176,12 @@ function SearchButton() {
                       <span className={styles.searchResultTitle}>
                         {result.title}
                       </span>
-                      {result.breadcrumb && (
-                        <span className={styles.searchResultBreadcrumb}>
-                          {result.breadcrumb}
-                        </span>
+                      {result.breadcrumb && result.breadcrumb.length > 0 && (
+                        <div className={styles.searchResultBreadcrumb}>
+                          {result.breadcrumb
+                            .map((crumb) => crumb.title)
+                            .join(' › ')}
+                        </div>
                       )}
                     </div>
                   </a>

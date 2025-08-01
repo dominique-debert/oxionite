@@ -9,8 +9,8 @@
   background-color: var(--default-bg-color);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding-top: 10vh;
+  align-items: flex-start; /* Align to top */
+  padding: 10vh 2rem; /* Equal top/bottom padding for consistent margins at max-height */
   z-index: 5000;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -25,7 +25,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   padding: 1.5rem;
-  margin: 2rem;
+  margin: 0; /* Remove margin, control spacing from overlay */
   box-shadow: 0 8px 32px 0 var(--shadow-color);
   max-height: 80vh;
   display: flex;
@@ -178,11 +178,10 @@
 }
 
 .searchResultBreadcrumb {
-  font-size: 0.8rem;
-  color: var(--secondary-text-color);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.75rem;
+  color: var(--tertiary-text-color);
+  white-space: normal; /* Allow text to wrap */
+  word-break: break-word; /* Break long words if necessary */
 }
 
 .searchResultSnippet {
