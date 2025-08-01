@@ -113,6 +113,17 @@ function SearchButton() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, closeModal])
 
+  // Debounce search query
+  React.useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (mounted) {
+        handleSearch(query)
+      }
+    }, 300) // 300ms debounce delay
+
+    return () => clearTimeout(debounceTimer)
+  }, [query, mounted, handleSearch])
+
   if (!isSearchEnabled) return null
 
   const modalContent = (
@@ -125,10 +136,7 @@ function SearchButton() {
             type="text"
             value={query}
             className={styles.searchInput}
-            onChange={(e) => {
-              setQuery(e.target.value)
-              void handleSearch(e.target.value)
-            }}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder={t.searchPlaceholder}
           />
           {query && (
