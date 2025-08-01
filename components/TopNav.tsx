@@ -105,51 +105,64 @@ export const TopNav: React.FC<TopNavProps> = ({
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     const { pathname, query, asPath } = router
 
-    // Handle /all-tags page
-    if (pathname === '/all-tags') {
-      return [
-        {
-          title: siteConfig.name,
-          href: '/'
-        },
-        {
-          title: 'All Tags',
-          href: '/all-tags'
-        }
-      ]
+
+
+    // Build hierarchical breadcrumbs from navigation tree and current page
+    if (!siteMap) return []
+
+    const breadcrumbs: BreadcrumbItem[] = [
+      {
+        title: siteConfig.name,
+        href: '/'
+      }
+    ]
+
+    // If we're on the root page, just return the base breadcrumb
+    if (pathname === '/') {
+      return breadcrumbs
     }
 
-    // Handle tag pages
-    if (pathname.startsWith('/tag/')) {
-      const tag = query.tag as string
-      if (tag) {
+    if (!pageId) {
+      // Handle /all-tags page
+      if (pathname === '/all-tags') {
         return [
-          {
-            title: siteConfig.name,
-            href: '/'
-          },
+          ...breadcrumbs,
           {
             title: 'All Tags',
             href: '/all-tags'
-          },
-          {
-            title: `#${tag}`,
-            pageInfo: { pageId: `tag-${tag}`, title: `#${tag}` } as types.PageInfo,
-            href: `/tag/${tag}`
           }
         ]
       }
-    }
 
-    // Build hierarchical breadcrumbs from navigation tree and current page
-    if (!siteMap || !pageId) return []
-    
-    const breadcrumbs: BreadcrumbItem[] = []
+      // Handle tag pages
+      if (pathname.startsWith('/tag/')) {
+        const tag = query.tag as string
+        if (tag) {
+          return [
+            ...breadcrumbs,
+            {
+              title: 'All Tags',
+              href: '/all-tags'
+            },
+            {
+              title: `#${tag}`,
+              pageInfo: {
+                pageId: `tag-${tag}`,
+                title: `#${tag}`
+              } as types.PageInfo,
+              href: `/tag/${tag}`
+            }
+          ]
+        }
+      }
+
+      return breadcrumbs
+    }
 
     // Build breadcrumbs from navigation tree
     const path = findPagePath(pageId, siteMap.navigationTree || [])
     if (path && path.length > 0) {
-      return path
+      return [...breadcrumbs, ...path]
     }
 
     // Fallback: Build from URL structure
@@ -157,6 +170,8 @@ export const TopNav: React.FC<TopNavProps> = ({
     const postIndex = pathSegments.indexOf('post')
     
     if (postIndex !== -1) {
+
+
       const postSegments = pathSegments.slice(postIndex + 1)
       let currentPath = '/post'
       let isFirst = true
@@ -229,7 +244,11 @@ export const TopNav: React.FC<TopNavProps> = ({
           <MobileMenuButton onToggle={onToggleMobileMenu} />
         )}
         <div className="glass-breadcrumb">
-          {!isMobile &&
+          {isMobile ? (
+            <Link href="/" className="breadcrumb-item active">
+              {siteConfig.name}
+            </Link>
+          ) : (
             breadcrumbs.map((crumb, index) => {
               const isLastCrumb = index === breadcrumbs.length - 1
               const isFirstCrumb = index === 0
@@ -265,7 +284,8 @@ export const TopNav: React.FC<TopNavProps> = ({
                   )}
                 </React.Fragment>
               )
-            })}
+            })
+          )}
         </div>
       </div>
 
