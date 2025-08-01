@@ -19,8 +19,12 @@ export const useGraphState = () => {
     setState(prev => ({ ...prev, displayType: type }));
   }, []);
 
-  const setIsModalOpen = useCallback((open: boolean) => {
-    setState(prev => ({ ...prev, isModalOpen: open }));
+  const openModal = useCallback(() => {
+    setState(preve => ({ ...preve, isModalOpen: true }));
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setState(prev => ({ ...prev, isModalOpen: false }));
   }, []);
 
   const setZoomStateForView = useCallback((view: GraphViewType, zoom: ZoomState) => {
@@ -58,7 +62,8 @@ export const useGraphState = () => {
     actions: {
       setCurrentView,
       setDisplayType,
-      setIsModalOpen,
+      openModal,
+      closeModal,
       setZoomStateForView,
       setIsGraphLoaded,
       setCurrentTag,

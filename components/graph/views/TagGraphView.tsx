@@ -37,10 +37,14 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   const [highlightedLinks, setHighlightedLinks] = useState<Set<any>>(new Set());
 
   const handleNodeClick = useCallback((node: GraphNode) => {
+    if (state.isModalOpen) {
+      actions.closeModal();
+    }
+
     if (node.url && node.url !== '#') {
       void router.push(node.url);
     }
-  }, [router]);
+  }, [router, actions, state.isModalOpen]);
 
   useEffect(() => {
     if (state.isGraphLoaded && graphRef.current && state.currentView === 'tag_view') {

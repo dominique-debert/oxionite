@@ -44,7 +44,11 @@ const GraphContent: React.FC<{
   }, [actions]);
 
   const handleModalToggle = useCallback(() => {
-    actions.setIsModalOpen(!state.isModalOpen);
+    if (state.isModalOpen) {
+      actions.closeModal();
+    } else {
+      actions.openModal();
+    }
   }, [actions, state.isModalOpen]);
 
   const handleFocusCurrent = useCallback(() => {

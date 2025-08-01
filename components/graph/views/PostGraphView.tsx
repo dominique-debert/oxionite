@@ -35,12 +35,23 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   const [highlightedLinks, setHighlightedLinks] = useState<Set<any>>(new Set());
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    if (node.type === 'Root') {
-      void router.push('/');
-    } else if (node.url && node.url !== '#') {
-      void router.push(node.url);
+    if (state.isModalOpen) {
+      actions.closeModal();
     }
-  }, [router]);
+
+    let path = '';
+    if (node.type === 'Post') {
+      path = `/post/${node.slug}`;
+    } else if (node.type === 'Category') {
+      path = `/category/${node.slug}`;
+    } else if (node.type === 'Root') {
+      path = '/';
+    }
+
+    if (path) {
+      void router.push(path);
+    }
+  }, [router, actions, state.isModalOpen]);
 
   useEffect(() => {
     if (state.isGraphLoaded && graphRef.current && state.currentView === 'post_view') {

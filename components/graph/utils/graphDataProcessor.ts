@@ -72,6 +72,7 @@ export const createPostGraphData = (
     const node: GraphNode = {
       id: pageId,
       name: pageInfo.title || 'Untitled',
+      slug: pageInfo.slug,
       url: pageInfo.slug ? `/${pageInfo.slug}` : '#',
       type: (pageInfo.type || 'Post') as any,
       color: pageInfo.type === 'Category' ? '#8B5CF6' : '#3B82F6',

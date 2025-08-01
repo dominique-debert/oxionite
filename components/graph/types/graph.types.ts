@@ -6,6 +6,7 @@ export interface GraphNode extends NodeObject {
   id: string;
   name: string;
   description?: string;
+  slug?: string;
   type: 'Root' | 'Category' | 'Post' | 'Home' | 'Tag';
   imageUrl?: string;
   page?: Partial<PageInfo>;
@@ -50,7 +51,8 @@ export interface GraphContextValue {
   actions: {
     setCurrentView: (view: GraphViewType) => void;
     setDisplayType: (type: GraphDisplayType) => void;
-    setIsModalOpen: (open: boolean) => void;
+    openModal: () => void;
+    closeModal: () => void;
     setIsGraphLoaded: (loaded: boolean) => void;
     setCurrentTag: (tag?: string) => void;
     
