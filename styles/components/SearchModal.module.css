@@ -45,8 +45,10 @@
 }
 
 .searchResultsCount {
-  padding: 0.5rem 1rem;
   font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
   color: var(--secondary-text-color);
   border-bottom: 1px solid var(--hover-border-color);
 }
@@ -106,7 +108,7 @@
   flex-grow: 1;
 }
 
-.searchResultItem a {
+.searchResultLink {
   display: flex; /* Use flexbox for alignment */
   align-items: flex-start;
   gap: 0.5rem; /* Space between tag and title */
@@ -142,6 +144,11 @@
 
 .pageTypeTagSubPage {
   background-color: #7e859c; /* Gray */
+}
+
+.searchResultItem {
+  border-radius: 16px;
+  transition: background-color 0.2s ease-in-out;
 }
 
 .searchResultItem:last-child {
