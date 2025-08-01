@@ -1,11 +1,12 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import * as React from 'react'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import nextI18NextConfig from '../../next-i18next.config.cjs'
 
 import { CategoryPage } from '@/components/CategoryPage'
 import type * as types from '@/lib/context/types'
 import { getCachedSiteMap } from '@/lib/context/site-cache'
-import { siteConfig } from '@/lib/site-config'
+import siteConfig from '../../site.config'
 
 import { site } from '@/lib/config'
 
@@ -109,7 +110,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
     if (categoryPageInfo.public === false) {
       return {
         props: {
-          ...(await serverSideTranslations(locale, ['common'])),
+          ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
           site: siteMap.site,
           siteMap,
           pageId: categoryPageId,
@@ -121,7 +122,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
 
     return {
       props: {
-        ...(await serverSideTranslations(locale, ['common'])),
+        ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
         site: siteMap.site,
         siteMap,
         pageId: categoryPageId,
@@ -136,3 +137,4 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
     }
   }
 }
+

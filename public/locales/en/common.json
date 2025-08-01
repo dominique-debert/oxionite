@@ -28,5 +28,8 @@
   "postsTaggedWithCount": "Total {{count}} post",
   "postsTaggedWithCount_plural": "Total {{count}} posts",
   "noPostsFound": "No posts found",
-  "noPostsWithTag": "There are no posts with this tag"
+  "noPostsWithTag": "There are no posts with this tag",
+  "error.404.title": "Page Not Found",
+  "error.404.description": "We can't seem to find the page you're looking for.",
+  "error.default.title": "Error"
 }

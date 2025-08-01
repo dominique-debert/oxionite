@@ -3,11 +3,15 @@ import type { PageProps } from '@/lib/context/types'
 import { PageHead } from '@/components/PageHead'
 import { TagList } from '@/components/TagList'
 import styles from '@/styles/components/all-tags.module.css'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import nextI18NextConfig from '../next-i18next.config.cjs'
+import { useTranslation } from 'next-i18next'
 
-export const getStaticProps = async () => {
+export const getStaticProps = async ({ locale }: { locale: string }) => {
   const siteMap = await getSiteMap()
   return {
     props: {
+      ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
       siteMap
     },
     revalidate: 10
@@ -15,6 +19,7 @@ export const getStaticProps = async () => {
 }
 
 export default function AllTagsPage({ siteMap }: PageProps) {
+  const { t } = useTranslation('common')
   if (!siteMap) {
     return null
   }
@@ -22,11 +27,11 @@ export default function AllTagsPage({ siteMap }: PageProps) {
     <>
       <PageHead 
         site={siteMap.site}
-        title="All Tags"
-        description="A complete list of all tags used on the site."
+        title={t('allTags')}
+        description={t('allTags')}
       />
       <div className={styles.container}>
-        <h1 className={styles.title}>All Tags</h1>
+        <h1 className={styles.title}>{t('allTags')}</h1>
         <TagList />
       </div>
     </>

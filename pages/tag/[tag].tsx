@@ -1,12 +1,13 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import * as React from 'react'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import nextI18NextConfig from '../../next-i18next.config.cjs'
 
 import { TagPage } from '@/components/TagPage'
 import type * as types from '@/lib/context/types'
 import { getCachedSiteMap } from '@/lib/context/site-cache'
 import { site } from '@/lib/config'
-import { siteConfig } from '../../site.config'
+import siteConfig from '../../site.config'
 
 export interface TagPageProps {
   site: types.Site
@@ -77,7 +78,7 @@ export const getStaticProps: GetStaticProps<TagPageProps, { tag: string }> = asy
     
     return {
       props: {
-        ...(await serverSideTranslations(locale, ['common'])),
+        ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
         site: siteMap.site,
         siteMap,
         tag: decodedTag,

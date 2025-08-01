@@ -1,5 +1,6 @@
 import * as React from 'react'
 import styles from 'styles/components/common.module.css'
+import { useTranslation } from 'next-i18next'
 
 import type { Site } from '@/lib/context/types'
 
@@ -11,7 +12,8 @@ interface ErrorPageProps {
 }
 
 export function ErrorPage({ statusCode, site }: ErrorPageProps) {
-  const title = statusCode === 404 ? 'Page Not Found' : 'Error'
+  const { t } = useTranslation('common')
+  const title = statusCode === 404 ? t('error.404.title') : t('error.default.title')
 
   return (
     <>
@@ -21,7 +23,7 @@ export function ErrorPage({ statusCode, site }: ErrorPageProps) {
           <h1>{title}</h1>
 
           {statusCode === 404 && (
-            <p>We can't seem to find the page you're looking for.</p>
+            <p>{t('error.404.description')}</p>
           )}
         </main>
       </div>

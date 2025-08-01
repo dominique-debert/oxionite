@@ -1,9 +1,10 @@
 import { useRouter } from 'next/router'
 import * as React from 'react'
+import { useTranslation } from 'next-i18next'
+import siteConfig from '../site.config'
 
 import { PostList } from '@/components/PostList'
 import type * as types from '@/lib/context/types'
-import { useI18n } from '@/lib/i18n'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
 interface CategoryPageProps {
@@ -36,7 +37,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
         description: pageInfo.description,
         date: (pageInfo as any).date, // Fix: Property 'published' does not exist on type 'PageInfo'
         slug: pageInfo.slug,
-        language: pageInfo.language || 'ko',
+        language: pageInfo.language || siteConfig.locale.defaultLocale,
         coverImage: pageInfo.coverImage || undefined,
         coverImageBlock: pageInfo.coverImageBlock || undefined // Pass the block
       })
@@ -62,10 +63,10 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
   const { siteMap, pageId } = pageProps
   const router = useRouter()
   const { isDarkMode: _isDarkMode } = useDarkMode()
+  const { t } = useTranslation('common')
 
   // Get texts for current locale
-  const locale = router.locale || 'ko'
-  const t = useI18n(locale)
+  const locale = router.locale
   
   // Get current page info from navigationTree (same as CategoryTree uses)
   const currentPageInfo = React.useMemo(() => {
@@ -134,9 +135,9 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
     <PostList
       posts={formattedPosts}
       title={currentPageInfo.title}
-      description={t.totalPostsCount(formattedPosts.length)}
-      emptyMessage={t.noPosts}
-      emptyDescription={t.noPostsDescription}
+      description={t('totalPostsCount', { count: formattedPosts.length })}
+      emptyMessage={t('noPosts')}
+      emptyDescription={t('noPostsDescription')}
     />
   )
 }

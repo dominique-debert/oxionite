@@ -25,5 +25,8 @@
   "viewMore": "자세히 보기",
   "postsTaggedWithCount": "총 {{count}}개의 글",
   "noPostsFound": "게시물을 찾을 수 없습니다",
-  "noPostsWithTag": "이 태그와 관련된 게시물이 없습니다"
+  "noPostsWithTag": "이 태그와 관련된 게시물이 없습니다",
+  "error.404.title": "페이지를 찾을 수 없습니다",
+  "error.404.description": "찾고 있는 페이지를 찾을 수 없습니다.",
+  "error.default.title": "오류"
 }

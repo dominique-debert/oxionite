@@ -2,9 +2,11 @@ import { IoChevronDown } from '@react-icons/all-files/io5/IoChevronDown'
 import { useRouter } from 'next/router'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'next-i18next'
 
 export function LanguageSwitcher() {
   const router = useRouter()
+  const { t } = useTranslation('common')
   const [isOpen, setIsOpen] = React.useState(false)
   const buttonRef = React.useRef<HTMLDivElement>(null)
   const menuRef = React.useRef<HTMLDivElement>(null)
@@ -13,12 +15,7 @@ export function LanguageSwitcher() {
 
   const { locale, locales, asPath } = router
 
-  const languageLabels: Record<string, string> = {
-    ko: '한국어',
-    en: 'English'
-  }
-
-  const currentLanguageShort = locale?.toUpperCase() || 'KO'
+  const currentLanguageShort = locale?.toUpperCase() || 'EN'
 
   const handleLanguageChange = (newLocale: string) => {
     void router.push(asPath, asPath, { locale: newLocale })
@@ -67,7 +64,7 @@ export function LanguageSwitcher() {
             key={availableLocale}
             onClick={() => handleLanguageChange(availableLocale)}
           >
-            {languageLabels[availableLocale] || availableLocale}
+            {t(`lang_${availableLocale}`)}
           </a>
         ))}
       </div>,

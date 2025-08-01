@@ -1,9 +1,10 @@
 import * as React from 'react'
 import { useRouter } from 'next/router'
+import { useTranslation } from 'next-i18next'
 
 import { PostList } from '@/components/PostList'
 import type * as types from '@/lib/context/types'
-import { useI18n } from '@/lib/i18n'
+import siteConfig from '../site.config'
 
 export interface TagPageProps {
   pageProps: types.PageProps
@@ -13,8 +14,8 @@ export interface TagPageProps {
 export function TagPage({ pageProps, tag }: TagPageProps) {
   const { siteMap } = pageProps
   const router = useRouter()
-  const locale = router.locale || 'ko'
-  const t = useI18n(locale)
+  const locale = router.locale
+  const { t } = useTranslation('common')
 
   // Get all posts that have this tag
   const postsWithTag = React.useMemo(() => {
@@ -32,7 +33,7 @@ export function TagPage({ pageProps, tag }: TagPageProps) {
       ) || false
       
       // Also filter by current locale to prevent showing posts from all languages
-      const postLanguage = post.language || 'ko'
+      const postLanguage = post.language || siteConfig.locale.defaultLocale
       
       return hasTag && postLanguage === locale
     })
@@ -46,7 +47,7 @@ export function TagPage({ pageProps, tag }: TagPageProps) {
       description: post.description,
       date: post.date,
       slug: post.slug,
-      language: post.language || 'ko',
+      language: post.language || siteConfig.locale.defaultLocale,
       coverImage: post.coverImage || undefined,
       coverImageBlock: post.coverImageBlock || undefined,
     }))
@@ -56,9 +57,9 @@ export function TagPage({ pageProps, tag }: TagPageProps) {
     <PostList
       posts={formattedPosts}
       title={`#${tag}`}
-      description={t.postsTaggedWithCount(postsWithTag.length)}
-      emptyMessage={t.noPostsFound}
-      emptyDescription={`${t.noPostsWithTag} "${tag}"`}
+      description={t('postsTaggedWithCount', { count: postsWithTag.length })}
+      emptyMessage={t('noPostsFound')}
+      emptyDescription={`${t('noPostsWithTag')} "${tag}"`}
     />
   )
 }

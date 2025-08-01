@@ -1,5 +1,6 @@
 import { type GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import nextI18NextConfig from '../next-i18next.config.cjs'
 
 import type { ExtendedRecordMap, PageProps } from '@/lib/context/types'
 import { Home } from '@/components/home/Home'
@@ -41,7 +42,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     return {
       props: {
-        ...(await serverSideTranslations(locale, ['common'])),
+        ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
         site,
         siteMap,
         pageId: 'home', // Add pageId for TopNav to render
@@ -54,7 +55,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     return {
       props: {
-        ...(await serverSideTranslations(locale, ['common'])),
+        ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
         site,
         siteMap: undefined,
         pageId: 'home' // Add pageId for TopNav to render

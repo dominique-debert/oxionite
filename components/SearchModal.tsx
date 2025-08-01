@@ -3,9 +3,9 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import React from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'next-i18next'
 
 import { isSearchEnabled } from '@/lib/config'
-import { useI18n } from '@/lib/i18n'
 import styles from '@/styles/components/SearchModal.module.css'
 import siteConfig from '../site.config'
 
@@ -28,8 +28,7 @@ export function SearchModal() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
-  const router = useRouter()
-  const t = useI18n(router.locale || 'ko')
+  const { t } = useTranslation('common')
 
   React.useEffect(() => {
     setMounted(true)
@@ -99,7 +98,7 @@ export function SearchModal() {
             value={query}
             className={styles.searchInput}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={t.searchPlaceholder}
+            placeholder={t('searchPlaceholder')}
           />
           {query && (
             <button className={styles.clearButton} onClick={() => setQuery('')}>
@@ -109,11 +108,11 @@ export function SearchModal() {
         </div>
         <div className={styles.searchResultsList}>
           {isLoading ? (
-            <div className={styles.loadingSpinner}>{t.searching}</div>
+            <div className={styles.loadingSpinner}>{t('searching')}</div>
           ) : query ? (
             <>
               <div className={styles.searchResultsCount}>
-                {t.resultsCount(results.length)}
+                {t('resultsCount', { count: results.length })}
               </div>
               {results.length > 0 ? (
                 results.map((result) => (
@@ -139,11 +138,11 @@ export function SearchModal() {
                   </div>
                 ))
               ) : (
-                <div className={styles.searchMessage}>{t.noResults}</div>
+                <div className={styles.searchMessage}>{t('noResults')}</div>
               )}
             </>
           ) : (
-            <div className={styles.searchMessage}>{t.typeToSearch}</div>
+            <div className={styles.searchMessage}>{t('typeToSearch')}</div>
           )}
         </div>
       </div>
@@ -152,7 +151,7 @@ export function SearchModal() {
 
   return (
     <>
-      <button className="glass-item" onClick={openModal} title="Search">
+      <button className="glass-item" onClick={openModal} title={t('search')}>
         <IoSearchOutline />
       </button>
       {mounted && isOpen && createPortal(modalContent, document.body)}

@@ -1,4 +1,5 @@
-import { siteConfig } from './lib/site-config'
+import { siteConfig } from './lib/site-config.ts'
+import locale from './site.locale.json'
 
 export default siteConfig({
   // the site's root Notion page (required)
@@ -20,10 +21,7 @@ export default siteConfig({
   description: 'Next Notion Blog Engine Example Description',
 
   // locale configuration (optional)
-  locale: {
-    // list of supported locales
-    localeList: ['en', 'ko', 'zh-cn']
-  },
+  locale: locale,
 
 
   // hero section (optional)

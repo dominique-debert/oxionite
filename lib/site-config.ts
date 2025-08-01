@@ -11,8 +11,9 @@ export interface SiteConfig {
   authors?: Array<{ name: string; avatar_dir: string; home_url: string }>
   description?: string
   language?: string
-  locale?: {
+  locale: {
     localeList: string[]
+    defaultLocale: string
   }
 
   // hero section (optional)

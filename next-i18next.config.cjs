@@ -1,9 +1,9 @@
-const { siteConfig } = require('./lib/site-config')
+const locale = require('./site.locale.json')
 
 module.exports = {
   i18n: {
-    defaultLocale: siteConfig.locale.localeList[0],
-    locales: siteConfig.locale.localeList,
+    defaultLocale: locale.defaultLocale,
+    locales: locale.localeList,
   },
   localePath: typeof window === 'undefined' ? require('path').resolve('./public/locales') : '/locales',
   reloadOnPrerender: process.env.NODE_ENV === 'development',
