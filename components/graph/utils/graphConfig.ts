@@ -77,6 +77,7 @@ export const GRAPH_COLORS = {
     node: 'rgba(255, 255, 255, 0.25)',
     nodeInnerBorder: 'rgba(255, 255, 255, 0.18)',
     nodeOuterBorder: 'rgba(0, 0, 0, 0.1)',
+    nodeHighlightOuterBorder: 'rgba(0, 0, 0, 0.5)',
   },
   dark: {
     link: 'rgba(255, 255, 255, 0.2)',
@@ -85,5 +86,6 @@ export const GRAPH_COLORS = {
     node: 'rgba(0, 0, 0, 0.3)',
     nodeInnerBorder: 'rgba(0, 0, 0, 0.3)',
     nodeOuterBorder: 'rgba(255, 255, 255, 0.1)',
+    nodeHighlightOuterBorder: 'rgba(255, 255, 255, 0.5)',
   },
 };

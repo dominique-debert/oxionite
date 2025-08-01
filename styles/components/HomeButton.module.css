@@ -10,7 +10,6 @@
   transition: background-color 0.2s ease-in-out;
   text-decoration: none;
   padding: 16px;
-  margin-bottom: 16px;
 }
 
 .homeButton:hover {

@@ -65,7 +65,7 @@ export function SideNav({
   const { locale, asPath } = router
   const { isDarkMode } = useDarkMode()
 
-  const navRef = useRef<HTMLElement>(null)
+  const navRef = useRef<HTMLDivElement>(null)
   const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 })
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null)
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({})
@@ -193,19 +193,23 @@ export function SideNav({
 
   return (
     <aside 
-      ref={navRef}
       className={asideClasses}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
     >
       <HomeButton />
-      <div className="sidenav-pill" style={pillStyle} />
-      <CategoryTree 
-        items={filteredNavigationTree}
-        expandedItems={expandedItems}
-        toggleItemExpanded={toggleItemExpanded}
-      />
       <UnifiedGraphView siteMap={siteMap} viewType='sidenav' />
+      <div 
+        ref={navRef} 
+        className={styles.categoryTreeContainer} 
+        onMouseMove={handleMouseMove} 
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="sidenav-pill" style={pillStyle} />
+        <CategoryTree 
+          items={filteredNavigationTree}
+          expandedItems={expandedItems}
+          toggleItemExpanded={toggleItemExpanded}
+        />
+      </div>
     </aside>
   )
 }

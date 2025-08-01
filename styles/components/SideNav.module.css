@@ -5,6 +5,10 @@
   /* The rest is handled by glass-sidenav and mobile/desktop classes */
 }
 
+.categoryTreeContainer {
+  position: relative;
+}
+
 /* Desktop styles */
 .desktop {
   position: fixed;

@@ -125,5 +125,9 @@ export function CategoryTree({
   expandedItems,
   toggleItemExpanded
 }: CategoryTreeProps) {
-  return <RecursiveCategoryTree items={items} level={level} expandedItems={expandedItems} toggleItemExpanded={toggleItemExpanded} />
+    return (
+    <div className={styles.categoryTreeWrapper}>
+      <RecursiveCategoryTree items={items} level={level} expandedItems={expandedItems} toggleItemExpanded={toggleItemExpanded} />
+    </div>
+  )
 }
