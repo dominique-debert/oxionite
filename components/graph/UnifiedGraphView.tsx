@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
+import { useI18n } from '@/lib/i18n';
 import { useGraphContext, GraphProvider } from './GraphProvider';
 import { MdFullscreen, MdMyLocation, MdHome, MdOutlineFullscreenExit } from 'react-icons/md';
 import { PiGraphBold } from "react-icons/pi";
@@ -22,6 +23,8 @@ const GraphContent: React.FC<{
   currentTag?: string;
 }> = ({ viewType, currentTag }) => {
   const { state, actions } = useGraphContext();
+  const { locale } = useRouter()
+  const t = useI18n(locale)
 
   const getDimensions = () => {
     switch (viewType) {
@@ -67,14 +70,14 @@ const GraphContent: React.FC<{
               onClick={() => handleViewChange('post_view')}
             >
               <PiGraphBold className={styles.viewNavIcon} />
-              Post View
+              {t.postView}
             </button>
             <button
               className={`${styles.viewNavItem} ${state.currentView === 'tag_view' ? styles.active : ''}`}
               onClick={() => handleViewChange('tag_view')}
             >
               <FaTags className={styles.viewNavIcon} />
-              Tag View
+              {t.tagView}
             </button>
           </nav>
         </div>
@@ -126,14 +129,14 @@ const GraphContent: React.FC<{
             onClick={() => handleViewChange('post_view')}
           >
             <PiGraphBold className={styles.viewNavIcon} />
-            Post View
+            {t.postView}
           </button>
           <button
             className={`${styles.viewNavItem} ${state.currentView === 'tag_view' ? styles.active : ''}`}
             onClick={() => handleViewChange('tag_view')}
           >
             <FaTags className={styles.viewNavIcon} />
-            Tag View
+            {t.tagView}
           </button>
         </nav>
       </div>

@@ -156,9 +156,6 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
 
   const paddingRight = showTOC ? '32rem' : '0'
 
-  const toggleMobileMenu = React.useCallback(() => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }, [isMobileMenuOpen])
 
   const closeMobileMenu = React.useCallback(() => {
     setIsMobileMenuOpen(false)

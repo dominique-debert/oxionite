@@ -1,6 +1,8 @@
+import { useRouter } from 'next/router'
 import cs from 'classnames'
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import styles from 'styles/components/home.module.css'
+import { useI18n } from '@/lib/i18n'
 
 import type { PageInfo } from '@/lib/context/types'
 
@@ -11,7 +13,9 @@ interface HomeNavProps {
 }
 
 export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavProps) {
-  const navItems = ['Recent Posts', 'Graph View', 'All Tags']
+  const { locale } = useRouter()
+  const t = useI18n(locale)
+  const navItems = [t.recentPosts, t.graphView, t.allTags]
   const allNavItems = [
     ...homePages.map((page) => ({ title: page.title, pageId: page.pageId })),
     ...navItems.map((item) => ({ title: item, pageId: undefined }))

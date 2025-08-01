@@ -13,6 +13,12 @@ export interface LocaleTexts {
   // Navigation
   home: string
   navigation: string
+  recentPosts: string
+  graphView: string
+  allTags: string
+  postView: string
+  tagView: string
+  
   
   // Search
   search: string
@@ -44,6 +50,11 @@ const koTexts: LocaleTexts = {
   // Navigation
   home: '홈',
   navigation: '네비게이션',
+  recentPosts: '최근 게시물',
+  graphView: '그래프 뷰',
+  allTags: '모든 태그',
+  postView: '게시물 뷰',
+  tagView: '태그 뷰',
   
   // Search
   search: '검색',
@@ -75,6 +86,11 @@ const enTexts: LocaleTexts = {
   // Navigation
   home: 'Home',
   navigation: 'Navigation',
+  recentPosts: 'Recent Posts',
+  graphView: 'Graph View',
+  allTags: 'All Tags',
+  postView: 'Post View',
+  tagView: 'Tag View',
   
   // Search
   search: 'Search',
