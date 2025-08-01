@@ -1,11 +1,13 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import * as React from 'react'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
 import { NotionPage } from '@/components/NotionPage'
 import type * as types from '@/lib/context/types'
 import { getCachedSiteMap } from '@/lib/context/site-cache'
 import { getPage } from '@/lib/notion'
 import { site } from '@/lib/config'
+import { siteConfig } from '../../site.config'
 
 export interface NestedPostPageProps {
   site: types.Site
@@ -71,8 +73,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       // Only generate paths for root pages (Post/Home type)
       if (page.type === 'Post' || page.type === 'Home') {
         console.log(`[BUILD] Generating path for root page: ${pageInfo.title} (${pageInfo.slug})`)
-        const locales: ('ko' | 'en')[] = ['ko', 'en']
-        locales.forEach((locale: 'ko' | 'en') => {
+        siteConfig.locale.localeList.forEach((locale) => {
           if (page.language === locale) {
             paths.push({
               params: { slug: [page.slug] },
@@ -102,7 +103,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[] }> = async (context) => {
   const { slug } = context.params!
-  const locale = context.locale || 'ko'
+  const locale = context.locale!
 
   try {
     const siteMap = await getCachedSiteMap()
@@ -175,6 +176,7 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
 
     return {
       props: {
+        ...(await serverSideTranslations(locale, ['common'])),
         site: siteMap.site,
         siteMap,
         pageId: currentPageId,

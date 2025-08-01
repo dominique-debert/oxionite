@@ -28,6 +28,7 @@ import {
 import { mapImageUrl } from '@/lib/map-image-url'
 import { AppContext } from '@/lib/context/app-context'
 import { Noto_Sans_KR } from 'next/font/google'
+import { appWithTranslation } from 'next-i18next'
 
 
 const notoKR = Noto_Sans_KR({
@@ -40,7 +41,7 @@ if (typeof window !== 'undefined') {
   bootstrap()
 }
 
-export default function App({ Component, pageProps }: AppProps<types.PageProps>) {
+function App({ Component, pageProps }: AppProps<types.PageProps>) {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isMobile, setIsMobile] = React.useState(false)
@@ -270,3 +271,5 @@ export default function App({ Component, pageProps }: AppProps<types.PageProps>)
     </AppContext.Provider>
   )
 }
+
+export default appWithTranslation(App)

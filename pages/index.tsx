@@ -1,4 +1,5 @@
 import { type GetStaticProps } from 'next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
 import type { ExtendedRecordMap, PageProps } from '@/lib/context/types'
 import { Home } from '@/components/home/Home'
@@ -7,7 +8,7 @@ import { getPage } from '@/lib/notion'
 import { getCachedSiteMap } from '@/lib/context/site-cache'
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
-  const locale = context.locale || 'ko'
+  const locale = context.locale!
 
   try {
     console.log(`DEBUG: Fetching home page for locale: ${locale}`)
@@ -40,6 +41,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     return {
       props: {
+        ...(await serverSideTranslations(locale, ['common'])),
         site,
         siteMap,
         pageId: 'home', // Add pageId for TopNav to render
@@ -52,6 +54,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     return {
       props: {
+        ...(await serverSideTranslations(locale, ['common'])),
         site,
         siteMap: undefined,
         pageId: 'home' // Add pageId for TopNav to render

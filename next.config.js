@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url'
 
 import bundleAnalyzer from '@next/bundle-analyzer'
 
+import { siteConfig } from './lib/site-config.ts'
+
 const withBundleAnalyzer = bundleAnalyzer({
   // eslint-disable-next-line no-process-env
   enabled: process.env.ANALYZE === 'true'
@@ -11,8 +13,8 @@ const withBundleAnalyzer = bundleAnalyzer({
 export default withBundleAnalyzer({
   staticPageGenerationTimeout: 300,
   i18n: {
-    locales: ['ko', 'en'],
-    defaultLocale: 'ko'
+    locales: siteConfig.locale.localeList,
+    defaultLocale: siteConfig.locale.localeList[0]
   },
   images: {
     remotePatterns: [

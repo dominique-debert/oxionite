@@ -1,10 +1,12 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import * as React from 'react'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
 import { TagPage } from '@/components/TagPage'
 import type * as types from '@/lib/context/types'
 import { getCachedSiteMap } from '@/lib/context/site-cache'
 import { site } from '@/lib/config'
+import { siteConfig } from '../../site.config'
 
 export interface TagPageProps {
   site: types.Site
@@ -40,7 +42,7 @@ export const getStaticPaths: GetStaticPaths = async (): Promise<any> => {
     })
 
     tags.forEach((tag: string) => {
-      ['ko', 'en'].forEach((locale: string) => {
+      siteConfig.locale.localeList.forEach((locale: string) => {
         if (tag && tag.trim()) {
           paths.push({
             params: { tag },
@@ -65,7 +67,7 @@ export const getStaticPaths: GetStaticPaths = async (): Promise<any> => {
 
 export const getStaticProps: GetStaticProps<TagPageProps, { tag: string }> = async (context) => {
   const { tag } = context.params!
-  
+  const locale = context.locale!
 
   try {
     const siteMap = await getCachedSiteMap()
@@ -75,6 +77,7 @@ export const getStaticProps: GetStaticProps<TagPageProps, { tag: string }> = asy
     
     return {
       props: {
+        ...(await serverSideTranslations(locale, ['common'])),
         site: siteMap.site,
         siteMap,
         tag: decodedTag,

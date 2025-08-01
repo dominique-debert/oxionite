@@ -1,9 +1,11 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import * as React from 'react'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
 import { CategoryPage } from '@/components/CategoryPage'
 import type * as types from '@/lib/context/types'
 import { getCachedSiteMap } from '@/lib/context/site-cache'
+import { siteConfig } from '@/lib/site-config'
 
 import { site } from '@/lib/config'
 
@@ -49,7 +51,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       const page = pageInfo as types.PageInfo
       if (page.type === 'Category') {
         // Add paths for each locale
-        ['ko', 'en'].forEach((locale) => {
+        siteConfig.locale.localeList.forEach((locale) => {
           if (page.language === locale) {
             paths.push({
               params: { slug: page.slug },
@@ -77,7 +79,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }> = async (context) => {
   const { slug } = context.params!
-  const locale = context.locale || 'ko'
+  const locale = context.locale!
 
   try {
     const siteMap = await getCachedSiteMap()
@@ -107,6 +109,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
     if (categoryPageInfo.public === false) {
       return {
         props: {
+          ...(await serverSideTranslations(locale, ['common'])),
           site: siteMap.site,
           siteMap,
           pageId: categoryPageId,
@@ -118,6 +121,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
 
     return {
       props: {
+        ...(await serverSideTranslations(locale, ['common'])),
         site: siteMap.site,
         siteMap,
         pageId: categoryPageId,

@@ -19,6 +19,12 @@ export default siteConfig({
   // open graph metadata (optional)
   description: 'Next Notion Blog Engine Example Description',
 
+  // locale configuration (optional)
+  locale: {
+    // list of supported locales
+    localeList: ['en', 'ko', 'zh-cn']
+  },
+
 
   // hero section (optional)
   heroAssets: [
