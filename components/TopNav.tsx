@@ -102,6 +102,8 @@ export const TopNav: React.FC<TopNavProps> = ({
 }) => {
   const router = useRouter()
   const { siteMap, pageId, recordMap } = pageProps
+  const { locale } = router
+  const t = useI18n(locale)
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     const { pathname, query, asPath } = router
 
@@ -128,7 +130,7 @@ export const TopNav: React.FC<TopNavProps> = ({
         return [
           ...breadcrumbs,
           {
-            title: 'All Tags',
+            title: t.allTags,
             href: '/all-tags'
           }
         ]
@@ -141,7 +143,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           return [
             ...breadcrumbs,
             {
-              title: 'All Tags',
+              title: t.allTags,
               href: '/all-tags'
             },
             {
@@ -228,7 +230,7 @@ export const TopNav: React.FC<TopNavProps> = ({
     }
     
     return breadcrumbs
-  }, [siteMap, pageId, router, recordMap])
+  }, [siteMap, pageId, router, recordMap, t.allTags])
 
   return (
     <nav className="glass-nav">
@@ -271,8 +273,8 @@ export const TopNav: React.FC<TopNavProps> = ({
                     </span>
                   ) : (
                     <Link href={crumb.href} className="breadcrumb-item">
-                      {(index === 1 && pathname.startsWith('/tag/') && crumb.title === 'All Tags') || 
-                       (index === 1 && pathname === '/all-tags' && crumb.title === 'All Tags') ? (
+                      {(index === 1 && pathname.startsWith('/tag/') && crumb.title === t.allTags) || 
+                       (index === 1 && pathname === '/all-tags' && crumb.title === t.allTags) ? (
                         <>
                           <FaTags style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
                           {crumb.title}
