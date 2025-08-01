@@ -17,7 +17,6 @@ export const getPageBreadcrumb = (
     return null
   }
 
-  const pageId = block.id
   const breadcrumbs = []
 
   let currentBlock = block

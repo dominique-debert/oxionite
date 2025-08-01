@@ -79,7 +79,7 @@ export function SearchModal() {
   React.useEffect(() => {
     const debounceTimer = setTimeout(() => {
       if (mounted) {
-        handleSearch(query)
+        void handleSearch(query)
       }
     }, 300) // 300ms debounce delay
 

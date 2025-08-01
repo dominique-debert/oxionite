@@ -22,7 +22,6 @@ interface PostHeaderProps {
 export function PostHeader({ 
   block, 
   recordMap, 
-  siteMap,
   isBlogPost,
   isMobile = false,
   variant = 'full' // Default to 'full'
