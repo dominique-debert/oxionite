@@ -3,6 +3,7 @@ import type { GraphContextValue } from './types/graph.types';
 import { useGraphState } from './hooks/useGraphState';
 import { useGraphData } from './hooks/useGraphData';
 import { useGraphInstance } from './hooks/useGraphInstance';
+import localeConfig from '../../site.locale.json';
 import type { SiteMap } from '@/lib/context/types';
 
 const GraphContext = createContext<GraphContextValue | undefined>(undefined);
@@ -16,7 +17,7 @@ export interface GraphProviderProps {
 export const GraphProvider: React.FC<GraphProviderProps> = ({ 
   children, 
   siteMap, 
-  locale = 'en' 
+  locale = localeConfig.defaultLocale 
 }) => {
   const { state, actions: stateActions } = useGraphState();
   const graphData = useGraphData(siteMap, locale);

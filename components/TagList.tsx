@@ -1,5 +1,6 @@
 import React from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/router'
+import localeConfig from '../site.locale.json';
 import { useAppContext } from '@/lib/context/app-context';
 import { TagButton } from './TagButton';
 import Magnet from './react-bits/Magnet';
@@ -8,7 +9,7 @@ import styles from '@/styles/components/TagList.module.css';
 export function TagList() {
   const { siteMap } = useAppContext();
   const router = useRouter();
-  const locale = router.locale || 'en';
+  const locale = router.locale || localeConfig.defaultLocale;
 
   const allTags = React.useMemo(() => {
     if (!siteMap?.tagGraphData?.locales) {
@@ -16,7 +17,7 @@ export function TagList() {
     }
     
     const currentLocaleData = siteMap.tagGraphData.locales[locale];
-    const fallbackLocaleData = siteMap.tagGraphData.locales['en'];
+    const fallbackLocaleData = siteMap.tagGraphData.locales[localeConfig.defaultLocale];
     
     const tagCounts = currentLocaleData?.tagCounts || fallbackLocaleData?.tagCounts || {};
     const tags = Object.keys(tagCounts)

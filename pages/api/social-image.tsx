@@ -13,6 +13,7 @@ import * as libConfig from '@/lib/config'
 import interSemiBoldFont from '@/lib/fonts/inter-semibold'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { notion } from '@/lib/notion-api'
+import localeConfig from '../../site.locale.json'
 import { type PageError,type PageInfo } from '@/lib/context/types'
 
 export const runtime = 'edge'
@@ -251,7 +252,7 @@ export async function getNotionPageInfo({
   //   : undefined
   const date =
     isBlogPost && datePublished
-      ? `${datePublished.toLocaleString('en-US', {
+      ? `${datePublished.toLocaleString(localeConfig.defaultLocale, {
           month: 'long'
         })} ${datePublished.getFullYear()}`
       : undefined

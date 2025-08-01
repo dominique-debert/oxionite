@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import localeConfig from '../../../site.locale.json';
 import type { SiteMap } from '@/lib/context/types';
 import { 
   createPostGraphData, 
@@ -7,7 +8,7 @@ import {
   invalidateDataCache 
 } from '../utils/graphDataProcessor';
 
-export const useGraphData = (siteMap?: SiteMap, locale = 'en') => {
+export const useGraphData = (siteMap?: SiteMap, locale = localeConfig.defaultLocale) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 

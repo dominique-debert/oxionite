@@ -8,7 +8,7 @@ import React from 'react'
 
 import type * as types from '@/lib/context/types'
 import { isSearchEnabled } from '@/lib/config'
-import { useI18n } from '@/lib/i18n'
+import { useTranslation } from 'next-i18next'
 
 import { useDarkMode } from '@/lib/use-dark-mode'
 import { getBlockTitle } from 'notion-utils'
@@ -103,7 +103,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   const router = useRouter()
   const { siteMap, pageId, recordMap } = pageProps
   const { locale } = router
-  const t = useI18n(locale)
+  const { t } = useTranslation('common')
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     const { pathname, query, asPath } = router
 
@@ -130,7 +130,7 @@ export const TopNav: React.FC<TopNavProps> = ({
         return [
           ...breadcrumbs,
           {
-            title: t.allTags,
+            title: t('allTags'),
             href: '/all-tags'
           }
         ]
@@ -143,7 +143,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           return [
             ...breadcrumbs,
             {
-              title: t.allTags,
+              title: t('allTags'),
               href: '/all-tags'
             },
             {
@@ -230,7 +230,7 @@ export const TopNav: React.FC<TopNavProps> = ({
     }
     
     return breadcrumbs
-  }, [siteMap, pageId, router, recordMap, t.allTags])
+  }, [siteMap, pageId, router, recordMap, t])
 
   return (
     <nav className="glass-nav">
@@ -273,8 +273,8 @@ export const TopNav: React.FC<TopNavProps> = ({
                     </span>
                   ) : (
                     <Link href={crumb.href} className="breadcrumb-item">
-                      {(index === 1 && pathname.startsWith('/tag/') && crumb.title === t.allTags) || 
-                       (index === 1 && pathname === '/all-tags' && crumb.title === t.allTags) ? (
+                      {(index === 1 && pathname.startsWith('/tag/') && crumb.title === t('allTags')) || 
+                       (index === 1 && pathname === '/all-tags' && crumb.title === t('allTags')) ? (
                         <>
                           <FaTags style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
                           {crumb.title}

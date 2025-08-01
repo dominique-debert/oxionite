@@ -2,8 +2,10 @@ import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import siteConfig from 'site.config'
 import styles from 'styles/components/home.module.css'
+import { useWindowSize } from 'react-use'
+import localeConfig from '../../site.locale.json'
 import { FaArrowRight } from 'react-icons/fa'
-import { useI18n } from '@/lib/i18n'
+import { useTranslation } from 'next-i18next'
 import VariableProximity from '../react-bits/VariableProximity'
 import Magnet from '../react-bits/Magnet'
 
@@ -17,7 +19,7 @@ interface HeroProps {
 
 export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps) {
   const { locale } = useRouter()
-  const t = useI18n(locale)
+  const { t } = useTranslation('common')
   const [isVisuallyPaused, setIsVisuallyPaused] = useState(false)
   const [isHeld, setIsHeld] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -347,10 +349,10 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
           style={{ cursor: currentAsset.url ? 'pointer' : 'default' }}
         >
           <div className={styles.heroTextShadow} />
-          {currentAsset.content[locale || 'ko']?.title && (
+          {currentAsset.content[locale || localeConfig.defaultLocale]?.title && (
             <h2 className={styles.heroTitle}>
               <VariableProximity
-                label={currentAsset.content[locale || 'ko'].title}
+                label={currentAsset.content[locale || localeConfig.defaultLocale].title}
                 fromFontVariationSettings="'wght' 600"
                 toFontVariationSettings="'wght' 900"
                 containerRef={heroRef}
@@ -358,10 +360,10 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
               />
             </h2>
           )}
-          {currentAsset.content[locale || 'ko']?.description && (
+          {currentAsset.content[locale || localeConfig.defaultLocale]?.description && (
             <p className={styles.heroDescription}>
               <VariableProximity
-                label={currentAsset.content[locale || 'ko'].description}
+                label={currentAsset.content[locale || localeConfig.defaultLocale].description}
                 fromFontVariationSettings="'wght' 350"
                 toFontVariationSettings="'wght' 900"
                 containerRef={heroRef}
@@ -372,7 +374,7 @@ export default function Hero({ onAssetChange, isPaused, setIsPaused }: HeroProps
           {currentAsset.url && (
             <Magnet magnetStrength={20} style={{ zIndex: 3 }}>
               <div className={styles.heroButton}>
-                {t.viewMore} <FaArrowRight />
+                {t('viewMore')} <FaArrowRight />
               </div>
             </Magnet>
           )}

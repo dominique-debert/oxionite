@@ -1,3 +1,4 @@
+import localeConfig from '../../site.locale.json'
 import type { SiteMap } from './types'
 
 export interface LocaleTagGraphData {
@@ -32,7 +33,7 @@ export function buildTagGraphData(siteMap: SiteMap): TagGraphData {
   const pagesByLocale: Record<string, typeof pageInfos> = {}
   
   for (const pageInfo of pageInfos) {
-    const locale = pageInfo.language || 'en'
+    const locale = pageInfo.language || localeConfig.defaultLocale
     if (!pagesByLocale[locale]) {
       pagesByLocale[locale] = []
     }
@@ -118,7 +119,7 @@ export function buildTagGraphData(siteMap: SiteMap): TagGraphData {
   }
 }
 
-export function getTopTags(tagGraphData: TagGraphData, locale = 'en', limit = 20): Array<[string, number]> {
+export function getTopTags(tagGraphData: TagGraphData, locale = localeConfig.defaultLocale, limit = 20): Array<[string, number]> {
   const localeData = tagGraphData.locales[locale]
   if (!localeData) return []
   
@@ -127,14 +128,14 @@ export function getTopTags(tagGraphData: TagGraphData, locale = 'en', limit = 20
     .slice(0, limit)
 }
 
-export function getRelatedTags(tagGraphData: TagGraphData, tagName: string, locale = 'en'): string[] {
+export function getRelatedTags(tagGraphData: TagGraphData, tagName: string, locale = localeConfig.defaultLocale): string[] {
   const localeData = tagGraphData.locales[locale]
   if (!localeData) return []
   
   return localeData.tagRelationships[tagName] || []
 }
 
-export function getPagesWithTag(tagGraphData: TagGraphData, tagName: string, locale = 'en'): string[] {
+export function getPagesWithTag(tagGraphData: TagGraphData, tagName: string, locale = localeConfig.defaultLocale): string[] {
   const localeData = tagGraphData.locales[locale]
   if (!localeData) return []
   

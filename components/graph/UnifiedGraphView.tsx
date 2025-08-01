@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
-import { useI18n } from '@/lib/i18n';
+import { useTranslation } from 'next-i18next'
+import localeConfig from '../../site.locale.json';
 import { useGraphContext, GraphProvider } from './GraphProvider';
 import { MdFullscreen, MdMyLocation, MdHome, MdOutlineFullscreenExit } from 'react-icons/md';
 import { PiGraphBold } from "react-icons/pi";
@@ -24,7 +25,7 @@ const GraphContent: React.FC<{
 }> = ({ viewType, currentTag }) => {
   const { state, actions } = useGraphContext();
   const { locale } = useRouter()
-  const t = useI18n(locale)
+  const { t } = useTranslation('common')
 
   const getDimensions = () => {
     switch (viewType) {
@@ -70,14 +71,14 @@ const GraphContent: React.FC<{
               onClick={() => handleViewChange('post_view')}
             >
               <PiGraphBold className={styles.viewNavIcon} />
-              {t.postView}
+              {t('postView')}
             </button>
             <button
               className={`${styles.viewNavItem} ${state.currentView === 'tag_view' ? styles.active : ''}`}
               onClick={() => handleViewChange('tag_view')}
             >
               <FaTags className={styles.viewNavIcon} />
-              {t.tagView}
+              {t('tagView')}
             </button>
           </nav>
         </div>
@@ -129,14 +130,14 @@ const GraphContent: React.FC<{
             onClick={() => handleViewChange('post_view')}
           >
             <PiGraphBold className={styles.viewNavIcon} />
-            {t.postView}
+            {t('postView')}
           </button>
           <button
             className={`${styles.viewNavItem} ${state.currentView === 'tag_view' ? styles.active : ''}`}
             onClick={() => handleViewChange('tag_view')}
           >
             <FaTags className={styles.viewNavIcon} />
-            {t.tagView}
+            {t('tagView')}
           </button>
         </nav>
       </div>
@@ -206,7 +207,7 @@ export const UnifiedGraphView: React.FC<UnifiedGraphViewProps> = ({
   currentTag,
 }) => {
   const router = useRouter();
-  const locale = router.locale || 'en';
+  const locale = router.locale || localeConfig.defaultLocale;
   
   return (
     <GraphProvider siteMap={siteMap} locale={locale}>
