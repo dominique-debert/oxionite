@@ -83,60 +83,76 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     actions.saveCurrentZoom();
   }, [actions]);
 
-  const nodeCanvasObject = useCallback((
-    node: GraphNode,
-    ctx: CanvasRenderingContext2D,
-    globalScale: number
-  ) => {
+  const nodeCanvasObject = useCallback((_node: GraphNode, ctx: CanvasRenderingContext2D) => {
+    const node = _node as Required<GraphNode>;
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
-    
-    const isHighlighted = highlightedNodeIds.has(node.id as string);
+    const isHighlighted = highlightedNodeIds.has(node.id);
     ctx.globalAlpha = !hoveredNode || isHighlighted ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
 
     const isCurrentTag = currentTag === node.id;
-    const label = node.name;
-    
-    // Use node.val for dynamic sizing, with a base size and scaling factor
+    const label = node.type === 'Tag' ? `# ${node.name}` : node.name;
+
     const baseSize = 2;
     const scalingFactor = 0.5;
     const nodeSize = baseSize + (node.val || 1) * scalingFactor;
-    
+
     const W_OUTER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
     const W_INNER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
+    // Outer border
     ctx.strokeStyle = isCurrentTag ? colors.highlight : colors.nodeOuterBorder;
     ctx.lineWidth = W_OUTER;
     const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
     ctx.beginPath();
-    ctx.arc(node.x!, node.y!, outerPathRadius > 0 ? outerPathRadius : 0, 0, 2 * Math.PI);
+    ctx.arc(node.x, node.y, outerPathRadius > 0 ? outerPathRadius : 0, 0, 2 * Math.PI);
     ctx.stroke();
 
+    // Inner border
     ctx.strokeStyle = isCurrentTag ? colors.highlight : colors.nodeInnerBorder;
     ctx.lineWidth = W_INNER;
     const innerPathRadius = (nodeSize / 2) - W_OUTER - (W_INNER / 2);
     ctx.beginPath();
-    ctx.arc(node.x!, node.y!, innerPathRadius > 0 ? innerPathRadius : 0, 0, 2 * Math.PI);
+    ctx.arc(node.x, node.y, innerPathRadius > 0 ? innerPathRadius : 0, 0, 2 * Math.PI);
     ctx.stroke();
 
+    // Main fill
     ctx.fillStyle = isCurrentTag ? colors.highlight : colors.node;
     const fillRadius = (nodeSize / 2) - W_OUTER - W_INNER;
     ctx.beginPath();
-    ctx.arc(node.x!, node.y!, fillRadius > 0 ? fillRadius : 0, 0, 2 * Math.PI);
+    ctx.arc(node.x, node.y, fillRadius > 0 ? fillRadius : 0, 0, 2 * Math.PI);
     ctx.fill();
 
-    const fontSize = GRAPH_CONFIG.visual.TAG_NAME_FONT_SIZE;
-    ctx.font = `${fontSize}px sans-serif`;
+    // Draw count inside the node for both 'Tag' and 'Root' types
+    if (node.count) {
+      const maxTextWidth = fillRadius > 0 ? fillRadius * 1.6 : 0;
+      let countFontSize = nodeSize * 0.4;
+      ctx.font = `${countFontSize}px sans-serif`;
+      
+      const countText = node.count.toString();
+      let textMetrics = ctx.measureText(countText);
+
+      if (textMetrics.width > maxTextWidth && maxTextWidth > 0) {
+        countFontSize = countFontSize * (maxTextWidth / textMetrics.width);
+        ctx.font = `${countFontSize}px sans-serif`;
+      }
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = colors.text;
+      // Vertically center the text more accurately by adding a small offset
+      const verticalOffset = fillRadius / 8;
+      ctx.fillText(countText, node.x, node.y + verticalOffset);
+    }
+
+    // Draw label outside the node
+    const labelFontSize = GRAPH_CONFIG.visual.TAG_NAME_FONT_SIZE;
+    ctx.font = `${labelFontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = colors.text;
     
-    const textYOffset = nodeSize / 2 + 3;
-    ctx.fillText(label, node.x!, node.y! + textYOffset);
-    
-    if (node.count && globalScale >= 1.5) {
-      ctx.font = `${fontSize - 1}px sans-serif`;
-      ctx.fillText(`(${node.count})`, node.x!, node.y! + textYOffset + 3);
-    }
+    const textYOffset = nodeSize / 2 + 2; // Adjusted Y offset
+    ctx.fillText(label, node.x, node.y + textYOffset);
     
     ctx.globalAlpha = 1;
   }, [isDarkMode, currentTag, hoveredNode, highlightedNodeIds]);

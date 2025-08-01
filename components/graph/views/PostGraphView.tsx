@@ -203,7 +203,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = colors.text;
-    const textYOffset = nodeSize / 2 + 3;
+    const textYOffset = nodeSize / 2 + 2;
     ctx.fillText(label, node.x!, node.y! + textYOffset);
     
     ctx.globalAlpha = 1;
