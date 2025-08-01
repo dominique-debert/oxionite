@@ -6,7 +6,7 @@ import { useTranslation } from 'next-i18next'
 
 export function LanguageSwitcher() {
   const router = useRouter()
-  const { t } = useTranslation('common')
+  const { t } = useTranslation('languages')
   const [isOpen, setIsOpen] = React.useState(false)
   const buttonRef = React.useRef<HTMLDivElement>(null)
   const menuRef = React.useRef<HTMLDivElement>(null)

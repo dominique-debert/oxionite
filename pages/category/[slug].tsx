@@ -110,7 +110,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
     if (categoryPageInfo.public === false) {
       return {
         props: {
-          ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
+          ...(await serverSideTranslations(locale, ['common', 'languages'], nextI18NextConfig)),
           site: siteMap.site,
           siteMap,
           pageId: categoryPageId,
@@ -122,7 +122,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
 
     return {
       props: {
-        ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
+        ...(await serverSideTranslations(locale, ['common', 'languages'], nextI18NextConfig)),
         site: siteMap.site,
         siteMap,
         pageId: categoryPageId,

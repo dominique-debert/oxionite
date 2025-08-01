@@ -12,7 +12,9 @@
   },
   "type": "module",
   "scripts": {
+    "predev": "node scripts/generate-language-files.mjs",
     "dev": "next dev -H 0.0.0.0",
+    "prebuild": "node scripts/generate-language-files.mjs",
     "build": "next build",
     "start": "next start -H 0.0.0.0",
     "deploy": "vercel deploy",

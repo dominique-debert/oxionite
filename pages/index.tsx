@@ -42,7 +42,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     return {
       props: {
-        ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
+        ...(await serverSideTranslations(locale, ['common', 'languages'], nextI18NextConfig)),
         site,
         siteMap,
         pageId: 'home', // Add pageId for TopNav to render
@@ -55,7 +55,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     return {
       props: {
-        ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
+        ...(await serverSideTranslations(locale, ['common', 'languages'], nextI18NextConfig)),
         site,
         siteMap: undefined,
         pageId: 'home' // Add pageId for TopNav to render

@@ -1,7 +1,4 @@
 {
-  "lang_en": "English",
-  "lang_ko": "한국어",
-  "lang_zh": "简体中文",
   "totalPostsCount": "总共 {{count}} 篇帖子",
   "totalPostsCount_plural": "总共 {{count}} 篇帖子",
   "previousPage": "上一页",

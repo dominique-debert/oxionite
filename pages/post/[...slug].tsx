@@ -177,7 +177,7 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
 
     return {
       props: {
-        ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig)),
+        ...(await serverSideTranslations(locale, ['common', 'languages'], nextI18NextConfig)),
         site: siteMap.site,
         siteMap,
         pageId: currentPageId,
