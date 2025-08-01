@@ -1,6 +1,7 @@
 import React from 'react'
 import { useRouter } from 'next/router'
 import { useAppContext } from '@/lib/context/app-context'
+import Magnet from './react-bits/Magnet';
 
 import styles from '@/styles/components/TagButton.module.css'
 
@@ -35,17 +36,29 @@ export function TagButton({ tag }: TagButtonProps) {
   }
 
   return (
-    <button
-      className={`${styles.tagButton} ${tagCount > 0 ? styles.hasBadge : ''}`}
-      onClick={handleClick}
-      type="button"
+    <Magnet
+      key={tag}
+      padding={3}
+      disabled={false}
+      magnetStrength={3}
+      activeTransition="transform 0.3s ease-out"
+      inactiveTransition="transform 0.5s ease-in-out"
+      wrapperClassName=""
+      innerClassName=""
+      style={{}}
     >
-      <div className={styles.tagContent}>
-        <span className={styles.tagName}># {tag}</span>
-        {tagCount > 0 && (
-          <span className={styles.tagCount}>{tagCount}</span>
-        )}
-      </div>
-    </button>
+      <button
+        className={`${styles.tagButton} ${tagCount > 0 ? styles.hasBadge : ''}`}
+        onClick={handleClick}
+        type="button"
+      >
+        <div className={styles.tagContent}>
+          <span className={styles.tagName}># {tag}</span>
+          {tagCount > 0 && (
+            <span className={styles.tagCount}>{tagCount}</span>
+          )}
+        </div>
+      </button>
+    </Magnet>
   )
 }

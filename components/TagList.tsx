@@ -3,7 +3,6 @@ import { useRouter } from 'next/router'
 import localeConfig from '../site.locale.json';
 import { useAppContext } from '@/lib/context/app-context';
 import { TagButton } from './TagButton';
-import Magnet from './react-bits/Magnet';
 import styles from '@/styles/components/TagList.module.css';
 
 export function TagList() {
@@ -41,19 +40,7 @@ export function TagList() {
     <div className={styles.tagListContainer}>
       {
         allTags.map(tag => (
-          <Magnet
-            key={tag}
-            padding={3}
-            disabled={false}
-            magnetStrength={3}
-            activeTransition="transform 0.3s ease-out"
-            inactiveTransition="transform 0.5s ease-in-out"
-            wrapperClassName=""
-            innerClassName=""
-            style={{}}
-          >
-            <TagButton tag={tag} />
-          </Magnet>
+          <TagButton tag={tag} />
         ))
       }
     </div>
