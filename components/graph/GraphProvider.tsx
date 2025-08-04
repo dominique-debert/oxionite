@@ -48,6 +48,12 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     options?: any;
   } | null>(null);
 
+  // Debug wrapper for continuous focus
+  const setContinuousFocusDebug = useCallback((focus: any) => {
+    console.log(`[GraphProvider] setContinuousFocus called with:`, focus);
+    setContinuousFocus(focus);
+  }, []);
+
   // Create slug-to-id mapping based on specified view type
   const createSlugToIdMapping = useCallback((viewType?: GraphViewType): Map<string, string> => {
     const mapping = new Map<string, string>();
@@ -178,7 +184,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 
                 // Handle continuous focusing
                 if (message.payload?.continuous) {
-                  setContinuousFocus({
+                  setContinuousFocusDebug({
                     type: 'node',
                     target: message.payload.nodeId,
                     options: message.payload.options
@@ -212,7 +218,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   
                   // Handle continuous focusing
                   if (message.payload?.continuous) {
-                    setContinuousFocus({
+                    setContinuousFocusDebug({
                       type: 'slug',
                       target: message.payload.slug,
                       options: message.payload.options
@@ -251,62 +257,62 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     if (continuousFocus && !graphData.isLoading) {
       let retryCount = 0;
       const maxRetries = GRAPH_CONFIG.performance.focusTry;
-      let intervalId: NodeJS.Timeout;
+      const retryInterval = GRAPH_CONFIG.performance.focusFrequency;
       
-      // Check if we can focus immediately
-      const tryFocus = () => {
+      console.log(`[GraphProvider] Starting continuous focus with maxRetries=${maxRetries}, interval=${retryInterval}ms`);
+      console.log(`[GraphProvider] Continuous focus target:`, continuousFocus);
+      
+      // Store current values in refs to prevent stale closures
+      const currentContinuousFocus = continuousFocus;
+      const currentInstanceActions = instanceActions;
+      const currentCreateSlugToIdMapping = createSlugToIdMapping;
+      
+      const startTime = Date.now();
+      
+      const intervalId = setInterval(() => {
         try {
           retryCount++;
-          console.log(`[GraphProvider] Continuous focusing retry ${retryCount}/${maxRetries}:`, continuousFocus);
+          const elapsed = Date.now() - startTime;
+          console.log(`[GraphProvider] Attempt ${retryCount}/${maxRetries} (${elapsed}ms elapsed):`, currentContinuousFocus);
           
           let nodeId: string | undefined;
           
-          if (continuousFocus.type === 'slug') {
-            const slugToIdMapping = createSlugToIdMapping();
-            nodeId = slugToIdMapping.get(continuousFocus.target);
-          } else if (continuousFocus.type === 'node') {
-            nodeId = continuousFocus.target;
+          if (currentContinuousFocus.type === 'slug') {
+            const slugToIdMapping = currentCreateSlugToIdMapping();
+            nodeId = slugToIdMapping.get(currentContinuousFocus.target);
+            console.log(`[GraphProvider] Slug mapping for ${currentContinuousFocus.target}:`, nodeId);
+          } else if (currentContinuousFocus.type === 'node') {
+            nodeId = currentContinuousFocus.target;
           }
           
           if (nodeId) {
-            instanceActions.zoomToNode(nodeId, continuousFocus.options?.duration, continuousFocus.options?.padding);
-            
-            // Successfully focused, clear continuous focus state
-            setContinuousFocus(null);
-            clearInterval(intervalId);
-            return true;
+            console.log(`[GraphProvider] Found node ${nodeId}, attempting zoom...`);
+            currentInstanceActions.zoomToNode(nodeId, currentContinuousFocus.options?.duration, currentContinuousFocus.options?.padding);
+          } else {
+            console.log(`[GraphProvider] Node not found, will retry...`);
           }
           
-          // Stop after max retries
+          // Continue retrying until max retries reached
           if (retryCount >= maxRetries) {
-            console.log(`[GraphProvider] Max retries reached, stopping continuous focus`);
-            setContinuousFocus(null);
+            const totalElapsed = Date.now() - startTime;
+            console.log(`[GraphProvider] Max retries (${maxRetries}) reached after ${totalElapsed}ms, stopping continuous focus`);
+            setContinuousFocusDebug(null);
             clearInterval(intervalId);
-            return true;
           }
-          
-          return false;
         } catch (error) {
           console.warn(`[GraphProvider] Error in continuous focus:`, error);
-          setContinuousFocus(null);
+          setContinuousFocusDebug(null);
           clearInterval(intervalId);
-          return true;
         }
-      };
-      
-      // Try immediately first
-      if (!tryFocus()) {
-        // If not successful, set up interval for retries
-        intervalId = setInterval(tryFocus, GRAPH_CONFIG.performance.focusFrequency);
-      }
+      }, retryInterval);
 
       return () => {
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
+        const totalElapsed = Date.now() - startTime;
+        console.log(`[GraphProvider] Cleaning up continuous focus interval after ${retryCount} attempts (${totalElapsed}ms elapsed)`);
+        clearInterval(intervalId);
       };
     }
-  }, [continuousFocus, graphData.isLoading, instanceActions, createSlugToIdMapping]);
+  }, [continuousFocus, graphData.isLoading]); // Only depend on the trigger conditions
 
   const contextValue: GraphContextValue = {
     state,
