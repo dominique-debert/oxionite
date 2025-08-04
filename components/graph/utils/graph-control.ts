@@ -272,7 +272,12 @@ class GraphControlAPI {
       if (slugs.length === 1) {
         this.focusBySlug(slugs[0], instanceType, options);
       } else {
-        this.focusNodes(slugs, instanceType, options);
+        // Multiple slugs: use focusBySlug with slugs array
+        this.sendMessage({
+          type: 'focusBySlug',
+          instanceType,
+          payload: { slugs, options }
+        });
       }
     }
   }

@@ -189,6 +189,27 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               message.payload?.options?.padding
             );
             break;
+          case 'focusNode':
+            if (graphData.isLoading) {
+              console.log(`[GraphProvider ${instanceType}] Queueing focusNode:`, message.payload?.nodeId);
+              pendingFocusQueue.push({
+                type: 'focusNode',
+                payload: message.payload?.nodeId,
+                options: message.payload?.options,
+                targetView: state.currentView
+              });
+            } else {
+              console.log(`[GraphProvider ${instanceType}] Executing focusNode:`, message.payload?.nodeId);
+              if (message.payload?.nodeId) {
+                instanceActions.zoomToNode(
+                  message.payload.nodeId,
+                  message.payload?.options?.duration,
+                  message.payload?.options?.padding
+                );
+              }
+            }
+            break;
+            
           case 'focusBySlug':
             if (graphData.isLoading) {
               const slugs = message.payload?.slugs || (message.payload?.slug ? [message.payload.slug] : []);
