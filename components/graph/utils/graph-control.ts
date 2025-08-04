@@ -106,36 +106,66 @@ class GraphControlAPI {
     
     let targetView: GraphViewType = 'post_view';
     let focusTarget: FocusTarget | null = null;
+    let currentSegment = '';
 
-    if (segments.length === 0) {
-      // Root path: / - no focus
+    // Smart approach: Look for actual routing patterns
+    // Find the first occurrence of our known route types and use everything after
+    const routeTypes = ['post', 'category', 'tag', 'all-tags'];
+    let startIndex = 0;
+    
+    for (let i = 0; i < segments.length; i++) {
+      if (routeTypes.includes(segments[i])) {
+        startIndex = i;
+        break;
+      }
+    }
+    
+    const relevantSegments = segments.slice(startIndex);
+
+    if (relevantSegments.length === 0) {
+      // Root path: / or /{locale}/ - no focus
       focusTarget = null;
-    } else if (segments[0] === 'post' && segments[1]) {
+      currentSegment = 'home';
+    } else if (relevantSegments[0] === 'post' && relevantSegments[1]) {
       // /post/{slug} or /post/{slug}/{subpage}
       targetView = 'post_view';
-      focusTarget = { type: 'post', id: segments[1] };
-    } else if (segments[0] === 'category' && segments[1]) {
+      focusTarget = { type: 'post', id: relevantSegments[1] };
+      currentSegment = `post/${relevantSegments[1]}`;
+    } else if (relevantSegments[0] === 'category' && relevantSegments[1]) {
       // /category/{slug}
       targetView = 'post_view';
-      focusTarget = { type: 'category', id: segments[1] };
-    } else if (segments[0] === 'tag' && segments[1]) {
+      focusTarget = { type: 'category', id: relevantSegments[1] };
+      currentSegment = `category/${relevantSegments[1]}`;
+    } else if (relevantSegments[0] === 'tag' && relevantSegments[1]) {
       // /tag/{tag}
       targetView = 'tag_view';
-      focusTarget = { type: 'tag', id: segments[1] };
-    } else if (segments[0] === 'all-tags') {
+      focusTarget = { type: 'tag', id: relevantSegments[1] };
+      currentSegment = `tag/${relevantSegments[1]}`;
+    } else if (relevantSegments[0] === 'all-tags') {
       // /all-tags - no focus
       targetView = 'tag_view';
       focusTarget = null;
+      currentSegment = 'all-tags';
     }
+
+    console.log(`[GraphControl] Current segment: ${currentSegment}`);
 
     // Send appropriate messages
-    if (targetView !== this.instanceStates.get(instanceType)?.currentView) {
-      this.changeView(targetView, instanceType);
-    }
-
-    if (focusTarget) {
-      this.focusOnTarget(focusTarget, instanceType);
+    if (focusTarget && focusTarget.id) {
+      const { type, id } = focusTarget;
+      
+      if (type === 'post' || type === 'category') {
+        // Use changeViewAndFocusBySlug for post and category targets
+        this.changeViewAndFocusBySlug(targetView, id, instanceType);
+      } else if (type === 'tag') {
+        // Use changeViewAndFocusNode for tag targets
+        this.changeViewAndFocusNode(targetView, id, instanceType);
+      }
     } else {
+      // No focus target, just change view if needed
+      if (targetView !== this.instanceStates.get(instanceType)?.currentView) {
+        this.changeView(targetView, instanceType);
+      }
       this.fitToHome(instanceType);
     }
   }
