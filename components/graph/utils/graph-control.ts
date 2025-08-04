@@ -5,6 +5,7 @@
  */
 
 import type { GraphViewType } from '../types/graph.types';
+import { GRAPH_CONFIG } from '../utils/graphConfig';
 
 export interface GraphControlMessage {
   type: 'fitToHome' | 'focusNode' | 'focusNodes' | 'changeView' | 'highlightNodes' | 'clearHighlight' | 'focusBySlug';
@@ -30,7 +31,9 @@ export interface GraphControlOptions {
  * Manages communication between external components (routing, UI) and graph instances
  */
 class GraphControlAPI {
-  private listeners: Map<string, ((message: GraphControlMessage) => void)[]> = new Map();
+  private instanceState: Map<string, any> = new Map();
+  private listeners: Map<string, Array<(message: any) => void>> = new Map();
+  private focusIntervals: Map<string, NodeJS.Timeout> = new Map();
   private instanceStates: Map<string, {
     currentView: GraphViewType;
     focusTarget: FocusTarget | null;
@@ -204,26 +207,36 @@ class GraphControlAPI {
   }
 
   /**
-   * Sequential operation: change view and then focus by slug
+   * Sequential operation: change view and then focus by slug with continuous retry
    */
   changeViewAndFocusBySlug(view: GraphViewType, slug: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
     this.changeView(view, instanceType);
     
-    // Use a small delay to ensure view change completes
+    // Let GraphProvider handle the 50 retry attempts internally
     setTimeout(() => {
-      this.focusBySlug(slug, instanceType, options);
+      this.sendMessage({
+        type: 'focusBySlug',
+        instanceType,
+        payload: { slug, options, continuous: true }
+      });
     }, 50);
   }
 
+
+
   /**
-   * Sequential operation: change view and then focus node
+   * Sequential operation: change view and then focus node with continuous retry
    */
   changeViewAndFocusNode(view: GraphViewType, nodeId: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
     this.changeView(view, instanceType);
     
-    // Use a small delay to ensure view change completes
+    // Let GraphProvider handle the 50 retry attempts internally
     setTimeout(() => {
-      this.focusNode(nodeId, instanceType, options);
+      this.sendMessage({
+        type: 'focusNode',
+        instanceType,
+        payload: { nodeId, options, continuous: true }
+      });
     }, 50);
   }
 

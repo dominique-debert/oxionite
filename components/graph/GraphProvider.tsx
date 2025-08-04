@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useCallback, useEffect, useState } from 'react';
 import type { GraphContextValue, GraphViewType } from './types/graph.types';
 import { useGraphState } from './hooks/useGraphState';
 import { useGraphData } from './hooks/useGraphData';
@@ -6,6 +6,7 @@ import { useGraphInstance } from './hooks/useGraphInstance';
 import localeConfig from '../../site.locale.json';
 import type { SiteMap } from '@/lib/context/types';
 import { graphControl } from './utils/graph-control';
+import { GRAPH_CONFIG } from './utils/graphConfig';
 
 const GraphContext = createContext<GraphContextValue | undefined>(undefined);
 
@@ -40,6 +41,39 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     }
   }, [instanceActions, state.zoomState, state.currentView]);
 
+  // Track continuous focus operations
+  const [continuousFocus, setContinuousFocus] = useState<{
+    type: 'slug' | 'node';
+    target: string;
+    options?: any;
+  } | null>(null);
+
+  // Create slug-to-id mapping based on specified view type
+  const createSlugToIdMapping = useCallback((viewType?: GraphViewType): Map<string, string> => {
+    const mapping = new Map<string, string>();
+    const targetView = viewType || state.currentView;
+    
+    console.log(`[GraphProvider] Creating slug mapping for view:`, targetView);
+    
+    if (targetView === 'post_view' && graphData.data.postGraph) {
+      graphData.data.postGraph.nodes.forEach(node => {
+        if (node.slug) {
+          mapping.set(node.slug, node.id);
+        }
+      });
+      console.log(`[GraphProvider] Post view mapping:`, Array.from(mapping.keys()));
+    } else if (targetView === 'tag_view' && graphData.data.tagGraph) {
+      graphData.data.tagGraph.nodes.forEach(node => {
+        if (node.slug) {
+          mapping.set(node.slug, node.id);
+        }
+      });
+      console.log(`[GraphProvider] Tag view mapping:`, Array.from(mapping.keys()));
+    }
+    
+    return mapping;
+  }, [graphData.data.postGraph, graphData.data.tagGraph, state.currentView]);
+
   // Graph control API listener
   useEffect(() => {
     // Determine instance type based on context usage
@@ -54,31 +88,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       targetView?: GraphViewType;
     }> = [];
     
-    // Create slug-to-id mapping based on specified view type
-    const createSlugToIdMapping = (viewType?: GraphViewType): Map<string, string> => {
-      const mapping = new Map<string, string>();
-      const targetView = viewType || state.currentView;
-      
-      console.log(`[GraphProvider ${instanceType}] Creating slug mapping for view:`, targetView);
-      
-      if (targetView === 'post_view' && graphData.data.postGraph) {
-        graphData.data.postGraph.nodes.forEach(node => {
-          if (node.slug) {
-            mapping.set(node.slug, node.id);
-          }
-        });
-        console.log(`[GraphProvider ${instanceType}] Post view mapping:`, Array.from(mapping.keys()));
-      } else if (targetView === 'tag_view' && graphData.data.tagGraph) {
-        graphData.data.tagGraph.nodes.forEach(node => {
-          if (node.slug) {
-            mapping.set(node.slug, node.id);
-          }
-        });
-        console.log(`[GraphProvider ${instanceType}] Tag view mapping:`, Array.from(mapping.keys()));
-      }
-      
-      return mapping;
-    };
+
     
     // Process pending focus operations when data is ready
     const processPendingFocus = () => {
@@ -165,6 +175,15 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   message.payload?.options?.duration,
                   message.payload?.options?.padding
                 );
+                
+                // Handle continuous focusing
+                if (message.payload?.continuous) {
+                  setContinuousFocus({
+                    type: 'node',
+                    target: message.payload.nodeId,
+                    options: message.payload.options
+                  });
+                }
               }
             }
             break;
@@ -190,6 +209,15 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                     message.payload?.options?.duration,
                     message.payload?.options?.padding
                   );
+                  
+                  // Handle continuous focusing
+                  if (message.payload?.continuous) {
+                    setContinuousFocus({
+                      type: 'slug',
+                      target: message.payload.slug,
+                      options: message.payload.options
+                    });
+                  }
                 } else {
                   console.warn(`[GraphProvider ${instanceType}] No node found for slug:`, message.payload.slug);
                   console.log(`[GraphProvider ${instanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
@@ -217,6 +245,68 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       graphControl.removeListener(instanceType, handleControlMessage);
     };
   }, [instanceActions, stateActions, graphData.data.postGraph, graphData.isLoading, state.currentView]);
+
+  // Handle continuous focusing retry
+  useEffect(() => {
+    if (continuousFocus && !graphData.isLoading) {
+      let retryCount = 0;
+      const maxRetries = GRAPH_CONFIG.performance.focusTry;
+      let intervalId: NodeJS.Timeout;
+      
+      // Check if we can focus immediately
+      const tryFocus = () => {
+        try {
+          retryCount++;
+          console.log(`[GraphProvider] Continuous focusing retry ${retryCount}/${maxRetries}:`, continuousFocus);
+          
+          let nodeId: string | undefined;
+          
+          if (continuousFocus.type === 'slug') {
+            const slugToIdMapping = createSlugToIdMapping();
+            nodeId = slugToIdMapping.get(continuousFocus.target);
+          } else if (continuousFocus.type === 'node') {
+            nodeId = continuousFocus.target;
+          }
+          
+          if (nodeId) {
+            instanceActions.zoomToNode(nodeId, continuousFocus.options?.duration, continuousFocus.options?.padding);
+            
+            // Successfully focused, clear continuous focus state
+            setContinuousFocus(null);
+            clearInterval(intervalId);
+            return true;
+          }
+          
+          // Stop after max retries
+          if (retryCount >= maxRetries) {
+            console.log(`[GraphProvider] Max retries reached, stopping continuous focus`);
+            setContinuousFocus(null);
+            clearInterval(intervalId);
+            return true;
+          }
+          
+          return false;
+        } catch (error) {
+          console.warn(`[GraphProvider] Error in continuous focus:`, error);
+          setContinuousFocus(null);
+          clearInterval(intervalId);
+          return true;
+        }
+      };
+      
+      // Try immediately first
+      if (!tryFocus()) {
+        // If not successful, set up interval for retries
+        intervalId = setInterval(tryFocus, GRAPH_CONFIG.performance.focusFrequency);
+      }
+
+      return () => {
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+      };
+    }
+  }, [continuousFocus, graphData.isLoading, instanceActions, createSlugToIdMapping]);
 
   const contextValue: GraphContextValue = {
     state,
