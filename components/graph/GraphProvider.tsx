@@ -164,8 +164,69 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             
           case 'focusNodes':
             console.log(`[GraphProvider ${instanceType}] Processing queued focusNodes:`, operation.payload);
-            // Multi-node zooming is handled directly in the focusNodes case
-            // No action needed here as it will be processed when the queue is executed
+            const queuedNodeIds = operation.payload;
+            if (queuedNodeIds && Array.isArray(queuedNodeIds) && queuedNodeIds.length > 0) {
+                const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
+                if (!currentGraphData || !currentGraphData.nodes) {
+                  console.warn(`[GraphProvider ${instanceType}] No graph data available for queued multi-node focus`);
+                  return;
+                }
+
+                const targetNodes = currentGraphData.nodes.filter((node: any) => queuedNodeIds.includes(node.id));
+
+                if (targetNodes.length === 0) {
+                  console.warn(`[GraphProvider ${instanceType}] No matching nodes found for queued node IDs:`, queuedNodeIds);
+                  return;
+                }
+
+                if (targetNodes.length === 1) {
+                  instanceActions.zoomToNode(
+                    targetNodes[0].id,
+                    operation.options?.duration,
+                    operation.options?.padding
+                  );
+                } else {
+                  const xCoords = targetNodes.map((node: any) => node.x);
+                  const yCoords = targetNodes.map((node: any) => node.y);
+                  const minX = Math.min(...xCoords);
+                  const maxX = Math.max(...xCoords);
+                  const minY = Math.min(...yCoords);
+                  const maxY = Math.max(...yCoords);
+
+                  const centerX = (minX + maxX) / 2;
+                  const centerY = (minY + maxY) / 2;
+
+                  const graphInstance = instance.graphRef.current;
+                  if (!graphInstance) {
+                    console.warn(`[GraphProvider ${instanceType}] Graph instance not available for queued focus`);
+                    return;
+                  }
+
+                  const canvasWidth = graphInstance.width?.() || 800;
+                  const canvasHeight = graphInstance.height?.() || 600;
+                  const padding = operation.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
+                  
+                  const zoomLevel = calculateZoomLevel(
+                    { minX, maxX, minY, maxY },
+                    canvasWidth,
+                    canvasHeight,
+                    padding
+                  );
+
+                  if (typeof graphInstance.centerAt === 'function' && typeof graphInstance.zoom === 'function') {
+                    const duration = operation.options?.duration || 400;
+                    graphInstance.centerAt(centerX, centerY, duration);
+                    graphInstance.zoom(zoomLevel, duration);
+                  } else {
+                    const nodeIdSet = new Set(queuedNodeIds);
+                    graphInstance.zoomToFit(
+                      operation.options?.duration,
+                      operation.options?.padding,
+                      (node: any) => nodeIdSet.has(node.id)
+                    );
+                  }
+                }
+            }
             break;
             
           case 'focusBySlugs':
@@ -206,6 +267,91 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   message.payload?.options?.duration,
                   message.payload?.options?.padding
                 );
+              }
+            }
+            break;
+
+          case 'focusNodes':
+            if (graphData.isLoading) {
+              console.log(`[GraphProvider ${instanceType}] Queueing focusNodes:`, message.payload?.nodeIds);
+              pendingFocusQueue.push({
+                type: 'focusNodes',
+                payload: message.payload?.nodeIds,
+                options: message.payload?.options,
+                targetView: state.currentView
+              });
+            } else {
+              console.log(`[GraphProvider ${instanceType}] Executing focusNodes:`, message.payload?.nodeIds);
+              const nodeIds = message.payload?.nodeIds;
+              if (nodeIds && Array.isArray(nodeIds) && nodeIds.length > 0) {
+                const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
+                if (!currentGraphData || !currentGraphData.nodes) {
+                  console.warn(`[GraphProvider ${instanceType}] No graph data available for multi-node focus`);
+                  return;
+                }
+
+                const targetNodes = currentGraphData.nodes.filter((node: any) => nodeIds.includes(node.id));
+
+                if (targetNodes.length === 0) {
+                  console.warn(`[GraphProvider ${instanceType}] No matching nodes found for provided node IDs:`, nodeIds);
+                  return;
+                }
+
+                if (targetNodes.length === 1) {
+                  instanceActions.zoomToNode(
+                    targetNodes[0].id,
+                    message.payload?.options?.duration,
+                    message.payload?.options?.padding
+                  );
+                } else {
+                  const xCoords = targetNodes.map((node: any) => node.x);
+                  const yCoords = targetNodes.map((node: any) => node.y);
+                  const minX = Math.min(...xCoords);
+                  const maxX = Math.max(...xCoords);
+                  const minY = Math.min(...yCoords);
+                  const maxY = Math.max(...yCoords);
+
+                  const centerX = (minX + maxX) / 2;
+                  const centerY = (minY + maxY) / 2;
+
+                  const graphInstance = instance.graphRef.current;
+                  if (!graphInstance) {
+                    console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
+                    return;
+                  }
+
+                  const canvasWidth = graphInstance.width?.() || 800;
+                  const canvasHeight = graphInstance.height?.() || 600;
+                  const padding = message.payload?.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
+                  
+                  const zoomLevel = calculateZoomLevel(
+                    { minX, maxX, minY, maxY },
+                    canvasWidth,
+                    canvasHeight,
+                    padding
+                  );
+
+                  if (typeof graphInstance.centerAt === 'function' && typeof graphInstance.zoom === 'function') {
+                    const duration = message.payload?.options?.duration || 400;
+                    graphInstance.centerAt(centerX, centerY, duration);
+                    graphInstance.zoom(zoomLevel, duration);
+                  } else {
+                    const nodeIdSet = new Set(nodeIds);
+                    graphInstance.zoomToFit(
+                      message.payload?.options?.duration,
+                      message.payload?.options?.padding,
+                      (node: any) => nodeIdSet.has(node.id)
+                    );
+                  }
+                }
+                
+                if (message.payload?.continuous) {
+                  setContinuousFocusDebug({
+                    type: 'nodes',
+                    target: nodeIds,
+                    options: message.payload.options
+                  });
+                }
               }
             }
             break;
