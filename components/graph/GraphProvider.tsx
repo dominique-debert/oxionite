@@ -5,7 +5,7 @@ import { useGraphData } from './hooks/useGraphData';
 import { useGraphInstance } from './hooks/useGraphInstance';
 import localeConfig from '../../site.locale.json';
 import type { SiteMap } from '@/lib/context/types';
-import { graphControl } from './utils/graph-control';
+import { graphControl, calculateZoomLevel } from './utils/graph-control';
 import { GRAPH_CONFIG } from './utils/graphConfig';
 
 const GraphContext = createContext<GraphContextValue | undefined>(undefined);
@@ -278,10 +278,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   // Calculate center and dimensions
                   const centerX = (minX + maxX) / 2;
                   const centerY = (minY + maxY) / 2;
-                  const width = maxX - minX;
-                  const height = maxY - minY;
 
-                  // Calculate appropriate zoom level based on the bounding box
                   const graphInstance = instance.graphRef.current;
                   if (!graphInstance) {
                     console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
@@ -290,14 +287,14 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
                   const canvasWidth = graphInstance.width?.() || 800;
                   const canvasHeight = graphInstance.height?.() || 600;
+                  const padding = message.payload?.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
                   
-                  const padding = message.payload?.options?.padding || 50;
-                  const effectiveWidth = width + (padding * 2);
-                  const effectiveHeight = height + (padding * 2);
-                  
-                  const zoomX = canvasWidth / effectiveWidth;
-                  const zoomY = canvasHeight / effectiveHeight;
-                  const zoomLevel = Math.min(zoomX, zoomY, 3); // Cap zoom at 3x
+                  const zoomLevel = calculateZoomLevel(
+                    { minX, maxX, minY, maxY },
+                    canvasWidth,
+                    canvasHeight,
+                    padding
+                  );
 
                   // Apply the calculated zoom and center
                   if (typeof graphInstance.centerAt === 'function' && typeof graphInstance.zoom === 'function') {
@@ -313,105 +310,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                       (node: any) => nodeIdSet.has(node.id)
                     );
                   }
-                }
-                
-                // Handle continuous focusing
-                if (message.payload?.continuous && slugs.length === 1) {
-                  setContinuousFocusDebug({
-                    type: 'slug',
-                    target: slugs[0],
-                    options: message.payload.options
-                  });
-                }
-              }
-            }
-            break;
-          case 'focusNodes':
-            if (graphData.isLoading) {
-              console.log(`[GraphProvider ${instanceType}] Queueing focusNodes:`, message.payload?.nodeIds);
-              pendingFocusQueue.push({
-                type: 'focusNodes',
-                payload: message.payload?.nodeIds,
-                options: message.payload?.options,
-                targetView: state.currentView
-              });
-            } else {
-              console.log(`[GraphProvider ${instanceType}] Executing focusNodes:`, message.payload?.nodeIds);
-              if (message.payload?.nodeIds && Array.isArray(message.payload.nodeIds)) {
-                const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
-                
-                if (!currentGraphData || !currentGraphData.nodes) {
-                  console.warn(`[GraphProvider ${instanceType}] No graph data available for focusNodes`);
-                  return;
-                }
-
-                // Find the actual nodes from the provided node IDs
-                const targetNodes = currentGraphData.nodes.filter((node: any) => 
-                  message.payload.nodeIds.includes(node.id)
-                );
-
-                if (targetNodes.length === 0) {
-                  console.warn(`[GraphProvider ${instanceType}] No matching nodes found for provided node IDs:`, message.payload.nodeIds);
-                  return;
-                }
-
-                if (targetNodes.length === 1) {
-                  // Single node: use existing zoomToNode behavior
-                  instanceActions.zoomToNode(
-                    targetNodes[0].id,
-                    message.payload?.options?.duration,
-                    message.payload?.options?.padding
-                  );
-                  return;
-                }
-
-                // Multiple nodes: calculate bounding box
-                const xCoords = targetNodes.map((node: any) => node.x);
-                const yCoords = targetNodes.map((node: any) => node.y);
-                
-                const minX = Math.min(...xCoords);
-                const maxX = Math.max(...xCoords);
-                const minY = Math.min(...yCoords);
-                const maxY = Math.max(...yCoords);
-
-                // Calculate center and dimensions
-                const centerX = (minX + maxX) / 2;
-                const centerY = (minY + maxY) / 2;
-                const width = maxX - minX;
-                const height = maxY - minY;
-
-                // Calculate appropriate zoom level based on the bounding box
-                const graphInstance = instance.graphRef.current;
-                if (!graphInstance) {
-                  console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
-                  return;
-                }
-
-                const canvasWidth = graphInstance.width?.() || 800;
-                const canvasHeight = graphInstance.height?.() || 600;
-                
-                const padding = message.payload?.options?.padding || 50;
-                const effectiveWidth = width + (padding * 2);
-                const effectiveHeight = height + (padding * 2);
-                
-                const zoomX = canvasWidth / effectiveWidth;
-                const zoomY = canvasHeight / effectiveHeight;
-                const zoomLevel = Math.min(zoomX, zoomY, 3); // Cap zoom at 3x
-
-                // Apply the calculated zoom and center
-                if (typeof graphInstance.centerAt === 'function' && typeof graphInstance.zoom === 'function') {
-                  const duration = message.payload?.options?.duration || 400;
-                  graphInstance.centerAt(centerX, centerY, duration);
-                  graphInstance.zoom(zoomLevel, duration);
-                } else {
-                  // Fallback to zoomToFit with filter
-                  const nodeIdSet = new Set(message.payload.nodeIds);
-                  graphInstance.zoomToFit(
-                    message.payload?.options?.duration,
-                    message.payload?.options?.padding,
-                    (node: any) => nodeIdSet.has(node.id)
-                  );
-                }
                 
                 // Handle continuous focusing
                 if (message.payload?.continuous) {
@@ -423,7 +321,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 }
               }
             }
-            break;
+          }
+          break;
             
           case 'focusBySlugs':
             if (graphData.isLoading) {
@@ -444,7 +343,76 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 
                 if (nodeIds.length > 0) {
                   console.log(`[GraphProvider ${instanceType}] Found node IDs for slugs:`, message.payload.slugs, '->', nodeIds);
-                  // Multi-node zooming is handled directly in the focusNodes case above
+                  
+                  const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
+                  if (!currentGraphData || !currentGraphData.nodes) {
+                    console.warn(`[GraphProvider ${instanceType}] No graph data available for multi-slug focus`);
+                    return;
+                  }
+
+                  // Find the actual nodes from the provided node IDs
+                  const targetNodes = currentGraphData.nodes.filter((node: any) => 
+                    nodeIds.includes(node.id)
+                  );
+
+                  if (targetNodes.length === 0) {
+                    console.warn(`[GraphProvider ${instanceType}] No matching nodes found for provided node IDs:`, nodeIds);
+                    return;
+                  }
+
+                  if (targetNodes.length === 1) {
+                    // Single node: use zoomToNode
+                    instanceActions.zoomToNode(
+                      targetNodes[0].id,
+                      message.payload?.options?.duration,
+                      message.payload?.options?.padding
+                    );
+                  } else {
+                    // Multiple nodes: calculate bounding box
+                    const xCoords = targetNodes.map((node: any) => node.x);
+                    const yCoords = targetNodes.map((node: any) => node.y);
+                    
+                    const minX = Math.min(...xCoords);
+                    const maxX = Math.max(...xCoords);
+                    const minY = Math.min(...yCoords);
+                    const maxY = Math.max(...yCoords);
+
+                    // Calculate center and dimensions
+                    const centerX = (minX + maxX) / 2;
+                    const centerY = (minY + maxY) / 2;
+
+                    const graphInstance = instance.graphRef.current;
+                    if (!graphInstance) {
+                      console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
+                      return;
+                    }
+
+                    const canvasWidth = graphInstance.width?.() || 800;
+                    const canvasHeight = graphInstance.height?.() || 600;
+                    const padding = message.payload?.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
+                    
+                    const zoomLevel = calculateZoomLevel(
+                      { minX, maxX, minY, maxY },
+                      canvasWidth,
+                      canvasHeight,
+                      padding
+                    );
+
+                    // Apply the calculated zoom and center
+                    if (typeof graphInstance.centerAt === 'function' && typeof graphInstance.zoom === 'function') {
+                      const duration = message.payload?.options?.duration || 400;
+                      graphInstance.centerAt(centerX, centerY, duration);
+                      graphInstance.zoom(zoomLevel, duration);
+                    } else {
+                      // Fallback to zoomToFit with filter
+                      const nodeIdSet = new Set(nodeIds);
+                      graphInstance.zoomToFit(
+                        message.payload?.options?.duration,
+                        message.payload?.options?.padding,
+                        (node: any) => nodeIdSet.has(node.id)
+                      );
+                    }
+                  }
                   
                   // Handle continuous focusing
                   if (message.payload?.continuous) {

@@ -385,4 +385,45 @@ class GraphControlAPI {
   }
 }
 
+/**
+ * Calculate optimal zoom level to fit multiple nodes within canvas bounds
+ * @param bounds - Bounding box containing minX, maxX, minY, maxY coordinates
+ * @param canvasWidth - Canvas width in pixels
+ * @param canvasHeight - Canvas height in pixels
+ * @param padding - Padding around the bounding box in pixels
+ * @returns Optimal zoom level
+ */
+export function calculateZoomLevel(
+  bounds: { minX: number; maxX: number; minY: number; maxY: number },
+  canvasWidth: number,
+  canvasHeight: number,
+  padding: number = GRAPH_CONFIG.zoom.DEFAULT_PADDING
+): number {
+  const { minX, maxX, minY, maxY } = bounds;
+  
+  // Calculate bounding box dimensions
+  const width = maxX - minX;
+  const height = maxY - minY;
+  
+  // If all nodes are at the same location, use a reasonable zoom level
+  if (width === 0 && height === 0) {
+    return 5; // Default zoom level for single point
+  }
+  
+  // Calculate effective dimensions with padding
+  const effectiveWidth = width + (padding * 2);
+  const effectiveHeight = height + (padding * 2);
+  
+  // Calculate zoom levels for width and height
+  // We want the bounding box to fit within the canvas with some margin
+  const zoomX = (canvasWidth * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO) / effectiveWidth;
+  const zoomY = (canvasHeight * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO) / effectiveHeight;
+  
+  // Use the smaller zoom level to ensure all nodes fit within both dimensions
+  const zoomLevel = Math.min(zoomX, zoomY);
+  
+  // Cap zoom level to prevent extreme zooming
+  return Math.max(0.1, Math.min(zoomLevel, 10));
+}
+
 export const graphControl = new GraphControlAPI();
