@@ -17,7 +17,14 @@ const ForceGraphWrapper = React.forwardRef<GraphMethods, ForceGraphProps>(
     // ref가 설정될 때 필요한 메서드만 노출
     useImperativeHandle(ref, () => ({
       zoomToFit: (ms?: number, padding?: number, nodeFilter?: (node: any) => boolean) => {
-        console.log('[ForceGraphWrapper] zoomToFit called with internalRef:', internalRef.current);
+        console.log('[ForceGraphWrapper] zoomToFit called:', {
+          internalRef: internalRef.current,
+          canvasWidth: internalRef.current?.width?.(),
+          canvasHeight: internalRef.current?.height?.(),
+          ms,
+          padding,
+          nodeFilter
+        });
         if (internalRef.current && typeof internalRef.current.zoomToFit === 'function') {
           internalRef.current.zoomToFit(ms, padding, nodeFilter);
         } else {

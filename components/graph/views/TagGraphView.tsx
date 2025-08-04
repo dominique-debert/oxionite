@@ -28,7 +28,11 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   const { state, actions, data, instance } = useGraphContext();
   const { isDarkMode } = useDarkMode();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: width || 800, height: height || 600 });
+  const [dimensions, setDimensions] = useState({ 
+    width: width || GRAPH_CONFIG.responsive.sidebar.width, 
+    height: height || GRAPH_CONFIG.responsive.sidebar.height 
+  });
+  const [isDimensionsReady, setIsDimensionsReady] = useState(false);
 
   const { tagGraphData } = data;
   const { graphRef, setGraphInstance } = instance;
@@ -47,14 +51,14 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   }, [router, actions, state.isModalOpen]);
 
   useEffect(() => {
-    if (state.isGraphLoaded && graphRef.current && state.currentView === 'tag_view') {
+    if (state.isGraphLoaded && graphRef.current && state.currentView === 'tag_view' && isDimensionsReady) {
       if (currentTag) {
         actions.zoomToNode(currentTag, 400);
       } else {
-        actions.applyCurrentZoom();
+        actions.applyCurrentZoom(true); // Force fit to new dimensions
       }
     }
-  }, [currentTag, state.currentView, state.isGraphLoaded]);
+  }, [currentTag, state.currentView, state.isGraphLoaded, isDimensionsReady]);
 
   const handleNodeHover = useCallback((node: GraphNode | null) => {
     setHoveredNode(node);
@@ -181,12 +185,18 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
 
     const resizeObserver = new ResizeObserver(entries => {
       if (entries[0]) {
-        const { width: containerWidth, height: containerHeight } = entries[0].contentRect;
-        setDimensions({ width: containerWidth, height: containerHeight });
+        const { width: w, height: h } = entries[0].contentRect;
+        console.log('[TagGraphView] Dimensions updated:', { width: w, height: h });
+        setDimensions({ width: w, height: h });
+        setIsDimensionsReady(true);
       }
     });
 
     resizeObserver.observe(containerRef.current);
+    // Initial measurement
+    const { width: containerWidth, height: containerHeight } = containerRef.current.getBoundingClientRect();
+    setDimensions({ width: containerWidth, height: containerHeight });
+    setIsDimensionsReady(true);
     return () => resizeObserver.disconnect();
   }, [width, height]);
 

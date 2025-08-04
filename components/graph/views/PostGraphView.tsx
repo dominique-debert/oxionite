@@ -26,7 +26,11 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   const { state, actions, data, instance } = useGraphContext();
   const { isDarkMode } = useDarkMode();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: width || 800, height: height || 600 });
+  const [dimensions, setDimensions] = useState({ 
+    width: width || GRAPH_CONFIG.responsive.sidebar.width, 
+    height: height || GRAPH_CONFIG.responsive.sidebar.height 
+  });
+  const [isDimensionsReady, setIsDimensionsReady] = useState(false);
 
   const { postGraphData } = data;
   const { graphRef, setGraphInstance } = instance;
@@ -54,10 +58,10 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   }, [router, actions, state.isModalOpen]);
 
   useEffect(() => {
-    if (state.isGraphLoaded && graphRef.current && state.currentView === 'post_view') {
+    if (state.isGraphLoaded && graphRef.current && state.currentView === 'post_view' && isDimensionsReady) {
       actions.applyCurrentZoom();
     }
-  }, [state.currentView, state.isGraphLoaded]);
+  }, [state.currentView, state.isGraphLoaded, isDimensionsReady]);
 
   const handleNodeHover = useCallback((node: GraphNode | null) => {
     setHoveredNode(node);
@@ -237,7 +241,9 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     const resizeObserver = new ResizeObserver(entries => {
       if (entries[0]) {
         const { width: w, height: h } = entries[0].contentRect;
+        console.log('[PostGraphView] Dimensions updated:', { width: w, height: h });
         setDimensions({ width: w, height: h });
+        setIsDimensionsReady(true);
       }
     });
     resizeObserver.observe(containerRef.current);
@@ -263,8 +269,17 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
           onNodeClick={handleNodeClick as any}
           onZoomEnd={handleZoomEnd}
           onEngineStop={() => {
+            console.log('[PostGraphView] onEngineStop triggered:', {
+              dimensions,
+              isDimensionsReady,
+              graphWidth,
+              graphHeight
+            });
             actions.setIsGraphLoaded(true);
-            actions.applyCurrentZoom();
+            if (isDimensionsReady) {
+              console.log('[PostGraphView] Applying zoom with dimensions:', { width: graphWidth, height: graphHeight });
+              actions.applyCurrentZoom(true);
+            }
           }}
           onReady={(instance) => {
             setGraphInstance(instance);

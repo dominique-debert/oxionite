@@ -11,6 +11,7 @@ import styles from '@/styles/components/GraphView.module.css';
 import type { SiteMap } from '@/lib/context/types';
 import { PostGraphView } from './views/PostGraphView';
 import { TagGraphView } from './views/TagGraphView';
+import { GRAPH_CONFIG } from './utils/graphConfig';
 
 interface UnifiedGraphViewProps {
   siteMap?: SiteMap;
@@ -30,7 +31,7 @@ const GraphContent: React.FC<{
   const getDimensions = () => {
     switch (viewType) {
       case 'sidenav':
-        return { width: 300, height: 300 };
+        return { width: GRAPH_CONFIG.responsive.sidebar.width, height: GRAPH_CONFIG.responsive.sidebar.height };
       case 'home':
       default:
         return null; // Use CSS classes for responsive sizing

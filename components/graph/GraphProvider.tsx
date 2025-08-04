@@ -202,9 +202,16 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                     return;
                   }
 
-                  const canvasWidth = graphInstance.width?.() || 800;
-                  const canvasHeight = graphInstance.height?.() || 600;
+                  const canvasWidth = graphInstance.width?.() || GRAPH_CONFIG.responsive.home.width;
+                  const canvasHeight = graphInstance.height?.() || GRAPH_CONFIG.responsive.home.height;
                   const padding = operation.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
+                  
+                  console.log('[GraphProvider] Calculating zoom for queued focus:', {
+                    canvasWidth,
+                    canvasHeight,
+                    bounds: { minX, maxX, minY, maxY },
+                    padding
+                  });
                   
                   const zoomLevel = calculateZoomLevel(
                     { minX, maxX, minY, maxY },
@@ -320,8 +327,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                     return;
                   }
 
-                  const canvasWidth = graphInstance.width?.() || 800;
-                  const canvasHeight = graphInstance.height?.() || 600;
+                  const canvasWidth = graphInstance.width?.() || GRAPH_CONFIG.responsive.home.width;
+                  const canvasHeight = graphInstance.height?.() || GRAPH_CONFIG.responsive.home.height;
                   const padding = message.payload?.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
                   
                   const zoomLevel = calculateZoomLevel(
@@ -431,8 +438,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                     return;
                   }
 
-                  const canvasWidth = graphInstance.width?.() || 800;
-                  const canvasHeight = graphInstance.height?.() || 600;
+                  const canvasWidth = graphInstance.width?.() || GRAPH_CONFIG.responsive.home.width;
+                  const canvasHeight = graphInstance.height?.() || GRAPH_CONFIG.responsive.home.height;
                   const padding = message.payload?.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
                   
                   const zoomLevel = calculateZoomLevel(
@@ -533,8 +540,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                       return;
                     }
 
-                    const canvasWidth = graphInstance.width?.() || 800;
-                    const canvasHeight = graphInstance.height?.() || 600;
+                    const canvasWidth = graphInstance.width?.() || GRAPH_CONFIG.responsive.home.width;
+                    const canvasHeight = graphInstance.height?.() || GRAPH_CONFIG.responsive.home.height;
                     const padding = message.payload?.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
                     
                     const zoomLevel = calculateZoomLevel(

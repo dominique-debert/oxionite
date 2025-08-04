@@ -404,30 +404,64 @@ export function calculateZoomLevel(
   const width = maxX - minX;
   const height = maxY - minY;
 
+  console.log('[calculateZoomLevel] Debug info:', {
+    bounds: { minX, maxX, minY, maxY },
+    width,
+    height,
+    canvasWidth,
+    canvasHeight,
+    paddingInPixels
+  });
+
   // 모든 노드가 한 점에 있는 경우 (너비/높이가 0)
   if (width === 0 && height === 0) {
+    console.log('[calculateZoomLevel] Zero bounds, returning zoom=5');
     return 5; // 적절한 기본 줌 레벨 반환
   }
 
   const targetCanvasWidth = canvasWidth * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO;
   const targetCanvasHeight = canvasHeight * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO;
 
+  console.log('[calculateZoomLevel] Target canvas dimensions:', {
+    targetCanvasWidth,
+    targetCanvasHeight,
+    MULTIPLE_ZOOM_RATIO: GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO
+  });
+
   // 1. 패딩이 없다고 가정하고, 노드 바운딩 박스를 목표 캔버스 영역에 맞추기 위한 '기본 줌 레벨'을 계산합니다.
   // 이 줌 레벨이 '그래프 좌표 단위'와 '픽셀' 사이의 변환 비율이 됩니다.
-  const zoomXWithoutPadding = targetCanvasWidth / width;
-  const zoomYWithoutPadding = targetCanvasHeight / height;
-  
+  const zoomXWithoutPadding = targetCanvasWidth / (width || 1);
+  const zoomYWithoutPadding = targetCanvasHeight / (height || 1);
+
+  console.log('[calculateZoomLevel] Zoom without padding:', {
+    zoomXWithoutPadding,
+    zoomYWithoutPadding
+  });
+
   // 두 축 모두 화면 안에 들어와야 하므로 더 작은 줌 레벨을 선택합니다.
   const baseZoom = Math.min(zoomXWithoutPadding, zoomYWithoutPadding);
+
+  console.log('[calculateZoomLevel] Base zoom:', baseZoom);
 
   // 2. 원하는 '픽셀' 단위의 패딩을 '그래프 좌표' 단위로 변환합니다.
   // 예를 들어 baseZoom이 5라면, 1 그래프 단위 = 5 픽셀입니다.
   // 따라서 20px 패딩은 20/5 = 4 그래프 단위가 됩니다.
   const paddingInGraphUnits = paddingInPixels / baseZoom;
 
+  console.log('[calculateZoomLevel] Padding conversion:', {
+    paddingInPixels,
+    baseZoom,
+    paddingInGraphUnits
+  });
+
   // 3. 변환된 그래프 단위 패딩을 적용하여 유효 너비/높이를 계산합니다.
   const effectiveWidth = width + (paddingInGraphUnits * 2);
   const effectiveHeight = height + (paddingInGraphUnits * 2);
+
+  console.log('[calculateZoomLevel] Effective dimensions:', {
+    effectiveWidth,
+    effectiveHeight
+  });
 
   // 4. 최종 줌 레벨을 다시 계산합니다.
   const finalZoomX = targetCanvasWidth / effectiveWidth;
@@ -435,7 +469,13 @@ export function calculateZoomLevel(
 
   const finalZoom = Math.min(finalZoomX, finalZoomY);
 
-  // 줌 레벨이 너무 크거나 작아지는 것을 방지
+  console.log('[calculateZoomLevel] Final calculation:', {
+    finalZoomX,
+    finalZoomY,
+    finalZoom,
+    clampedZoom: Math.max(0.1, Math.min(finalZoom, 10))
+  });
+
   return Math.max(0.1, Math.min(finalZoom, 10));
 }
 
