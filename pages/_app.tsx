@@ -175,16 +175,14 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     const handleSlugFocus = () => {
       if (slugInput.trim()) {
         console.log(`[Debug] Focusing on slug: ${slugInput}`);
-        graphControl.changeView('post_view', 'sidenav');
-        graphControl.focusBySlug(slugInput, 'sidenav');
+        graphControl.changeViewAndFocusBySlug('post_view', slugInput, 'sidenav');
       }
     };
 
     const handleTagFocus = () => {
       if (tagInput.trim()) {
         console.log(`[Debug] Focusing on tag: ${tagInput}`);
-        graphControl.changeView('tag_view', 'sidenav');
-        graphControl.focusNode(tagInput, 'sidenav');
+        graphControl.changeViewAndFocusNode('tag_view', tagInput, 'sidenav');
       }
     };
 

@@ -203,6 +203,30 @@ class GraphControlAPI {
     });
   }
 
+  /**
+   * Sequential operation: change view and then focus by slug
+   */
+  changeViewAndFocusBySlug(view: GraphViewType, slug: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
+    this.changeView(view, instanceType);
+    
+    // Use a small delay to ensure view change completes
+    setTimeout(() => {
+      this.focusBySlug(slug, instanceType, options);
+    }, 50);
+  }
+
+  /**
+   * Sequential operation: change view and then focus node
+   */
+  changeViewAndFocusNode(view: GraphViewType, nodeId: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
+    this.changeView(view, instanceType);
+    
+    // Use a small delay to ensure view change completes
+    setTimeout(() => {
+      this.focusNode(nodeId, instanceType, options);
+    }, 50);
+  }
+
   highlightNodes(nodeIds: string[], instanceType: 'sidenav' | 'home' = 'sidenav') {
     this.sendMessage({
       type: 'highlightNodes',

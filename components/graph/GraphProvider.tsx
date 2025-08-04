@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode, useCallback, useEffect } from 'react';
-import type { GraphContextValue } from './types/graph.types';
+import type { GraphContextValue, GraphViewType } from './types/graph.types';
 import { useGraphState } from './hooks/useGraphState';
 import { useGraphData } from './hooks/useGraphData';
 import { useGraphInstance } from './hooks/useGraphInstance';
@@ -46,19 +46,94 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     // This should be enhanced to detect actual instance type from props
     const instanceType = 'sidenav';
     
-    // Create slug-to-id mapping for post graph
-    const createSlugToIdMapping = () => {
+    // Queue for pending focus operations
+    let pendingFocusQueue: Array<{
+      type: 'focusBySlug' | 'focusNode';
+      payload: any;
+      options?: any;
+      targetView?: GraphViewType;
+    }> = [];
+    
+    // Create slug-to-id mapping based on specified view type
+    const createSlugToIdMapping = (viewType?: GraphViewType): Map<string, string> => {
       const mapping = new Map<string, string>();
+      const targetView = viewType || state.currentView;
       
-      if (state.currentView === 'post_view' && graphData.data.postGraph?.nodes) {
-        graphData.data.postGraph.nodes.forEach((node: any) => {
+      console.log(`[GraphProvider ${instanceType}] Creating slug mapping for view:`, targetView);
+      
+      if (targetView === 'post_view' && graphData.data.postGraph) {
+        graphData.data.postGraph.nodes.forEach(node => {
           if (node.slug) {
-            mapping.set(node.slug, node.id as string);
+            mapping.set(node.slug, node.id);
           }
         });
+        console.log(`[GraphProvider ${instanceType}] Post view mapping:`, Array.from(mapping.keys()));
+      } else if (targetView === 'tag_view' && graphData.data.tagGraph) {
+        graphData.data.tagGraph.nodes.forEach(node => {
+          if (node.slug) {
+            mapping.set(node.slug, node.id);
+          }
+        });
+        console.log(`[GraphProvider ${instanceType}] Tag view mapping:`, Array.from(mapping.keys()));
       }
       
       return mapping;
+    };
+    
+    // Process pending focus operations when data is ready
+    const processPendingFocus = () => {
+      if (graphData.isLoading) {
+        return; // Wait for data to be ready
+      }
+      
+      // Check if we have data for the current view
+      const hasPostData = graphData.data.postGraph && graphData.data.postGraph.nodes.length > 0;
+      const hasTagData = graphData.data.tagGraph && graphData.data.tagGraph.nodes.length > 0;
+      
+      if (state.currentView === 'post_view' && !hasPostData) {
+        return; // Wait for post data
+      }
+      
+      if (state.currentView === 'tag_view' && !hasTagData) {
+        return; // Wait for tag data
+      }
+      
+      while (pendingFocusQueue.length > 0) {
+        const operation = pendingFocusQueue.shift();
+        if (!operation) continue;
+        
+        // Skip if this operation is for a different view
+        if (operation.targetView && operation.targetView !== state.currentView) {
+          continue;
+        }
+        
+        switch (operation.type) {
+          case 'focusBySlug':
+            const slugToIdMapping = createSlugToIdMapping(operation.targetView);
+            const nodeId = slugToIdMapping.get(operation.payload);
+            
+            if (nodeId) {
+              console.log(`[GraphProvider ${instanceType}] Processing queued focusBySlug:`, operation.payload, '->', nodeId);
+              instanceActions.zoomToNode(
+                nodeId,
+                operation.options?.duration,
+                operation.options?.padding
+              );
+            } else {
+              console.warn(`[GraphProvider ${instanceType}] Queued slug not found:`, operation.payload);
+            }
+            break;
+            
+          case 'focusNode':
+            console.log(`[GraphProvider ${instanceType}] Processing queued focusNode:`, operation.payload);
+            instanceActions.zoomToNode(
+              operation.payload,
+              operation.options?.duration,
+              operation.options?.padding
+            );
+            break;
+        }
+      }
     };
     
     const handleControlMessage = (message: any) => {
@@ -74,31 +149,51 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             );
             break;
           case 'focusNode':
-            console.log(`[GraphProvider ${instanceType}] Executing focusNode:`, message.payload?.nodeId);
-            if (message.payload?.nodeId) {
-              instanceActions.zoomToNode(
-                message.payload.nodeId,
-                message.payload?.options?.duration,
-                message.payload?.options?.padding
-              );
-            }
-            break;
-          case 'focusBySlug':
-            console.log(`[GraphProvider ${instanceType}] Executing focusBySlug:`, message.payload?.slug);
-            if (message.payload?.slug) {
-              const slugToIdMapping = createSlugToIdMapping();
-              const nodeId = slugToIdMapping.get(message.payload.slug);
-              
-              if (nodeId) {
-                console.log(`[GraphProvider ${instanceType}] Found node ID for slug:`, message.payload.slug, '->', nodeId);
+            if (graphData.isLoading) {
+              console.log(`[GraphProvider ${instanceType}] Queueing focusNode:`, message.payload?.nodeId);
+              pendingFocusQueue.push({
+                type: 'focusNode',
+                payload: message.payload?.nodeId,
+                options: message.payload?.options,
+                targetView: state.currentView
+              });
+            } else {
+              console.log(`[GraphProvider ${instanceType}] Executing focusNode:`, message.payload?.nodeId);
+              if (message.payload?.nodeId) {
                 instanceActions.zoomToNode(
-                  nodeId,
+                  message.payload.nodeId,
                   message.payload?.options?.duration,
                   message.payload?.options?.padding
                 );
-              } else {
-                console.warn(`[GraphProvider ${instanceType}] No node found for slug:`, message.payload.slug);
-                console.log(`[GraphProvider ${instanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
+              }
+            }
+            break;
+          case 'focusBySlug':
+            if (graphData.isLoading) {
+              console.log(`[GraphProvider ${instanceType}] Queueing focusBySlug:`, message.payload?.slug);
+              pendingFocusQueue.push({
+                type: 'focusBySlug',
+                payload: message.payload?.slug,
+                options: message.payload?.options,
+                targetView: state.currentView
+              });
+            } else {
+              console.log(`[GraphProvider ${instanceType}] Executing focusBySlug:`, message.payload?.slug);
+              if (message.payload?.slug) {
+                const slugToIdMapping = createSlugToIdMapping();
+                const nodeId = slugToIdMapping.get(message.payload.slug);
+                
+                if (nodeId) {
+                  console.log(`[GraphProvider ${instanceType}] Found node ID for slug:`, message.payload.slug, '->', nodeId);
+                  instanceActions.zoomToNode(
+                    nodeId,
+                    message.payload?.options?.duration,
+                    message.payload?.options?.padding
+                  );
+                } else {
+                  console.warn(`[GraphProvider ${instanceType}] No node found for slug:`, message.payload.slug);
+                  console.log(`[GraphProvider ${instanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
+                }
               }
             }
             break;
@@ -106,18 +201,22 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             console.log(`[GraphProvider ${instanceType}] Executing changeView:`, message.payload?.view);
             if (message.payload?.view) {
               stateActions.setCurrentView(message.payload.view);
+              // Don't clear pending operations - let them process with new view
             }
             break;
         }
       }
     };
 
+    // Process pending operations when data is loaded
+    processPendingFocus();
+    
     graphControl.addListener(instanceType, handleControlMessage);
     
     return () => {
       graphControl.removeListener(instanceType, handleControlMessage);
     };
-  }, [instanceActions, stateActions, graphData.data.postGraph, state.currentView]);
+  }, [instanceActions, stateActions, graphData.data.postGraph, graphData.isLoading, state.currentView]);
 
   const contextValue: GraphContextValue = {
     state,
