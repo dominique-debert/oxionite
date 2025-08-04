@@ -55,8 +55,8 @@ export const GRAPH_CONFIG = {
     maxLinks: 2000,
     debounceDelay: 16, // ~60fps
     cacheTimeout: 5 * 60 * 1000, // 5 minutes
-    focusFrequency: 150, // Focus retry interval in ms during physics engine operation
-    focusTry: 10, // maximum number of focus retry attempts
+    focusFrequency: 200, // Focus retry interval in ms during physics engine operation
+    focusTry: 5, // maximum number of focus retry attempts
   },
 
   // Responsive breakpoints

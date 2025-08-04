@@ -210,16 +210,24 @@ class GraphControlAPI {
    * Sequential operation: change view and then focus by slug with continuous retry
    */
   changeViewAndFocusBySlug(view: GraphViewType, slug: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
-    this.changeView(view, instanceType);
+    const currentState = this.instanceStates.get(instanceType);
+    const needsViewChange = !currentState || currentState.currentView !== view;
     
-    // Let GraphProvider handle the 50 retry attempts internally
-    setTimeout(() => {
-      this.sendMessage({
-        type: 'focusBySlug',
-        instanceType,
-        payload: { slug, options, continuous: true }
-      });
-    }, 50);
+    if (needsViewChange) {
+      this.changeView(view, instanceType);
+      
+      // Let GraphProvider handle the 50 retry attempts internally
+      setTimeout(() => {
+        this.sendMessage({
+          type: 'focusBySlug',
+          instanceType,
+          payload: { slug, options, continuous: true }
+        });
+      }, 50);
+    } else {
+      // View type is already correct, focus directly without continuous retry
+      this.focusBySlug(slug, instanceType, options);
+    }
   }
 
 
@@ -228,16 +236,24 @@ class GraphControlAPI {
    * Sequential operation: change view and then focus node with continuous retry
    */
   changeViewAndFocusNode(view: GraphViewType, nodeId: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
-    this.changeView(view, instanceType);
+    const currentState = this.instanceStates.get(instanceType);
+    const needsViewChange = !currentState || currentState.currentView !== view;
     
-    // Let GraphProvider handle the 50 retry attempts internally
-    setTimeout(() => {
-      this.sendMessage({
-        type: 'focusNode',
-        instanceType,
-        payload: { nodeId, options, continuous: true }
-      });
-    }, 50);
+    if (needsViewChange) {
+      this.changeView(view, instanceType);
+      
+      // Let GraphProvider handle the 50 retry attempts internally
+      setTimeout(() => {
+        this.sendMessage({
+          type: 'focusNode',
+          instanceType,
+          payload: { nodeId, options, continuous: true }
+        });
+      }, 50);
+    } else {
+      // View type is already correct, focus directly without continuous retry
+      this.focusNode(nodeId, instanceType, options);
+    }
   }
 
   highlightNodes(nodeIds: string[], instanceType: 'sidenav' | 'home' = 'sidenav') {
