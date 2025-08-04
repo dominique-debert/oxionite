@@ -40,7 +40,7 @@ export function TagList() {
     <div className={styles.tagListContainer}>
       {
         allTags.map(tag => (
-          <TagButton tag={tag} />
+          <TagButton key={tag} tag={tag} />
         ))
       }
     </div>

@@ -15,10 +15,10 @@ interface HomeNavProps {
 export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavProps) {
   const { locale } = useRouter()
   const { t } = useTranslation('common')
-  const navItems = [t('recentPosts'), t('graphView'), t('allTags')]
+  const navItems = ['recentPosts', 'graphView', 'allTags']
   const allNavItems = [
-    ...homePages.map((page) => ({ title: page.title, pageId: page.pageId })),
-    ...navItems.map((item) => ({ title: item, pageId: undefined }))
+    ...homePages.map((page) => ({ title: page.title, pageId: page.pageId, key: page.pageId })),
+    ...navItems.map((item) => ({ title: t(item), pageId: undefined, key: item }))
   ]
 
   const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null)
@@ -88,10 +88,10 @@ export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavPro
       <div className={styles.navPill} style={pillStyle} />
       {allNavItems.map((item, index) => (
         <button
-          key={item.title}
+          key={item.key}
           ref={(el) => { itemRefs.current[index] = el }}
-          className={cs(styles.navItem, activeTab === item.title && styles.active)}
-          onClick={() => onNavClick(item.title, item.pageId)}
+          className={cs(styles.navItem, activeTab === item.key && styles.active)}
+          onClick={() => onNavClick(item.key, item.pageId)}
         >
           {item.title}
         </button>

@@ -36,7 +36,7 @@ export function Home({
       }
     }
     return {
-      tab: 'Recent Posts',
+      tab: 'recentPosts',
       pageId: null
     }
   }
@@ -58,11 +58,11 @@ export function Home({
 
   const renderTabs = () => {
     switch (activeTab) {
-      case 'Recent Posts':
+      case 'recentPosts':
         return <RecentPosts siteMap={siteMap} />
-      case 'Graph View':
+      case 'graphView':
         return <UnifiedGraphView siteMap={siteMap} viewType="home" />
-      case 'All Tags':
+      case 'allTags':
         return <TagList />
       default:
         return <RecentPosts siteMap={siteMap} />
