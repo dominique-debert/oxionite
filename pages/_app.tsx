@@ -168,54 +168,135 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
   }
 
   // Debug controls for testing graph functionality
-  const DebugControls = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      zIndex: 9999,
-      background: 'rgba(0,0,0,0.8)',
-      color: 'white',
-      padding: '10px',
-      fontSize: '12px',
-      fontFamily: 'monospace'
-    }}>
-      <div>Graph Debug Controls:</div>
-      <button 
-        onClick={() => graphControl.fitToHome('sidenav')}
-        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-      >
-        Fit Sidenav Home
-      </button>
-      <button 
-        onClick={() => graphControl.focusNode('__HOME__', 'sidenav')}
-        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-      >
-        Focus Home Node
-      </button>
-      <button 
-        onClick={() => graphControl.changeView('post_view', 'sidenav')}
-        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-      >
-        Post View
-      </button>
-      <button 
-        onClick={() => graphControl.changeView('tag_view', 'sidenav')}
-        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-      >
-        Tag View
-      </button>
-      <button 
-        onClick={() => {
-          const path = window.location.pathname;
-          graphControl.handleUrlRouting(path, 'sidenav');
-        }}
-        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-      >
-        Test URL Routing
-      </button>
-    </div>
-  );
+  const DebugControls = () => {
+    const [slugInput, setSlugInput] = React.useState('');
+    const [tagInput, setTagInput] = React.useState('');
+
+    const handleSlugFocus = () => {
+      if (slugInput.trim()) {
+        console.log(`[Debug] Focusing on slug: ${slugInput}`);
+        graphControl.changeView('post_view', 'sidenav');
+        graphControl.focusBySlug(slugInput, 'sidenav');
+      }
+    };
+
+    const handleTagFocus = () => {
+      if (tagInput.trim()) {
+        console.log(`[Debug] Focusing on tag: ${tagInput}`);
+        graphControl.changeView('tag_view', 'sidenav');
+        graphControl.focusNode(tagInput, 'sidenav');
+      }
+    };
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        right: 0,
+        zIndex: 9999,
+        background: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: '10px',
+        fontSize: '12px',
+        fontFamily: 'monospace',
+        maxWidth: '300px'
+      }}>
+        <div><strong>Graph Debug Controls:</strong></div>
+        
+        <div style={{ marginTop: '8px' }}>
+          <div>Basic Controls:</div>
+          <button 
+            onClick={() => graphControl.fitToHome('sidenav')}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+          >
+            Fit Home
+          </button>
+          <button 
+            onClick={() => graphControl.changeView('post_view', 'sidenav')}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+          >
+            Post View
+          </button>
+          <button 
+            onClick={() => graphControl.changeView('tag_view', 'sidenav')}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+          >
+            Tag View
+          </button>
+        </div>
+
+        <div style={{ marginTop: '8px' }}>
+          <div>Slug Input (Post/Category):</div>
+          <input
+            type="text"
+            value={slugInput}
+            onChange={(e) => setSlugInput(e.target.value)}
+            placeholder="Enter slug..."
+            style={{ 
+              width: '120px', 
+              fontSize: '10px', 
+              padding: '2px', 
+              marginRight: '2px',
+              background: '#333',
+              color: 'white',
+              border: '1px solid #555'
+            }}
+          />
+          <button 
+            onClick={handleSlugFocus}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+          >
+            Focus Slug
+          </button>
+        </div>
+
+        <div style={{ marginTop: '8px' }}>
+          <div>Tag Input:</div>
+          <input
+            type="text"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            placeholder="Enter tag..."
+            style={{ 
+              width: '120px', 
+              fontSize: '10px', 
+              padding: '2px', 
+              marginRight: '2px',
+              background: '#333',
+              color: 'white',
+              border: '1px solid #555'
+            }}
+          />
+          <button 
+            onClick={handleTagFocus}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+          >
+            Focus Tag
+          </button>
+        </div>
+
+        <div style={{ marginTop: '8px' }}>
+          <button 
+            onClick={() => {
+              const path = window.location.pathname;
+              console.log(`[Debug] Current URL: ${path}`);
+              graphControl.handleUrlRouting(path, 'sidenav');
+            }}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+          >
+            Test Current URL
+          </button>
+        </div>
+
+        <div style={{ marginTop: '8px', fontSize: '10px', color: '#ccc' }}>
+          <div>Usage:</div>
+          <div>• Slug: post slug or category slug</div>
+          <div>• Tag: exact tag name</div>
+          <div>• Check console for logs</div>
+        </div>
+      </div>
+    );
+  };
 
   if (!siteMap) {
     return <Component {...pageProps} />

@@ -7,7 +7,7 @@
 import type { GraphViewType } from '../types/graph.types';
 
 export interface GraphControlMessage {
-  type: 'fitToHome' | 'focusNode' | 'focusNodes' | 'changeView' | 'highlightNodes' | 'clearHighlight';
+  type: 'fitToHome' | 'focusNode' | 'focusNodes' | 'changeView' | 'highlightNodes' | 'clearHighlight' | 'focusBySlug';
   instanceType: 'sidenav' | 'home';
   payload?: any;
 }
@@ -98,8 +98,8 @@ class GraphControlAPI {
   handleUrlRouting(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav') {
     console.log(`[GraphControl] Handling URL: ${pathname} for ${instanceType}`);
     
-    const url = new URL(pathname, 'http://localhost');
-    const segments = url.pathname.split('/').filter(Boolean);
+    // Parse URL path without creating URL object to avoid hostname issues
+    const segments = pathname.split('/').filter(Boolean);
     
     let targetView: GraphViewType = 'post_view';
     let focusTarget: FocusTarget | null = null;
@@ -154,7 +154,7 @@ class GraphControlAPI {
       case 'post':
       case 'category':
         if (target.id) {
-          this.focusNode(target.id, instanceType, options);
+          this.focusBySlug(target.id, instanceType, options);
         }
         break;
       case 'tag':
@@ -175,6 +175,14 @@ class GraphControlAPI {
       type: 'focusNode',
       instanceType,
       payload: { nodeId, options }
+    });
+  }
+
+  focusBySlug(slug: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
+    this.sendMessage({
+      type: 'focusBySlug',
+      instanceType,
+      payload: { slug, options }
     });
   }
 

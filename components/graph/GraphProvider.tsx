@@ -46,6 +46,21 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     // This should be enhanced to detect actual instance type from props
     const instanceType = 'sidenav';
     
+    // Create slug-to-id mapping for post graph
+    const createSlugToIdMapping = () => {
+      const mapping = new Map<string, string>();
+      
+      if (state.currentView === 'post_view' && graphData.data.postGraph?.nodes) {
+        graphData.data.postGraph.nodes.forEach((node: any) => {
+          if (node.slug) {
+            mapping.set(node.slug, node.id as string);
+          }
+        });
+      }
+      
+      return mapping;
+    };
+    
     const handleControlMessage = (message: any) => {
       console.log(`[GraphProvider ${instanceType}] Received control message:`, message);
       
@@ -68,6 +83,25 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               );
             }
             break;
+          case 'focusBySlug':
+            console.log(`[GraphProvider ${instanceType}] Executing focusBySlug:`, message.payload?.slug);
+            if (message.payload?.slug) {
+              const slugToIdMapping = createSlugToIdMapping();
+              const nodeId = slugToIdMapping.get(message.payload.slug);
+              
+              if (nodeId) {
+                console.log(`[GraphProvider ${instanceType}] Found node ID for slug:`, message.payload.slug, '->', nodeId);
+                instanceActions.zoomToNode(
+                  nodeId,
+                  message.payload?.options?.duration,
+                  message.payload?.options?.padding
+                );
+              } else {
+                console.warn(`[GraphProvider ${instanceType}] No node found for slug:`, message.payload.slug);
+                console.log(`[GraphProvider ${instanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
+              }
+            }
+            break;
           case 'changeView':
             console.log(`[GraphProvider ${instanceType}] Executing changeView:`, message.payload?.view);
             if (message.payload?.view) {
@@ -83,7 +117,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     return () => {
       graphControl.removeListener(instanceType, handleControlMessage);
     };
-  }, [instanceActions, stateActions]);
+  }, [instanceActions, stateActions, graphData.data.postGraph, state.currentView]);
 
   const contextValue: GraphContextValue = {
     state,
