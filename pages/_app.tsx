@@ -29,6 +29,7 @@ import { mapImageUrl } from '@/lib/map-image-url'
 import { AppContext } from '@/lib/context/app-context'
 import { Noto_Sans_KR } from 'next/font/google'
 import { appWithTranslation } from 'next-i18next'
+import { graphControl } from '@/components/graph/utils/graph-control'
 
 
 const notoKR = Noto_Sans_KR({
@@ -166,6 +167,56 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     return null
   }
 
+  // Debug controls for testing graph functionality
+  const DebugControls = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      zIndex: 9999,
+      background: 'rgba(0,0,0,0.8)',
+      color: 'white',
+      padding: '10px',
+      fontSize: '12px',
+      fontFamily: 'monospace'
+    }}>
+      <div>Graph Debug Controls:</div>
+      <button 
+        onClick={() => graphControl.fitToHome('sidenav')}
+        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+      >
+        Fit Sidenav Home
+      </button>
+      <button 
+        onClick={() => graphControl.focusNode('__HOME__', 'sidenav')}
+        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+      >
+        Focus Home Node
+      </button>
+      <button 
+        onClick={() => graphControl.changeView('post_view', 'sidenav')}
+        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+      >
+        Post View
+      </button>
+      <button 
+        onClick={() => graphControl.changeView('tag_view', 'sidenav')}
+        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+      >
+        Tag View
+      </button>
+      <button 
+        onClick={() => {
+          const path = window.location.pathname;
+          graphControl.handleUrlRouting(path, 'sidenav');
+        }}
+        style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
+      >
+        Test URL Routing
+      </button>
+    </div>
+  );
+
   if (!siteMap) {
     return <Component {...pageProps} />
   }
@@ -177,6 +228,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
   return (
     <AppContext.Provider value={appContextValue}>
+      <DebugControls />
       <style jsx global>{`
         :root {
           --font-noto-sans-kr: ${notoKR.style.fontFamily};
