@@ -397,33 +397,46 @@ export function calculateZoomLevel(
   bounds: { minX: number; maxX: number; minY: number; maxY: number },
   canvasWidth: number,
   canvasHeight: number,
-  padding: number = GRAPH_CONFIG.zoom.DEFAULT_PADDING
+  paddingInPixels: number = GRAPH_CONFIG.zoom.DEFAULT_PADDING
 ): number {
   const { minX, maxX, minY, maxY } = bounds;
-  
-  // Calculate bounding box dimensions
+
   const width = maxX - minX;
   const height = maxY - minY;
-  
-  // If all nodes are at the same location, use a reasonable zoom level
+
+  // 모든 노드가 한 점에 있는 경우 (너비/높이가 0)
   if (width === 0 && height === 0) {
-    return 5; // Default zoom level for single point
+    return 5; // 적절한 기본 줌 레벨 반환
   }
+
+  const targetCanvasWidth = canvasWidth * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO;
+  const targetCanvasHeight = canvasHeight * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO;
+
+  // 1. 패딩이 없다고 가정하고, 노드 바운딩 박스를 목표 캔버스 영역에 맞추기 위한 '기본 줌 레벨'을 계산합니다.
+  // 이 줌 레벨이 '그래프 좌표 단위'와 '픽셀' 사이의 변환 비율이 됩니다.
+  const zoomXWithoutPadding = targetCanvasWidth / width;
+  const zoomYWithoutPadding = targetCanvasHeight / height;
   
-  // Calculate effective dimensions with padding
-  const effectiveWidth = width + (padding * 2);
-  const effectiveHeight = height + (padding * 2);
-  
-  // Calculate zoom levels for width and height
-  // We want the bounding box to fit within the canvas with some margin
-  const zoomX = (canvasWidth * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO) / effectiveWidth;
-  const zoomY = (canvasHeight * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO) / effectiveHeight;
-  
-  // Use the smaller zoom level to ensure all nodes fit within both dimensions
-  const zoomLevel = Math.min(zoomX, zoomY);
-  
-  // Cap zoom level to prevent extreme zooming
-  return Math.max(0.1, Math.min(zoomLevel, 10));
+  // 두 축 모두 화면 안에 들어와야 하므로 더 작은 줌 레벨을 선택합니다.
+  const baseZoom = Math.min(zoomXWithoutPadding, zoomYWithoutPadding);
+
+  // 2. 원하는 '픽셀' 단위의 패딩을 '그래프 좌표' 단위로 변환합니다.
+  // 예를 들어 baseZoom이 5라면, 1 그래프 단위 = 5 픽셀입니다.
+  // 따라서 20px 패딩은 20/5 = 4 그래프 단위가 됩니다.
+  const paddingInGraphUnits = paddingInPixels / baseZoom;
+
+  // 3. 변환된 그래프 단위 패딩을 적용하여 유효 너비/높이를 계산합니다.
+  const effectiveWidth = width + (paddingInGraphUnits * 2);
+  const effectiveHeight = height + (paddingInGraphUnits * 2);
+
+  // 4. 최종 줌 레벨을 다시 계산합니다.
+  const finalZoomX = targetCanvasWidth / effectiveWidth;
+  const finalZoomY = targetCanvasHeight / effectiveHeight;
+
+  const finalZoom = Math.min(finalZoomX, finalZoomY);
+
+  // 줌 레벨이 너무 크거나 작아지는 것을 방지
+  return Math.max(0.1, Math.min(finalZoom, 10));
 }
 
 export const graphControl = new GraphControlAPI();

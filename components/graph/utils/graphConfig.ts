@@ -25,7 +25,7 @@ export const GRAPH_CONFIG = {
     BASE_NODE_SIZE: 4,
     DEFAULT_PADDING: 50,
     ANIMATION_DURATION: 400,
-    MULTIPLE_ZOOM_RATIO: 0.8,
+    MULTIPLE_ZOOM_RATIO: 1.0,
   },
 
   // Physics engine
