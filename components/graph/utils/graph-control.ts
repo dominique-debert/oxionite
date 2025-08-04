@@ -237,52 +237,86 @@ class GraphControlAPI {
   }
 
   /**
-   * Sequential operation: change view and then focus by slug with continuous retry
+   * Sequential operation: change view and then focus by slug(s) with continuous retry
    */
-  changeViewAndFocusBySlug(view: GraphViewType, slug: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
+  changeViewAndFocusBySlug(view: GraphViewType, slug: string | string[], instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
     const currentState = this.instanceStates.get(instanceType);
     const needsViewChange = !currentState || currentState.currentView !== view;
+    
+    // Normalize slug to array
+    const slugs = Array.isArray(slug) ? slug : [slug];
     
     if (needsViewChange) {
       this.changeView(view, instanceType);
       
       // Let GraphProvider handle the 50 retry attempts internally
       setTimeout(() => {
-        this.sendMessage({
-          type: 'focusBySlug',
-          instanceType,
-          payload: { slug, options, continuous: true }
-        });
+        if (slugs.length === 1) {
+          // Single slug: use existing behavior
+          this.sendMessage({
+            type: 'focusBySlug',
+            instanceType,
+            payload: { slug: slugs[0], options, continuous: true }
+          });
+        } else {
+          // Multiple slugs: use focusBySlugs for zoom-to-fit
+          this.sendMessage({
+            type: 'focusBySlug',
+            instanceType,
+            payload: { slugs, options: { ...options, continuous: true } }
+          });
+        }
       }, 50);
     } else {
       // View type is already correct, focus directly without continuous retry
-      this.focusBySlug(slug, instanceType, options);
+      if (slugs.length === 1) {
+        this.focusBySlug(slugs[0], instanceType, options);
+      } else {
+        this.focusNodes(slugs, instanceType, options);
+      }
     }
   }
 
 
 
   /**
-   * Sequential operation: change view and then focus node with continuous retry
+   * Sequential operation: change view and then focus node(s) with continuous retry
    */
-  changeViewAndFocusNode(view: GraphViewType, nodeId: string, instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
+  changeViewAndFocusNode(view: GraphViewType, nodeId: string | string[], instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
     const currentState = this.instanceStates.get(instanceType);
     const needsViewChange = !currentState || currentState.currentView !== view;
+    
+    // Normalize nodeId to array
+    const nodeIds = Array.isArray(nodeId) ? nodeId : [nodeId];
     
     if (needsViewChange) {
       this.changeView(view, instanceType);
       
       // Let GraphProvider handle the 50 retry attempts internally
       setTimeout(() => {
-        this.sendMessage({
-          type: 'focusNode',
-          instanceType,
-          payload: { nodeId, options, continuous: true }
-        });
+        if (nodeIds.length === 1) {
+          // Single node: use existing behavior
+          this.sendMessage({
+            type: 'focusNode',
+            instanceType,
+            payload: { nodeId: nodeIds[0], options, continuous: true }
+          });
+        } else {
+          // Multiple nodes: use focusNodes for zoom-to-fit
+          this.sendMessage({
+            type: 'focusNodes',
+            instanceType,
+            payload: { nodeIds, options: { ...options, continuous: true } }
+          });
+        }
       }, 50);
     } else {
       // View type is already correct, focus directly without continuous retry
-      this.focusNode(nodeId, instanceType, options);
+      if (nodeIds.length === 1) {
+        this.focusNode(nodeIds[0], instanceType, options);
+      } else {
+        this.focusNodes(nodeIds, instanceType, options);
+      }
     }
   }
 

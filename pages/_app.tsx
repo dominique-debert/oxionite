@@ -174,15 +174,17 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
     const handleSlugFocus = () => {
       if (slugInput.trim()) {
-        console.log(`[Debug] Focusing on slug: ${slugInput}`);
-        graphControl.changeViewAndFocusBySlug('post_view', slugInput, 'sidenav');
+        const slugs = slugInput.split(',').map(s => s.trim()).filter(s => s);
+        console.log(`[Debug] Focusing on slugs:`, slugs);
+        graphControl.changeViewAndFocusBySlug('post_view', slugs, 'sidenav');
       }
     };
 
     const handleTagFocus = () => {
       if (tagInput.trim()) {
-        console.log(`[Debug] Focusing on tag: ${tagInput}`);
-        graphControl.changeViewAndFocusNode('tag_view', tagInput, 'sidenav');
+        const tags = tagInput.split(',').map(s => s.trim()).filter(s => s);
+        console.log(`[Debug] Focusing on tags:`, tags);
+        graphControl.changeViewAndFocusNode('tag_view', tags, 'sidenav');
       }
     };
 
@@ -229,7 +231,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
             type="text"
             value={slugInput}
             onChange={(e) => setSlugInput(e.target.value)}
-            placeholder="Enter slug..."
+            placeholder="Enter slug(s), comma-separated..."
             style={{ 
               width: '120px', 
               fontSize: '10px', 
@@ -254,7 +256,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
             type="text"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
-            placeholder="Enter tag..."
+            placeholder="Enter tag(s), comma-separated..."
             style={{ 
               width: '120px', 
               fontSize: '10px', 
@@ -288,8 +290,8 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
         <div style={{ marginTop: '8px', fontSize: '10px', color: '#ccc' }}>
           <div>Usage:</div>
-          <div>• Slug: post slug or category slug</div>
-          <div>• Tag: exact tag name</div>
+          <div>• Slug: post slug or category slug (comma-separated for multiple)</div>
+          <div>• Tag: exact tag name (comma-separated for multiple)</div>
           <div>• Check console for logs</div>
         </div>
       </div>

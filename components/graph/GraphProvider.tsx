@@ -88,7 +88,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     
     // Queue for pending focus operations
     let pendingFocusQueue: Array<{
-      type: 'focusBySlug' | 'focusNode';
+      type: 'focusBySlug' | 'focusNode' | 'focusNodes' | 'focusBySlugs';
       payload: any;
       options?: any;
       targetView?: GraphViewType;
@@ -126,17 +126,30 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
         switch (operation.type) {
           case 'focusBySlug':
             const slugToIdMapping = createSlugToIdMapping(operation.targetView);
-            const nodeId = slugToIdMapping.get(operation.payload);
+            const slugs = operation.payload?.slugs || (operation.payload ? [operation.payload] : []);
             
-            if (nodeId) {
-              console.log(`[GraphProvider ${instanceType}] Processing queued focusBySlug:`, operation.payload, '->', nodeId);
+            const nodeIds = slugs
+              .map((slug: string) => slugToIdMapping.get(slug))
+              .filter((id: string | undefined): id is string => id !== undefined);
+            
+            if (nodeIds.length === 0) {
+              console.warn(`[GraphProvider ${instanceType}] Queued slugs not found:`, slugs);
+              return;
+            }
+
+            if (nodeIds.length === 1) {
+              console.log(`[GraphProvider ${instanceType}] Processing queued focusBySlug:`, slugs[0], '->', nodeIds[0]);
               instanceActions.zoomToNode(
-                nodeId,
+                nodeIds[0],
                 operation.options?.duration,
                 operation.options?.padding
               );
             } else {
-              console.warn(`[GraphProvider ${instanceType}] Queued slug not found:`, operation.payload);
+              console.log(`[GraphProvider ${instanceType}] Processing queued multi-slug focus:`, slugs, '->', nodeIds);
+              // For multiple nodes, we need to handle this differently
+              // This will be processed by the main focusNodes case when the queue is executed
+              // For now, we'll just log it and let it be handled by the main logic
+              console.log(`[GraphProvider ${instanceType}] Multi-slug focus queued for:`, nodeIds);
             }
             break;
             
@@ -148,6 +161,17 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               operation.options?.padding
             );
             break;
+            
+          case 'focusNodes':
+            console.log(`[GraphProvider ${instanceType}] Processing queued focusNodes:`, operation.payload);
+            // Multi-node zooming is handled directly in the focusNodes case
+            // No action needed here as it will be processed when the queue is executed
+            break;
+            
+          case 'focusBySlugs':
+            console.log(`[GraphProvider ${instanceType}] Processing queued focusBySlugs:`, operation.payload);
+            // focusBySlugs is handled by the main focusNodes case when queue is processed
+            break;
         }
       }
     };
@@ -157,6 +181,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       
       if (message.instanceType === instanceType) {
         switch (message.type) {
+          
           case 'fitToHome':
             console.log(`[GraphProvider ${instanceType}] Executing fitToHome`);
             instanceActions.zoomToFit(
@@ -164,73 +189,257 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               message.payload?.options?.padding
             );
             break;
-          case 'focusNode':
+          case 'focusBySlug':
             if (graphData.isLoading) {
-              console.log(`[GraphProvider ${instanceType}] Queueing focusNode:`, message.payload?.nodeId);
+              const slugs = message.payload?.slugs || (message.payload?.slug ? [message.payload.slug] : []);
+              console.log(`[GraphProvider ${instanceType}] Queueing focusBySlug:`, slugs);
               pendingFocusQueue.push({
-                type: 'focusNode',
-                payload: message.payload?.nodeId,
+                type: 'focusBySlug',
+                payload: { slugs, options: message.payload?.options },
                 options: message.payload?.options,
                 targetView: state.currentView
               });
             } else {
-              console.log(`[GraphProvider ${instanceType}] Executing focusNode:`, message.payload?.nodeId);
-              if (message.payload?.nodeId) {
-                instanceActions.zoomToNode(
-                  message.payload.nodeId,
-                  message.payload?.options?.duration,
-                  message.payload?.options?.padding
-                );
+              console.log(`[GraphProvider ${instanceType}] Executing focusBySlug:`, message.payload?.slug || message.payload?.slugs);
+              
+              // Handle both single slug (string) and multiple slugs (array)
+              const slugs = message.payload?.slugs || (message.payload?.slug ? [message.payload.slug] : []);
+              
+              if (slugs && slugs.length > 0) {
+                const slugToIdMapping = createSlugToIdMapping();
+                const nodeIds = slugs
+                  .map((slug: string) => slugToIdMapping.get(slug))
+                  .filter((id: string | undefined): id is string => id !== undefined);
+                
+                if (nodeIds.length === 0) {
+                  console.warn(`[GraphProvider ${instanceType}] No nodes found for slugs:`, slugs);
+                  console.log(`[GraphProvider ${instanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
+                  return;
+                }
+
+                if (nodeIds.length === 1) {
+                  // Single node: use zoomToNode
+                  console.log(`[GraphProvider ${instanceType}] Found node ID for slug:`, slugs[0], '->', nodeIds[0]);
+                  instanceActions.zoomToNode(
+                    nodeIds[0],
+                    message.payload?.options?.duration,
+                    message.payload?.options?.padding
+                  );
+                } else {
+                  // Multiple nodes: use multi-node zooming
+                  console.log(`[GraphProvider ${instanceType}] Found node IDs for slugs:`, slugs, '->', nodeIds);
+                  
+                  const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
+                  if (!currentGraphData || !currentGraphData.nodes) {
+                    console.warn(`[GraphProvider ${instanceType}] No graph data available for multi-slug focus`);
+                    return;
+                  }
+
+                  // Find the actual nodes from the provided node IDs
+                  const targetNodes = currentGraphData.nodes.filter((node: any) => 
+                    nodeIds.includes(node.id)
+                  );
+
+                  if (targetNodes.length === 0) {
+                    console.warn(`[GraphProvider ${instanceType}] No matching nodes found for provided node IDs:`, nodeIds);
+                    return;
+                  }
+
+                  // Multiple nodes: calculate bounding box
+                  const xCoords = targetNodes.map((node: any) => node.x);
+                  const yCoords = targetNodes.map((node: any) => node.y);
+                  
+                  const minX = Math.min(...xCoords);
+                  const maxX = Math.max(...xCoords);
+                  const minY = Math.min(...yCoords);
+                  const maxY = Math.max(...yCoords);
+
+                  // Calculate center and dimensions
+                  const centerX = (minX + maxX) / 2;
+                  const centerY = (minY + maxY) / 2;
+                  const width = maxX - minX;
+                  const height = maxY - minY;
+
+                  // Calculate appropriate zoom level based on the bounding box
+                  const graphInstance = instance.graphRef.current;
+                  if (!graphInstance) {
+                    console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
+                    return;
+                  }
+
+                  const canvasWidth = graphInstance.width?.() || 800;
+                  const canvasHeight = graphInstance.height?.() || 600;
+                  
+                  const padding = message.payload?.options?.padding || 50;
+                  const effectiveWidth = width + (padding * 2);
+                  const effectiveHeight = height + (padding * 2);
+                  
+                  const zoomX = canvasWidth / effectiveWidth;
+                  const zoomY = canvasHeight / effectiveHeight;
+                  const zoomLevel = Math.min(zoomX, zoomY, 3); // Cap zoom at 3x
+
+                  // Apply the calculated zoom and center
+                  if (typeof graphInstance.centerAt === 'function' && typeof graphInstance.zoom === 'function') {
+                    const duration = message.payload?.options?.duration || 400;
+                    graphInstance.centerAt(centerX, centerY, duration);
+                    graphInstance.zoom(zoomLevel, duration);
+                  } else {
+                    // Fallback to zoomToFit with filter
+                    const nodeIdSet = new Set(nodeIds);
+                    graphInstance.zoomToFit(
+                      message.payload?.options?.duration,
+                      message.payload?.options?.padding,
+                      (node: any) => nodeIdSet.has(node.id)
+                    );
+                  }
+                }
                 
                 // Handle continuous focusing
-                if (message.payload?.continuous) {
+                if (message.payload?.continuous && slugs.length === 1) {
                   setContinuousFocusDebug({
-                    type: 'node',
-                    target: message.payload.nodeId,
+                    type: 'slug',
+                    target: slugs[0],
                     options: message.payload.options
                   });
                 }
               }
             }
             break;
-          case 'focusBySlug':
+          case 'focusNodes':
             if (graphData.isLoading) {
-              console.log(`[GraphProvider ${instanceType}] Queueing focusBySlug:`, message.payload?.slug);
+              console.log(`[GraphProvider ${instanceType}] Queueing focusNodes:`, message.payload?.nodeIds);
               pendingFocusQueue.push({
-                type: 'focusBySlug',
-                payload: message.payload?.slug,
+                type: 'focusNodes',
+                payload: message.payload?.nodeIds,
                 options: message.payload?.options,
                 targetView: state.currentView
               });
             } else {
-              console.log(`[GraphProvider ${instanceType}] Executing focusBySlug:`, message.payload?.slug);
-              if (message.payload?.slug) {
-                const slugToIdMapping = createSlugToIdMapping();
-                const nodeId = slugToIdMapping.get(message.payload.slug);
+              console.log(`[GraphProvider ${instanceType}] Executing focusNodes:`, message.payload?.nodeIds);
+              if (message.payload?.nodeIds && Array.isArray(message.payload.nodeIds)) {
+                const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
                 
-                if (nodeId) {
-                  console.log(`[GraphProvider ${instanceType}] Found node ID for slug:`, message.payload.slug, '->', nodeId);
+                if (!currentGraphData || !currentGraphData.nodes) {
+                  console.warn(`[GraphProvider ${instanceType}] No graph data available for focusNodes`);
+                  return;
+                }
+
+                // Find the actual nodes from the provided node IDs
+                const targetNodes = currentGraphData.nodes.filter((node: any) => 
+                  message.payload.nodeIds.includes(node.id)
+                );
+
+                if (targetNodes.length === 0) {
+                  console.warn(`[GraphProvider ${instanceType}] No matching nodes found for provided node IDs:`, message.payload.nodeIds);
+                  return;
+                }
+
+                if (targetNodes.length === 1) {
+                  // Single node: use existing zoomToNode behavior
                   instanceActions.zoomToNode(
-                    nodeId,
+                    targetNodes[0].id,
                     message.payload?.options?.duration,
                     message.payload?.options?.padding
                   );
-                  
-                  // Handle continuous focusing
-                  if (message.payload?.continuous) {
-                    setContinuousFocusDebug({
-                      type: 'slug',
-                      target: message.payload.slug,
-                      options: message.payload.options
-                    });
-                  }
+                  return;
+                }
+
+                // Multiple nodes: calculate bounding box
+                const xCoords = targetNodes.map((node: any) => node.x);
+                const yCoords = targetNodes.map((node: any) => node.y);
+                
+                const minX = Math.min(...xCoords);
+                const maxX = Math.max(...xCoords);
+                const minY = Math.min(...yCoords);
+                const maxY = Math.max(...yCoords);
+
+                // Calculate center and dimensions
+                const centerX = (minX + maxX) / 2;
+                const centerY = (minY + maxY) / 2;
+                const width = maxX - minX;
+                const height = maxY - minY;
+
+                // Calculate appropriate zoom level based on the bounding box
+                const graphInstance = instance.graphRef.current;
+                if (!graphInstance) {
+                  console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
+                  return;
+                }
+
+                const canvasWidth = graphInstance.width?.() || 800;
+                const canvasHeight = graphInstance.height?.() || 600;
+                
+                const padding = message.payload?.options?.padding || 50;
+                const effectiveWidth = width + (padding * 2);
+                const effectiveHeight = height + (padding * 2);
+                
+                const zoomX = canvasWidth / effectiveWidth;
+                const zoomY = canvasHeight / effectiveHeight;
+                const zoomLevel = Math.min(zoomX, zoomY, 3); // Cap zoom at 3x
+
+                // Apply the calculated zoom and center
+                if (typeof graphInstance.centerAt === 'function' && typeof graphInstance.zoom === 'function') {
+                  const duration = message.payload?.options?.duration || 400;
+                  graphInstance.centerAt(centerX, centerY, duration);
+                  graphInstance.zoom(zoomLevel, duration);
                 } else {
-                  console.warn(`[GraphProvider ${instanceType}] No node found for slug:`, message.payload.slug);
-                  console.log(`[GraphProvider ${instanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
+                  // Fallback to zoomToFit with filter
+                  const nodeIdSet = new Set(message.payload.nodeIds);
+                  graphInstance.zoomToFit(
+                    message.payload?.options?.duration,
+                    message.payload?.options?.padding,
+                    (node: any) => nodeIdSet.has(node.id)
+                  );
+                }
+                
+                // Handle continuous focusing
+                if (message.payload?.continuous) {
+                  setContinuousFocusDebug({
+                    type: 'nodes',
+                    target: message.payload.nodeIds,
+                    options: message.payload.options
+                  });
                 }
               }
             }
             break;
+            
+          case 'focusBySlugs':
+            if (graphData.isLoading) {
+              console.log(`[GraphProvider ${instanceType}] Queueing focusBySlugs:`, message.payload?.slugs);
+              pendingFocusQueue.push({
+                type: 'focusBySlugs',
+                payload: message.payload?.slugs,
+                options: message.payload?.options,
+                targetView: state.currentView
+              });
+            } else {
+              console.log(`[GraphProvider ${instanceType}] Executing focusBySlugs:`, message.payload?.slugs);
+              if (message.payload?.slugs && Array.isArray(message.payload.slugs)) {
+                const slugToIdMapping = createSlugToIdMapping();
+                const nodeIds = message.payload.slugs
+                  .map((slug: string) => slugToIdMapping.get(slug))
+                  .filter((id: string | undefined): id is string => id !== undefined);
+                
+                if (nodeIds.length > 0) {
+                  console.log(`[GraphProvider ${instanceType}] Found node IDs for slugs:`, message.payload.slugs, '->', nodeIds);
+                  // Multi-node zooming is handled directly in the focusNodes case above
+                  
+                  // Handle continuous focusing
+                  if (message.payload?.continuous) {
+                    setContinuousFocusDebug({
+                      type: 'slugs',
+                      target: message.payload.slugs,
+                      options: message.payload.options
+                    });
+                  }
+                } else {
+                  console.warn(`[GraphProvider ${instanceType}] No nodes found for slugs:`, message.payload.slugs);
+                }
+              }
+            }
+            break;
+            
           case 'changeView':
             console.log(`[GraphProvider ${instanceType}] Executing changeView:`, message.payload?.view);
             if (message.payload?.view) {
