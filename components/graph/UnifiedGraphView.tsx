@@ -28,10 +28,10 @@ const GraphContent: React.FC<{
   const { locale } = useRouter()
   const { t } = useTranslation('common')
 
-  const getDimensions = () => {
+  const getDimensions = (): { width: number; height: number } | null => {
     switch (viewType) {
       case 'sidenav':
-        return { width: GRAPH_CONFIG.responsive.sidebar.width, height: GRAPH_CONFIG.responsive.sidebar.height };
+        return null; // Use responsive sizing
       case 'home':
       default:
         return null; // Use CSS classes for responsive sizing
@@ -173,7 +173,7 @@ const GraphContent: React.FC<{
         </div>
 
         {state.currentView === 'post_view' ? (
-          dimensions ? (
+          dimensions && dimensions.width && dimensions.height ? (
             <PostGraphView 
               className={styles.graphInner}
               width={dimensions.width} 
@@ -183,7 +183,7 @@ const GraphContent: React.FC<{
             <PostGraphView className={styles.graphInner} />
           )
         ) : (
-          dimensions ? (
+          dimensions && dimensions.width && dimensions.height ? (
             <TagGraphView 
               className={styles.graphInner}
               width={dimensions.width} 

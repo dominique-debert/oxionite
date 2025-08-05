@@ -29,8 +29,8 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   const { isDarkMode } = useDarkMode();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ 
-    width: width || GRAPH_CONFIG.responsive.sidebar.width, 
-    height: height || GRAPH_CONFIG.responsive.sidebar.height 
+    width: width || GRAPH_CONFIG.responsive.sidenav.width, 
+    height: height || GRAPH_CONFIG.responsive.sidenav.height 
   });
   const [isDimensionsReady, setIsDimensionsReady] = useState(false);
 

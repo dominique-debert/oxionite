@@ -196,7 +196,7 @@ export function SideNav({
       className={asideClasses}
     >
       <HomeButton />
-      <UnifiedGraphView siteMap={siteMap} viewType='sidenav' />
+      <UnifiedGraphView siteMap={siteMap} viewType='sidenav' className={styles.graphContainer} />
       <div 
         ref={navRef} 
         className={styles.categoryTreeContainer} 

@@ -9,6 +9,11 @@
   position: relative;
 }
 
+.graphContainer {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* Desktop styles */
 .desktop {
   position: fixed;

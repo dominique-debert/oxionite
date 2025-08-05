@@ -62,7 +62,7 @@ export const GRAPH_CONFIG = {
 
   // Responsive breakpoints
   responsive: {
-    sidebar: { width: 300, height: 300 },
+    sidenav: { width: 300, height: 300 },
     fullscreen: { minWidth: 400, minHeight: 400 },
     home: { width: 800, height: 600 },
   },
