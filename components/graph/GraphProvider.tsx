@@ -72,7 +72,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     if (zoomState) {
       stateActions.setZoomStateForView(state.currentView, zoomState);
     }
-  }, [instanceActions, stateActions, state.currentView]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [instanceActions, stateActions, state.currentView]);
 
   const applyCurrentZoom = useCallback((fitView = false) => {
     const savedZoom = state.zoomState[state.currentView];
@@ -81,7 +81,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     } else {
       instanceActions.zoomToFit();
     }
-  }, [instanceActions, state.zoomState, state.currentView]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [instanceActions, state.zoomState, state.currentView]);
 
   // Track continuous focus operations
   const [continuousFocus, setContinuousFocus] = useState<{

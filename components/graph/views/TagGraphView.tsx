@@ -50,7 +50,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     if (node.url && node.url !== '#') {
       void router.push(node.url);
     }
-  }, [router, actions, state.isModalOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [router, actions, state.isModalOpen]);
 
   useEffect(() => {
     if (state.isGraphLoaded && graphRef.current && state.currentView === 'tag_view' && isDimensionsReady) {

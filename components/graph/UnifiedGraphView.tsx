@@ -59,7 +59,7 @@ const GraphContent: React.FC<{
         graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, view, true);
       }
     }, 100);
-  }, [actions, viewType]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [actions, viewType]);
 
   const handleModalToggle = useCallback(() => {
     if (state.isModalOpen) {
