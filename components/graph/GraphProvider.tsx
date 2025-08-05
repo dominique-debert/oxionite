@@ -658,9 +658,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     const hasPostData = graphData.data.postGraph && graphData.data.postGraph.nodes.length > 0;
     const hasTagData = graphData.data.tagGraph && graphData.data.tagGraph.nodes.length > 0;
     const hasGraphInstance = instance.graphRef.current !== null;
-    const graphReady = state.isGraphLoaded && hasGraphInstance &&
-      ((state.currentView === 'post_view' && hasPostData) || 
-       (state.currentView === 'tag_view' && hasTagData));
+    const graphReady = state.isGraphLoaded && hasGraphInstance && (hasPostData || hasTagData);
     
     console.log(`[GraphProvider ${instanceType}] Graph readiness check:`, {
       isGraphLoaded: state.isGraphLoaded,
@@ -673,20 +671,33 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     
     if (graphReady) {
       console.log(`[GraphProvider ${instanceType}] Graph is fully ready, processing initial focus after delay...`);
-      // Add a small delay to ensure physics engine is fully stabilized
+      // Add a longer delay for route changes to ensure physics engine is fully stabilized
       setTimeout(() => {
         console.log(`[GraphProvider ${instanceType}] Delay complete, executing initial focus...`);
         graphControl.processInitialFocusWhenReady(instanceType, true);
-      }, 500);
+      }, 800);
     }
-  }, [state.isGraphLoaded, graphData.data.postGraph, graphData.data.tagGraph, state.currentView, instanceType, instance.graphRef.current]);
+  }, [state.isGraphLoaded, graphData.data.postGraph, graphData.data.tagGraph, state.currentView, instanceType, instance.graphRef.current, router.pathname]);
 
   // Handle client-side navigation (Next.js <Link>)
   useEffect(() => {
     const handleRouteChange = (url: string) => {
       console.log(`[GraphProvider ${instanceType}] Route changed to: ${url}`);
-      // Handle URL-based focus for client-side navigation
-      graphControl.handleUrlCurrentFocus(url, instanceType, state.currentView);
+      // Handle URL-based focus for client-side navigation using initial focus logic
+      graphControl.handleUrlInitialFocus(url, instanceType);
+      
+      // Force processing for route changes even if graph is already ready
+      setTimeout(() => {
+        const hasPostData = graphData.data.postGraph && graphData.data.postGraph.nodes.length > 0;
+        const hasTagData = graphData.data.tagGraph && graphData.data.tagGraph.nodes.length > 0;
+        const hasGraphInstance = instance.graphRef.current !== null;
+        const graphReady = state.isGraphLoaded && hasGraphInstance && (hasPostData || hasTagData);
+        
+        if (graphReady) {
+          console.log(`[GraphProvider ${instanceType}] Processing route change focus...`);
+          graphControl.processInitialFocusWhenReady(instanceType, true);
+        }
+      }, 100);
     };
 
     // Listen for route changes
@@ -695,7 +706,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     return () => {
       router.events.off('routeChangeComplete', handleRouteChange);
     };
-  }, [instanceType, state.currentView, router.events]);
+  }, [instanceType, state.currentView, router.events, graphData.data.postGraph, graphData.data.tagGraph, state.isGraphLoaded, instance.graphRef.current]);
 
   // Handle continuous focusing retry
   useEffect(() => {

@@ -342,16 +342,19 @@ class GraphControlAPI {
     // Handle based on segment only (view type independent)
     switch (request.segment) {
       case 'post':  
+        console.log(`[GraphControl] Processing initial focus request for post: ${request.slug}`);
         this.changeViewAndFocusBySlug('post_view', request.slug, instanceType);
         this.highlightBySlug([request.slug], instanceType);
         break;
         
       case 'category':
+        console.log(`[GraphControl] Processing initial focus request for category: ${request.slug}`);
         this.changeViewAndFocusBySlug('post_view', request.slug, instanceType);
         this.highlightBySlug([request.slug], instanceType);
         break;
         
       case 'tag':
+        console.log(`[GraphControl] Processing initial focus request for tag: ${request.slug}`);
         this.changeViewAndFocusBySlug('tag_view', request.slug, instanceType);
         this.highlightBySlug([request.slug], instanceType);
         break;
@@ -409,7 +412,8 @@ class GraphControlAPI {
       case 'category':
         if (effectiveCurrentView === 'post_view') {
           // Category segment with post_view: TODO - implement later
-          console.log(`[GraphControl] TODO: Handle category segment in post_view`);
+        this.changeViewAndFocusBySlug('post_view', slug, instanceType);
+        this.highlightBySlug([slug], instanceType);
         } else if (effectiveCurrentView === 'tag_view') {
           // Category segment with tag_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle category segment in tag_view`);
@@ -519,6 +523,7 @@ class GraphControlAPI {
     const slugs = Array.isArray(slug) ? slug : [slug];
     
     if (needsViewChange) {
+      console.log(`[GraphControl] Changing view to ${view} for ${instanceType}`);
       this.changeView(view, instanceType);
     }
     
@@ -555,6 +560,7 @@ class GraphControlAPI {
     const nodeIds = Array.isArray(nodeId) ? nodeId : [nodeId];
     
     if (needsViewChange) {
+      console.log(`[GraphControl] Changing view to ${view} for ${instanceType}`);
       this.changeView(view, instanceType);
     }
     
@@ -743,7 +749,7 @@ export function calculateZoomLevel(
     effectiveHeight
   });
 
-  // 4. 최종 줌 레벨을 다시 계산합니다.
+  // 4. 최종 줌 레벨을 다시 계산합니다. 
   const finalZoomX = targetCanvasWidth / effectiveWidth;
   const finalZoomY = targetCanvasHeight / effectiveHeight;
 
