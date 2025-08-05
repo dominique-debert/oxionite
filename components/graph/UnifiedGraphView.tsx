@@ -82,12 +82,12 @@ const GraphContent: React.FC<{
     const segments = pathname.split('/').filter(Boolean);
     
     // Find the route segment (post, category, tag, all-tags)
-    const routeTypes = ['post', 'category', 'tag', 'all-tags'];
+    const routeTypes = new Set(['post', 'category', 'tag', 'all-tags']);
     let routeSegment = '';
     
-    for (let i = 0; i < segments.length; i++) {
-      if (routeTypes.includes(segments[i])) {
-        routeSegment = segments[i];
+    for (const segment of segments) {
+      if (routeTypes.has(segment)) {
+        routeSegment = segment;
         break;
       }
     }
@@ -126,12 +126,12 @@ const GraphContent: React.FC<{
     const pathname = window.location.pathname;
     const segments = pathname.split('/').filter(Boolean);
     
-    const routeTypes = ['post', 'category', 'tag', 'all-tags'];
+    const routeTypes = new Set(['post', 'category', 'tag', 'all-tags']);
     let routeSegment = '';
     
-    for (let i = 0; i < segments.length; i++) {
-      if (routeTypes.includes(segments[i])) {
-        routeSegment = segments[i];
+    for (const segment of segments) {
+      if (routeTypes.has(segment)) {
+        routeSegment = segment;
         break;
       }
     }

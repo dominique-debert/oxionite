@@ -277,7 +277,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             }
             break;
           }
-          case 'focusNode': {
+          case 'focusNode':
             console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusNode:`, operation.payload);
             if (operation.continuous) {
               console.log(`[GraphProvider ${currentInstanceType}] Starting continuous focus for node:`, operation.payload);
@@ -294,7 +294,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               );
             }
             break;
-          }
           case 'focusNodes': {
             console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusNodes:`, operation.payload);
             const queuedNodeIds = operation.payload;
