@@ -516,18 +516,14 @@ class GraphControlAPI {
    * Sequential operation: change view and then focus by slug(s) with continuous retry
    */
   changeViewAndFocusBySlug(view: GraphViewType, slug: string | string[], instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
-    const currentState = this.instanceStates.get(instanceType);
-    const needsViewChange = !currentState || currentState.currentView !== view;
+    // Always force view change based on segment type, regardless of current state
+    console.log(`[GraphControl] Force changing view to ${view} for ${instanceType}`);
+    this.changeView(view, instanceType);
     
     // Normalize slug to array
     const slugs = Array.isArray(slug) ? slug : [slug];
     
-    if (needsViewChange) {
-      console.log(`[GraphControl] Changing view to ${view} for ${instanceType}`);
-      this.changeView(view, instanceType);
-    }
-    
-    // Always use continuous retry when view type changes (regardless of same/different)
+    // Always use delay to ensure view change completes
     setTimeout(() => {
       if (slugs.length === 1) {
         // Single slug: use existing behavior
@@ -537,14 +533,14 @@ class GraphControlAPI {
           payload: { slug: slugs[0], options, continuous: true }
         });
       } else {
-        // Multiple slugs: use focusBySlugs for zoom-to-fit
+        // Multiple slugs: use focusBySlug with array for zoom-to-fit
         this.sendMessage({
           type: 'focusBySlug',
           instanceType,
           payload: { slugs, options: { ...options, continuous: true } }
         });
       }
-    }, needsViewChange ? 50 : 0);
+    },  100);
   }
 
 
