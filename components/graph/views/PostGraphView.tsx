@@ -37,6 +37,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
   const [highlightedLinks, setHighlightedLinks] = useState<Set<any>>(new Set());
+  const [isMouseInCanvas, setIsMouseInCanvas] = useState(false);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
     if (state.isModalOpen) {
@@ -64,6 +65,8 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   }, [state.currentView, state.isGraphLoaded, isDimensionsReady]);
 
   const handleNodeHover = useCallback((node: GraphNode | null) => {
+    if (!isMouseInCanvas) return;
+    
     setHoveredNode(node);
     const newHighlightedNodeIds = new Set<string>();
     const newHighlightedLinks = new Set<any>();
@@ -86,7 +89,18 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     }
     setHighlightedNodeIds(newHighlightedNodeIds);
     setHighlightedLinks(newHighlightedLinks);
-  }, [postGraphData]);
+  }, [postGraphData, isMouseInCanvas]);
+
+  const handleMouseEnterCanvas = useCallback(() => {
+    setIsMouseInCanvas(true);
+  }, []);
+
+  const handleMouseLeaveCanvas = useCallback(() => {
+    setIsMouseInCanvas(false);
+    setHoveredNode(null);
+    setHighlightedNodeIds(new Set());
+    setHighlightedLinks(new Set());
+  }, []);
 
   const handleZoomEnd = useCallback(() => {
     actions.saveCurrentZoom();
@@ -278,7 +292,13 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   }
 
   return (
-    <div ref={containerRef} className={className} style={containerStyle}>
+    <div 
+      ref={containerRef} 
+      className={className} 
+      style={containerStyle}
+      onMouseEnter={handleMouseEnterCanvas}
+      onMouseLeave={handleMouseLeaveCanvas}
+    >
       {(graphWidth > 0 && graphHeight > 0) && (
         <ForceGraphWrapper
           ref={graphRef}
