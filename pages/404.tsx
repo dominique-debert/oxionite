@@ -21,7 +21,6 @@ export const getStaticProps = async ({ locale }: { locale: string }) => {
 export default function Page404({ siteMap }: PageProps) {
   return (
     <>
-      <PageHead site={siteMap?.site} title='Page Not Found' />
       <ErrorPage site={siteMap?.site} statusCode={404} />
     </>
   )

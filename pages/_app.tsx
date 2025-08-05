@@ -32,6 +32,8 @@ import { AppContext } from '@/lib/context/app-context'
 import { Noto_Sans_KR } from 'next/font/google'
 import { appWithTranslation } from 'next-i18next'
 import { graphControl } from '@/components/graph/utils/graph-control'
+import { PageHead } from '@/components/PageHead'
+import { getBlockTitle } from 'notion-utils'
 
 
 const notoKR = Noto_Sans_KR({
@@ -346,8 +348,48 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     pageInfo: pageInfo
   }
 
+  // Determine page title based on route
+  const getPageTitle = () => {
+    const { pathname, query } = router;
+    
+    if (pathname === '/') {
+      return pageProps.site?.name || '';
+    }
+    
+    if (pathname === '/post/[...slug]') {
+      const block = pageProps.pageId && pageProps.recordMap?.block?.[pageProps.pageId]?.value;
+      return (block && pageProps.recordMap) ? getBlockTitle(block, pageProps.recordMap) : pageProps.site?.name || '';
+    }
+    
+    if (pathname === '/category/[slug]') {
+      const block = pageProps.pageId && pageProps.recordMap?.block?.[pageProps.pageId]?.value;
+      return (block && pageProps.recordMap) ? getBlockTitle(block, pageProps.recordMap) : pageProps.site?.name || '';
+    }
+    
+    if (pathname === '/tag/[tag]') {
+      return `${query.tag}`;
+    }
+    
+    if (pathname === '/all-tags') {
+      return '모든 태그';
+    }
+    
+    if (pathname === '/404') {
+      return `404 - ${pageProps.site?.name || ''}`;
+    }
+    
+    return pageProps.site?.name || '';
+  };
+
+  const pageTitle = getPageTitle();
+
   return (
     <AppContext.Provider value={appContextValue}>
+      <PageHead
+        site={pageProps.site}
+        title={pageTitle}
+        pageId={pageProps.pageId}
+      />
       {SHOW_DEBUG_CONTROLS && <DebugControls />}
       <style jsx global>{`
         :root {

@@ -25,11 +25,6 @@ export default function AllTagsPage({ siteMap }: PageProps) {
   }
   return (
     <>
-      <PageHead 
-        site={siteMap.site}
-        title={t('allTags')}
-        description={t('allTags')}
-      />
       <div className={styles.container}>
         <h1 className={styles.title}>{t('allTags')}</h1>
         <TagList />

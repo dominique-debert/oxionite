@@ -255,12 +255,6 @@ export function NotionPageContent({
 
   return (
     <>
-      <PageHead
-        pageId={pageId}
-        site={site}
-        title={title}
-      />
-
       <div className={cs('notion-page', isMobile && 'mobile')}>
         <div className='notion-viewport'>
           <div className={cs(styles.main, styles.hasSideNav)}>
