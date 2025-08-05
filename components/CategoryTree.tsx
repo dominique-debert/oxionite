@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React from 'react'
 import styles from 'styles/components/CategoryTree.module.css'
+import { graphControl } from '@/components/graph/utils/graph-control'
 
 import type { PageInfo } from '@/lib/context/types'
 
@@ -53,8 +54,17 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   const postCount = isCategory ? countPostsRecursively(item) : 0
   const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' || item.type === 'Home' ? styles.postItem : ''}`
 
+  const handleMouseEnter = () => {
+    console.log('Hover:', item.slug);
+    graphControl.changeViewAndFocusBySlug('post_view', item.slug, 'sidenav');
+  };
+
   return (
-    <div className={styles.categoryItemContainer} style={{ paddingLeft: `${level * 16}px` }}>
+    <div 
+      className={styles.categoryItemContainer} 
+      style={{ paddingLeft: `${level * 16}px` }}
+      onMouseEnter={handleMouseEnter}
+    >
       {isCategory ? (
         <button onClick={toggleExpanded} className={styles.expandButton}>
           {isExpanded ? <IoChevronDown /> : <IoChevronForward />}

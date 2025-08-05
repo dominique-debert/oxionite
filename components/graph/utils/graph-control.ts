@@ -617,24 +617,6 @@ class GraphControlAPI {
     }
   }
 
-  /**
-   * Handle hover interactions from CategoryTree and TagButton
-   */
-  handleHover(hoverData: {
-    type: 'category' | 'tag' | 'post';
-    id: string;
-    instanceType: 'sidenav' | 'home';
-  }) {
-    const { type, id, instanceType } = hoverData;
-    
-    if (type === 'category' || type === 'post') {
-      this.changeView('post_view', instanceType);
-      this.focusNode(id, instanceType);
-    } else if (type === 'tag') {
-      this.changeView('tag_view', instanceType);
-      this.focusNode(id, instanceType);
-    }
-  }
 
   /**
    * Highlight nodes by slug (for post view)

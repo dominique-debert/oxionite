@@ -2,6 +2,7 @@ import React from 'react'
 import { useRouter } from 'next/router'
 import { useAppContext } from '@/lib/context/app-context'
 import Magnet from './react-bits/Magnet';
+import { graphControl } from '@/components/graph/utils/graph-control'
 
 import styles from '@/styles/components/TagButton.module.css'
 
@@ -35,6 +36,11 @@ export function TagButton({ tag }: TagButtonProps) {
     void router.push(`/tag/${encodeURIComponent(tag)}`)
   }
 
+  const handleMouseEnter = () => {
+    console.log('Hover Tag:', tag);
+    graphControl.changeViewAndFocusNode('tag_view', tag, 'sidenav');
+  };
+
   return (
     <Magnet
       key={tag}
@@ -50,6 +56,7 @@ export function TagButton({ tag }: TagButtonProps) {
       <button
         className={`${styles.tagButton} ${tagCount > 0 ? styles.hasBadge : ''}`}
         onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
         type="button"
       >
         <div className={styles.tagContent}>
