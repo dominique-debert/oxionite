@@ -6,21 +6,19 @@ import { useRouter } from 'next/router'
 import {
   formatDate,
   getBlockTitle,
-  getPageProperty,
+  getPageProperty
 } from 'notion-utils'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  NotionRenderer
-} from 'react-notion-x'
-import styles from 'styles/components/common.module.css'
+import { NotionRenderer } from 'react-notion-x'
 
 import type * as types from '@/lib/context/types'
 import * as config from '@/lib/config'
-import { mapImageUrl } from '@/lib/map-image-url'
 import { buildPageUrl } from '@/lib/context/build-page-url'
+import { mapImageUrl } from '@/lib/map-image-url'
 import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
-const localeConfig = require('../site.locale.json')
+import localeConfig from '../site.locale.json'
+import styles from 'styles/components/common.module.css'
 
 import { Loading } from './Loading'
 import { NotionComments } from './NotionComments'

@@ -174,7 +174,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
     const handleSlugFocus = () => {
       if (slugInput.trim()) {
-        const slugs = slugInput.split(',').map(s => s.trim()).filter(s => s);
+        const slugs = slugInput.split(',').map(s => s.trim()).filter(Boolean);
         console.log(`[Debug] Focusing on slugs:`, slugs);
         graphControl.changeViewAndFocusBySlug('post_view', slugs, 'sidenav');
       }
@@ -182,7 +182,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
     const handleTagFocus = () => {
       if (tagInput.trim()) {
-        const tags = tagInput.split(',').map(s => s.trim()).filter(s => s);
+        const tags = tagInput.split(',').map(s => s.trim()).filter(Boolean);
         console.log(`[Debug] Focusing on tags:`, tags);
         graphControl.changeViewAndFocusNode('tag_view', tags, 'sidenav');
       }
@@ -190,7 +190,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
     const handleSlugHighlight = () => {
       if (slugInput.trim()) {
-        const slugs = slugInput.split(',').map(s => s.trim()).filter(s => s);
+        const slugs = slugInput.split(',').map(s => s.trim()).filter(Boolean);
         console.log(`[Debug] Highlighting slugs:`, slugs);
         graphControl.highlightBySlug(slugs, 'sidenav');
       }
@@ -198,7 +198,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
     const handleTagHighlight = () => {
       if (tagInput.trim()) {
-        const tags = tagInput.split(',').map(s => s.trim()).filter(s => s);
+        const tags = tagInput.split(',').map(s => s.trim()).filter(Boolean);
         console.log(`[Debug] Highlighting tags:`, tags);
         graphControl.highlightByTag(tags, 'sidenav');
       }
