@@ -18,7 +18,7 @@ export interface NestedPostPageProps {
   isPrivate?: boolean
 }
 
-export default function NestedPostPage({ site, siteMap, pageId, recordMap, isPrivate }: NestedPostPageProps) {
+export default function NestedPostPage({ site, siteMap, pageId, recordMap, isPrivate, showTOC }: NestedPostPageProps & { showTOC?: boolean }) {
   if (isPrivate) {
     return (
       <div style={{ 
@@ -39,6 +39,7 @@ export default function NestedPostPage({ site, siteMap, pageId, recordMap, isPri
     siteMap,
     pageId,
     recordMap,
+    showTOC
   }
 
   return <NotionPage {...pageProps} />
