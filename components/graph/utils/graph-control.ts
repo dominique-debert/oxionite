@@ -319,12 +319,18 @@ class GraphControlAPI {
    * Process initial focus request when graph is ready
    */
   processInitialFocusWhenReady(instanceType: 'sidenav' | 'home', graphReady: boolean) {
+    console.log(`[GraphControl] Checking initial focus conditions: graphReady=${graphReady}, window=${typeof window}`);
+    
     if (!graphReady || typeof window === 'undefined') {
+      console.log(`[GraphControl] Skipping initial focus - conditions not met`);
       return;
     }
 
     const request = (window as any).__graphInitialFocus?.[instanceType];
+    console.log(`[GraphControl] Checking for stored request in ${instanceType}:`, request);
+    
     if (!request) {
+      console.log(`[GraphControl] No initial focus request found for ${instanceType}`);
       return;
     }
 
@@ -335,21 +341,24 @@ class GraphControlAPI {
 
     // Handle based on segment only (view type independent)
     switch (request.segment) {
-      case 'post':
+      case 'post':  
         this.changeViewAndFocusBySlug('post_view', request.slug, instanceType);
         this.highlightBySlug([request.slug], instanceType);
         break;
         
       case 'category':
-        // Handle category segment for initial focus
+        this.changeViewAndFocusBySlug('post_view', request.slug, instanceType);
+        this.highlightBySlug([request.slug], instanceType);
         break;
         
       case 'tag':
-        // Handle tag segment for initial focus
+        this.changeViewAndFocusBySlug('tag_view', request.slug, instanceType);
+        this.highlightBySlug([request.slug], instanceType);
         break;
         
       case 'all-tags':
-        // Handle all-tags segment for initial focus
+        console.log(`[GraphControl] Switching to tag view for all-tags`);
+        this.changeView('tag_view', instanceType);
         break;
         
       default:

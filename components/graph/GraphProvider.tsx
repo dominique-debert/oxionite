@@ -1,4 +1,5 @@
 import React, { createContext, useContext, ReactNode, useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import type { GraphContextValue, GraphViewType } from './types/graph.types';
 import { useGraphState } from './hooks/useGraphState';
 import { useGraphData } from './hooks/useGraphData';
@@ -61,6 +62,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     }
   }, [siteMap, recordMap]);
 
+  const router = useRouter();
   const { state, actions: stateActions } = useGraphState();
   const graphData = useGraphData(siteMap, locale);
   const { instance, actions: instanceActions } = useGraphInstance();
@@ -651,45 +653,49 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     };
   }, [instanceActions, stateActions, graphData.data.postGraph, graphData.isLoading, state.currentView]);
 
-  // Process initial focus when graph is ready
+  // Handle initial focus on page load and route changes
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    const hasPostData = graphData.data.postGraph && graphData.data.postGraph.nodes.length > 0;
+    const hasTagData = graphData.data.tagGraph && graphData.data.tagGraph.nodes.length > 0;
+    const hasGraphInstance = instance.graphRef.current !== null;
+    const graphReady = state.isGraphLoaded && hasGraphInstance &&
+      ((state.currentView === 'post_view' && hasPostData) || 
+       (state.currentView === 'tag_view' && hasTagData));
     
-    const checkReadiness = () => {
-      // Check if graph is ready - need both data and instance
-      const hasPostData = graphData.data.postGraph && graphData.data.postGraph.nodes.length > 0;
-      const hasTagData = graphData.data.tagGraph && graphData.data.tagGraph.nodes.length > 0;
-      const hasGraphInstance = instance.graphRef.current !== null;
-      const graphReady = !graphData.isLoading && hasGraphInstance &&
-        ((state.currentView === 'post_view' && hasPostData) || 
-         (state.currentView === 'tag_view' && hasTagData));
-      
-      console.log(`[GraphProvider ${instanceType}] Graph readiness check:`, {
-        isLoading: graphData.isLoading,
-        hasPostData,
-        hasTagData,
-        hasGraphInstance,
-        currentView: state.currentView,
-        graphReady
-      });
-      
-      if (graphReady) {
-        console.log(`[GraphProvider ${instanceType}] Graph is ready, processing initial focus...`);
-        // Add a small delay to ensure graph is fully initialized
-        timeoutId = setTimeout(() => {
-          graphControl.processInitialFocusWhenReady(instanceType, true);
-        }, 100);
-      }
+    console.log(`[GraphProvider ${instanceType}] Graph readiness check:`, {
+      isGraphLoaded: state.isGraphLoaded,
+      hasPostData,
+      hasTagData,
+      hasGraphInstance,
+      currentView: state.currentView,
+      graphReady
+    });
+    
+    if (graphReady) {
+      console.log(`[GraphProvider ${instanceType}] Graph is fully ready, processing initial focus after delay...`);
+      // Add a small delay to ensure physics engine is fully stabilized
+      setTimeout(() => {
+        console.log(`[GraphProvider ${instanceType}] Delay complete, executing initial focus...`);
+        graphControl.processInitialFocusWhenReady(instanceType, true);
+      }, 500);
+    }
+  }, [state.isGraphLoaded, graphData.data.postGraph, graphData.data.tagGraph, state.currentView, instanceType, instance.graphRef.current]);
+
+  // Handle client-side navigation (Next.js <Link>)
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      console.log(`[GraphProvider ${instanceType}] Route changed to: ${url}`);
+      // Handle URL-based focus for client-side navigation
+      graphControl.handleUrlCurrentFocus(url, instanceType, state.currentView);
     };
-    
-    checkReadiness();
+
+    // Listen for route changes
+    router.events.on('routeChangeComplete', handleRouteChange);
     
     return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      router.events.off('routeChangeComplete', handleRouteChange);
     };
-  }, [graphData.isLoading, graphData.data.postGraph, graphData.data.tagGraph, state.currentView, instanceType, instance.graphRef.current]);
+  }, [instanceType, state.currentView, router.events]);
 
   // Handle continuous focusing retry
   useEffect(() => {
