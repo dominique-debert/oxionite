@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react'
 import type * as types from '@/lib/context/types'
 
 export interface AppContextType {
-  siteMap: types.SiteMap
+  siteMap: types.SiteMap | undefined
   pageInfo: types.PageInfo | null
 }
 

@@ -1,5 +1,6 @@
 import { IoMoonSharp, IoSunnyOutline, IoMenuOutline } from 'react-icons/io5'
 import { FaTags } from 'react-icons/fa'
+import { MdError } from 'react-icons/md'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
@@ -106,11 +107,6 @@ export const TopNav: React.FC<TopNavProps> = ({
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     const { pathname, query, asPath } = router
 
-
-
-    // Build hierarchical breadcrumbs from navigation tree and current page
-    if (!siteMap) return []
-
     const breadcrumbs: BreadcrumbItem[] = [
       {
         title: siteConfig.name,
@@ -118,10 +114,24 @@ export const TopNav: React.FC<TopNavProps> = ({
       }
     ]
 
+    // Handle 404 page
+    if (pathname === '/404') {
+      return [
+        ...breadcrumbs,
+        {
+          title: '404',
+          href: '/404'
+        }
+      ]
+    }
+
     // If we're on the root page, just return the base breadcrumb
     if (pathname === '/') {
       return breadcrumbs
     }
+
+    // Build hierarchical breadcrumbs from navigation tree and current page
+    if (!siteMap) return breadcrumbs
 
     if (!pageId) {
       // Handle /all-tags page
@@ -260,10 +270,15 @@ export const TopNav: React.FC<TopNavProps> = ({
                   {!isFirstCrumb && <span className="breadcrumb-separator">›</span>}
                   {isLastCrumb || !crumb.href ? (
                     <span className="breadcrumb-item active">
-                      {(index === 1 && pathname.startsWith('/tag/') && crumb.title === 'All Tags') || 
-                       (index === 1 && pathname === '/all-tags' && crumb.title === 'All Tags') ? (
+                      {(index === 1 && pathname.startsWith('/tag/')) || 
+                       (index === 1 && pathname === '/all-tags') ? (
                         <>
                           <FaTags style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
+                          {crumb.title}
+                        </>
+                      ) : (pathname === '/404' && index === 1) ? (
+                        <>
+                          <MdError style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
                           {crumb.title}
                         </>
                       ) : (
@@ -272,10 +287,15 @@ export const TopNav: React.FC<TopNavProps> = ({
                     </span>
                   ) : (
                     <Link href={crumb.href} className="breadcrumb-item">
-                      {(index === 1 && pathname.startsWith('/tag/') && crumb.title === t('allTags')) || 
-                       (index === 1 && pathname === '/all-tags' && crumb.title === t('allTags')) ? (
+                      {(index === 1 && pathname.startsWith('/tag/')) || 
+                       (index === 1 && pathname === '/all-tags') ? (
                         <>
                           <FaTags style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
+                          {crumb.title}
+                        </>
+                      ) : (pathname === '/404' && index === 1) ? (
+                        <>
+                          <MdError style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
                           {crumb.title}
                         </>
                       ) : (

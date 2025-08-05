@@ -334,13 +334,16 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     );
   };
 
-  if (!siteMap) {
+  // Check if this is a 404 page
+  const is404Page = router.pathname === '/404';
+  
+  if (!siteMap && !is404Page) {
     return <Component {...pageProps} />
   }
 
   const appContextValue = {
-    siteMap,
-    pageInfo
+    siteMap: siteMap,
+    pageInfo: pageInfo
   }
 
   return (
@@ -378,19 +381,19 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
         />
 
         {/* Layer 1: Fixed elements that are independent of scroll */}
-        {siteMap && (
+        {(siteMap || is404Page) && (
           <SideNav
             siteMap={siteMap}
             isCollapsed={!showDesktopSideNav}
             isMobileMenuOpen={isMobileMenuOpen}
           />
         )}
-        {siteMap && (pageProps.pageId || router.pathname.startsWith('/tag/') || router.pathname === '/all-tags') && (
+        {(siteMap || is404Page) && (
           <div
             style={{
               position: 'fixed',
               top: 16,
-              left: showDesktopSideNav ? 'calc(var(--sidenav-width) + 32px)' : 0,
+              left: showDesktopSideNav && siteMap ? 'calc(var(--sidenav-width) + 32px)' : 0,
               right: 0,
               zIndex: 1000
             }}

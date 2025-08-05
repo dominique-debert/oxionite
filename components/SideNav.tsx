@@ -51,7 +51,7 @@ const findPathToActiveItem = (items: types.PageInfo[], activeSlug: string): stri
 };
 
 interface SideNavProps {
-  siteMap: types.SiteMap
+  siteMap: types.SiteMap | undefined
   isCollapsed?: boolean
   isMobileMenuOpen?: boolean
 }

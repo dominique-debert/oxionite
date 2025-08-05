@@ -180,3 +180,44 @@
 .hidden {
   visibility: hidden;
 }
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  color: var(--primary-text-color);
+  text-align: left;
+}
+
+.errorContent {
+  max-width: 600px;
+  width: 100%;
+  padding: 2rem;
+  text-align: left;
+}
+
+.errorTitle {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: var(--primary-text-color);
+}
+
+.errorDescription {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  color: var(--primary-text-color);
+}
+
+.errorLink {
+  color: var(--primary-text-color);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.errorLink:hover {
+  opacity: 0.8;
+}
