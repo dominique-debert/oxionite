@@ -451,8 +451,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                         console.log(`[GraphProvider ${currentInstanceType}] Local retry max retries (${maxRetries}) reached after ${totalElapsed}ms, stopping for node:`, nodeId);
                         clearInterval(intervalId);
                       }
-                    } catch (error) {
-                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, error);
+                    } catch (err) {
+                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, err);
                       clearInterval(intervalId);
                     }
                   }, retryInterval);
@@ -523,8 +523,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                         console.log(`[GraphProvider ${currentInstanceType}] Local retry max retries (${maxRetries}) reached after ${totalElapsed}ms, stopping for nodes:`, nodeIds);
                         clearInterval(intervalId);
                       }
-                    } catch (error) {
-                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, error);
+                    } catch (err) {
+                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, err);
                       clearInterval(intervalId);
                     }
                   }, retryInterval);
@@ -602,8 +602,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                         console.log(`[GraphProvider ${currentInstanceType}] Local retry max retries (${maxRetries}) reached after ${totalElapsed}ms, stopping for slugs:`, slugs);
                         clearInterval(intervalId);
                       }
-                    } catch (error) {
-                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, error);
+                    } catch (err) {
+                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, err);
                       clearInterval(intervalId);
                     }
                   }, retryInterval);
@@ -759,8 +759,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             setContinuousFocus(null);
             clearInterval(intervalId);
           }
-        } catch (error) {
-          console.warn(`[GraphProvider] Error in continuous focus:`, error);
+        } catch (err) {
+          console.warn(`[GraphProvider] Error in continuous focus:`, err);
           setContinuousFocus(null);
           clearInterval(intervalId);
         }
