@@ -239,7 +239,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
         }
         
         switch (operation.type) {
-          case 'focusBySlug':
+          case 'focusBySlug': {
             const slugToIdMapping = createSlugToIdMapping(operation.targetView as GraphViewType);
             const slugs = operation.payload?.slugs || (operation.payload ? [operation.payload] : []);
             
@@ -276,8 +276,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               console.log(`[GraphProvider ${currentInstanceType}] Multi-slug focus queued for:`, nodeIds);
             }
             break;
-            
-          case 'focusNode':
+          }
+          case 'focusNode': {
             console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusNode:`, operation.payload);
             if (operation.continuous) {
               console.log(`[GraphProvider ${currentInstanceType}] Starting continuous focus for node:`, operation.payload);
@@ -294,8 +294,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               );
             }
             break;
-            
-          case 'focusNodes':
+          }
+          case 'focusNodes': {
             console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusNodes:`, operation.payload);
             const queuedNodeIds = operation.payload;
             if (queuedNodeIds && Array.isArray(queuedNodeIds) && queuedNodeIds.length > 0) {
@@ -378,6 +378,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 }
             }
             break;
+          }
         }
       }
     };
