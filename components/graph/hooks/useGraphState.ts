@@ -9,6 +9,8 @@ export const useGraphState = () => {
     zoomState: {},
     isGraphLoaded: false,
     currentTag: undefined,
+    highlightSlugs: [],
+    highlightTags: [],
   }));
 
   const setCurrentView = useCallback((view: GraphViewType) => {
@@ -45,6 +47,18 @@ export const useGraphState = () => {
     setState(prev => ({ ...prev, currentTag: tag }));
   }, []);
 
+  const setHighlightSlugs = useCallback((slugs: string[]) => {
+    setState(prev => ({ ...prev, highlightSlugs: slugs }));
+  }, []);
+
+  const setHighlightTags = useCallback((tags: string[]) => {
+    setState(prev => ({ ...prev, highlightTags: tags }));
+  }, []);
+
+  const clearHighlight = useCallback(() => {
+    setState(prev => ({ ...prev, highlightSlugs: [], highlightTags: [] }));
+  }, []);
+
   const resetZoomState = useCallback((view?: GraphViewType) => {
     if (view) {
       setState(prev => {
@@ -67,6 +81,9 @@ export const useGraphState = () => {
       setZoomStateForView,
       setIsGraphLoaded,
       setCurrentTag,
+      setHighlightSlugs,
+      setHighlightTags,
+      clearHighlight,
       resetZoomState,
     },
   };

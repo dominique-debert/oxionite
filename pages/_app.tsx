@@ -188,6 +188,22 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
       }
     };
 
+    const handleSlugHighlight = () => {
+      if (slugInput.trim()) {
+        const slugs = slugInput.split(',').map(s => s.trim()).filter(s => s);
+        console.log(`[Debug] Highlighting slugs:`, slugs);
+        graphControl.highlightBySlug(slugs, 'sidenav');
+      }
+    };
+
+    const handleTagHighlight = () => {
+      if (tagInput.trim()) {
+        const tags = tagInput.split(',').map(s => s.trim()).filter(s => s);
+        console.log(`[Debug] Highlighting tags:`, tags);
+        graphControl.highlightByTag(tags, 'sidenav');
+      }
+    };
+
     return (
       <div style={{
         position: 'fixed',
@@ -248,6 +264,12 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
           >
             Focus Slug
           </button>
+          <button 
+            onClick={handleSlugHighlight}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px', backgroundColor: '#ff9800' }}
+          >
+            Highlight Slug
+          </button>
         </div>
 
         <div style={{ marginTop: '8px' }}>
@@ -272,6 +294,12 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
             style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
           >
             Focus Tag
+          </button>
+          <button 
+            onClick={handleTagHighlight}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px', backgroundColor: '#ff9800' }}
+          >
+            Highlight Tag
           </button>
         </div>
 

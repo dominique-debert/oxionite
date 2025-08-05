@@ -44,6 +44,8 @@ export interface GraphState {
   zoomState: Record<string, ZoomState>;
   isGraphLoaded: boolean;
   currentTag?: string;
+  highlightSlugs: string[];
+  highlightTags: string[];
 }
 
 export interface GraphContextValue {

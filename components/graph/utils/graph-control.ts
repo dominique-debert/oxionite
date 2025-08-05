@@ -325,21 +325,6 @@ class GraphControlAPI {
     }
   }
 
-  highlightNodes(nodeIds: string[], instanceType: 'sidenav' | 'home' = 'sidenav') {
-    this.sendMessage({
-      type: 'highlightNodes',
-      instanceType,
-      payload: { nodeIds }
-    });
-  }
-
-  clearHighlight(instanceType: 'sidenav' | 'home' = 'sidenav') {
-    this.sendMessage({
-      type: 'clearHighlight',
-      instanceType
-    });
-  }
-
   /**
    * Handle modal open/close events
    */
@@ -372,6 +357,48 @@ class GraphControlAPI {
       this.changeView('tag_view', instanceType);
       this.focusNode(id, instanceType);
     }
+  }
+
+  /**
+   * Highlight nodes by slug (for post view)
+   */
+  highlightBySlug(slugs: string[], instanceType: 'sidenav' | 'home' = 'sidenav') {
+    console.log(`[GraphControl] Highlighting slugs:`, slugs);
+    this.sendMessage({
+      type: 'highlightNodes',
+      instanceType,
+      payload: {
+        type: 'slug',
+        values: slugs
+      }
+    });
+  }
+
+  /**
+   * Highlight nodes by tag (for tag view)
+   */
+  highlightByTag(tags: string[], instanceType: 'sidenav' | 'home' = 'sidenav') {
+    console.log(`[GraphControl] Highlighting tags:`, tags);
+    this.sendMessage({
+      type: 'highlightNodes',
+      instanceType,
+      payload: {
+        type: 'tag',
+        values: tags
+      }
+    });
+  }
+
+  /**
+   * Clear all highlights
+   */
+  clearHighlight(instanceType: 'sidenav' | 'home' = 'sidenav') {
+    console.log(`[GraphControl] Clearing highlights`);
+    this.sendMessage({
+      type: 'clearHighlight',
+      instanceType,
+      payload: {}
+    });
   }
 
   /**

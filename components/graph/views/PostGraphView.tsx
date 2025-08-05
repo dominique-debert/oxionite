@@ -112,8 +112,9 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
 
   const nodeCanvasObject = useCallback((node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
-    const isHighlighted = highlightedNodeIds.has(node.id as string);
-    ctx.globalAlpha = !hoveredNode || isHighlighted ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
+    const isSlugHighlighted = state.highlightSlugs.length > 0 && node.slug && state.highlightSlugs.includes(node.slug);
+    const isHoveredHighlighted = highlightedNodeIds.has(node.id as string);
+    ctx.globalAlpha = !hoveredNode || isHoveredHighlighted ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
 
     const label = node.name;
     let nodeSize: number;
@@ -133,7 +134,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     const W_OUTER = GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
     const W_INNER = GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
-    ctx.strokeStyle = colors.nodeOuterBorder;
+    ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;
     ctx.lineWidth = W_OUTER;
     if (node.type === 'Category') {
       const outerPathX = node.x! - (nodeSize / 2) + (W_OUTER / 2);

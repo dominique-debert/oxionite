@@ -94,8 +94,9 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   const nodeCanvasObject = useCallback((_node: GraphNode, ctx: CanvasRenderingContext2D) => {
     const node = _node as Required<GraphNode>;
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
-    const isHighlighted = highlightedNodeIds.has(node.id);
-    ctx.globalAlpha = !hoveredNode || isHighlighted ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
+    const isHoveredHighlighted = highlightedNodeIds.has(node.id);
+    const isTagHighlighted = state.highlightTags.length > 0 && node.id && state.highlightTags.includes(node.id);
+    ctx.globalAlpha = !hoveredNode || isHoveredHighlighted ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
 
     const isCurrentTag = currentTag === node.id;
     const label = node.type === 'Tag' ? `# ${node.name}` : node.name;
@@ -108,7 +109,8 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     const W_INNER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
     // Outer border
-    ctx.strokeStyle = isCurrentTag ? colors.highlight : colors.nodeOuterBorder;
+    ctx.strokeStyle = isTagHighlighted ? colors.nodeHighlightOuterBorder : 
+                     isCurrentTag ? colors.highlight : colors.nodeOuterBorder;
     ctx.lineWidth = W_OUTER;
     const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
     ctx.beginPath();

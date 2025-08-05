@@ -603,6 +603,20 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               }
             }
             break;
+
+          case 'highlightNodes':
+            console.log(`[GraphProvider ${instanceType}] Executing highlightNodes:`, message.payload);
+            if (message.payload?.type === 'slug') {
+              stateActions.setHighlightSlugs(message.payload.values || []);
+            } else if (message.payload?.type === 'tag') {
+              stateActions.setHighlightTags(message.payload.values || []);
+            }
+            break;
+
+          case 'clearHighlight':
+            console.log(`[GraphProvider ${instanceType}] Executing clearHighlight`);
+            stateActions.clearHighlight();
+            break;
             
           case 'changeView':
             console.log(`[GraphProvider ${instanceType}] Executing changeView:`, message.payload?.view);
