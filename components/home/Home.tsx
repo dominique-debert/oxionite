@@ -1,6 +1,8 @@
 import React, { useMemo,useState } from 'react'
+import { useRouter } from 'next/router'
 
 import styles from 'styles/components/home.module.css'
+import localeConfig from '../../site.locale.json'
 
 import type { PageInfo, PageProps } from '@/lib/context/types'
 
@@ -21,12 +23,15 @@ export function Home({
   homeRecordMaps,
   isMobile
 }: PageProps) {
+  const router = useRouter()
+  const currentLocale = router.locale || localeConfig.defaultLocale
+
   const homePages = useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap).filter(
-      (page: PageInfo) => page.type === 'Home'
+      (page: PageInfo) => page.type === 'Home' && page.language === currentLocale
     )
-  }, [siteMap])
+  }, [siteMap, currentLocale])
   
   const getInitialTab = () => {
     if (homePages.length > 0 && homePages[0]) {
