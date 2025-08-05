@@ -33,10 +33,10 @@ export interface GraphControlOptions {
  * Manages communication between external components (routing, UI) and graph instances
  */
 class GraphControlAPI {
-  private instanceState: Map<string, any> = new Map();
-  private listeners: Map<string, Array<(message: any) => void>> = new Map();
-  private focusIntervals: Map<string, NodeJS.Timeout> = new Map();
-  private pendingFitToHome: Map<string, boolean> = new Map();
+  private instanceState = new Map<string, any>();
+  private listeners = new Map<string, Array<(message: any) => void>>();
+  private focusIntervals = new Map<string, NodeJS.Timeout>();
+  private pendingFitToHome = new Map<string, boolean>();
   private instanceStates = new Map<string, {
     currentView: GraphViewType;
     focusTarget: FocusTarget | null;
@@ -231,7 +231,7 @@ class GraphControlAPI {
     const listeners = this.listeners.get(instanceType);
     if (listeners) {
       const index = listeners.indexOf(callback);
-      if (index > -1) {
+      if (index !== -1) {
         listeners.splice(index, 1);
       }
     }
@@ -263,11 +263,11 @@ class GraphControlAPI {
     
     // Smart approach: Look for actual routing patterns
     // Find the first occurrence of our known route types and use everything after
-    const routeTypes = ['post', 'category', 'tag', 'all-tags'];
+    const routeTypes = new Set(['post', 'category', 'tag', 'all-tags']);
     let startIndex = 0;
     
-    for (let i = 0; i < segments.length; i++) {
-      if (routeTypes.includes(segments[i])) {
+    for (const [i, segment] of segments.entries()) {
+      if (routeTypes.has(segment)) {
         startIndex = i;
         break;
       }
@@ -398,7 +398,7 @@ class GraphControlAPI {
   /**
    * Handle URL-based routing
    */
-  handleUrlCurrentFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType, continuousFocus: boolean = false) {
+  handleUrlCurrentFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType, continuousFocus = false) {
     console.log(`[GraphControl] handleUrlCurrentFocus: ${pathname} for ${instanceType}, currentView: ${currentView}, continuousFocus: ${continuousFocus}`);
     
     const { segment, slug } = this.urlParser(pathname);
@@ -440,11 +440,13 @@ class GraphControlAPI {
           this.changeViewAndFocusBySlug('post_view', slug, instanceType, undefined, continuousFocus);
           this.highlightBySlug([slug], instanceType);
         } else if (effectiveCurrentView === 'tag_view') {
+          // Do nothing
         }
         break;
         
       case 'tag':
-        if (effectiveCurrentView === 'post_view') {``
+        if (effectiveCurrentView === 'post_view') {
+          // Do nothing
         } else if (effectiveCurrentView === 'tag_view' && slug) {
           this.changeViewAndFocusBySlug('tag_view', slug, instanceType, undefined, continuousFocus);
           this.highlightByTag([slug], instanceType);
