@@ -636,6 +636,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             console.log(`[GraphProvider ${currentInstanceType}] Executing changeView:`, message.payload?.view);
             if (message.payload?.view) {
               stateActions.setCurrentView(message.payload.view);
+              
               // Don't clear pending operations - let them process with new view
             }
             break;

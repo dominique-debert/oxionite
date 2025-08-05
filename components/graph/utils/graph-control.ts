@@ -35,11 +35,11 @@ class GraphControlAPI {
   private instanceState: Map<string, any> = new Map();
   private listeners: Map<string, Array<(message: any) => void>> = new Map();
   private focusIntervals: Map<string, NodeJS.Timeout> = new Map();
-  private instanceStates: Map<string, {
+  private instanceStates = new Map<string, {
     currentView: GraphViewType;
     focusTarget: FocusTarget | null;
     isModalOpen: boolean;
-  }> = new Map();
+  }>();
   private siteMap: SiteMap | null = null;
   private recordMap: any | null = null;
 
@@ -374,7 +374,7 @@ class GraphControlAPI {
    * Handle URL-based routing
    */
   handleUrlCurrentFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType) {
-    console.log(`[GraphControl] Handling URL: ${pathname} for ${instanceType}`);
+    console.log(`[GraphControl] handleUrlCurrentFocus: ${pathname} for ${instanceType}, currentView: ${currentView}`);
     
     const { segment, slug } = this.urlParser(pathname);
     
@@ -504,7 +504,11 @@ class GraphControlAPI {
   }
 
   changeView(view: GraphViewType, instanceType: 'sidenav' | 'home' = 'sidenav') {
-    this.updateInstanceState(instanceType, { currentView: view });
+    console.log(`[GraphControl] changeView: ${instanceType} switching to ${view}`);
+    
+    this.updateInstanceState(instanceType, { 
+      currentView: view,
+    });
     this.sendMessage({
       type: 'changeView',
       instanceType,
@@ -654,6 +658,13 @@ class GraphControlAPI {
       instanceType,
       payload: {}
     });
+  }
+
+  /**
+   * Get instance state for a specific instance type
+   */
+  getInstanceState(instanceType: string) {
+    return this.instanceStates.get(instanceType);
   }
 
   /**

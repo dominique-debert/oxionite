@@ -52,7 +52,14 @@ const GraphContent: React.FC<{
 
   const handleViewChange = useCallback((view: 'post_view' | 'tag_view') => {
     actions.setCurrentView(view);
-  }, [actions]);
+    
+    // Always trigger URL focus when switching views
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, view);
+      }
+    }, 100);
+  }, [actions, viewType]);
 
   const handleModalToggle = useCallback(() => {
     if (state.isModalOpen) {
@@ -87,9 +94,7 @@ const GraphContent: React.FC<{
     
     const currentView = state.currentView;
 
-    console.log(`[GraphContent] Current view: ${currentView}`);
-    console.log(`[GraphContent] Route segment: ${routeSegment}`);
-    console.log(`[GraphContent] Segments: ${segments}`);
+
     
     // Case 1: root/ - disable in both views
     if (segments.length < 2) {

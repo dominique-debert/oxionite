@@ -6,7 +6,10 @@ export const useGraphState = () => {
     currentView: 'post_view',
     displayType: 'home',
     isModalOpen: false,
-    zoomState: {},
+    zoomState: {
+      post_view: { zoom: 1, center: { x: 0, y: 0 } },
+      tag_view: { zoom: 1, center: { x: 0, y: 0 } },
+    },
     isGraphLoaded: false,
     currentTag: undefined,
     highlightSlugs: [],
@@ -70,6 +73,8 @@ export const useGraphState = () => {
       setState(prev => ({ ...prev, zoomState: {} }));
     }
   }, []);
+
+
 
   return {
     state,
