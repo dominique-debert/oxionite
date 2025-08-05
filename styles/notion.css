@@ -711,6 +711,21 @@ span.notion-default_background {
   border-color: var(--secondary-bg-color);
 }
 
+.notion-google-drive-link {
+  border-radius: 12px;
+  background-color: var(--default-bg-color);
+  backdrop-filter: blur(10px);
+  border-color: var(--border-color);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.notion-google-drive-body {
+ border-color: var(--border-color); 
+}
+
+.notion-google-drive-link:hover {
+  background-color: var(--hover-bg-color);
+}
 
 
 /*
