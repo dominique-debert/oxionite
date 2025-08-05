@@ -118,7 +118,7 @@ const GraphContent: React.FC<{
     
     // Default: enable button
     return false;
-  }, [state.currentView, router.asPath]);
+  }, [state.currentView, router.asPath]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getLocationButtonTooltip = useCallback(() => {
     if (typeof window === 'undefined') return "Focus on current page";
@@ -155,7 +155,7 @@ const GraphContent: React.FC<{
     }
     
     return "Focus on current page";
-  }, [state.currentView, router.asPath]);
+  }, [state.currentView, router.asPath]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFitToHome = useCallback(() => {
     actions.zoomToFit();

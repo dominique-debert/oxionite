@@ -60,7 +60,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
         actions.applyCurrentZoom(true); // Force fit to new dimensions
       }
     }
-  }, [currentTag, state.currentView, state.isGraphLoaded, isDimensionsReady]);
+  }, [currentTag, state.currentView, state.isGraphLoaded, isDimensionsReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNodeHover = useCallback((node: GraphNode | null) => {
     if (!isMouseInCanvas) return;

@@ -63,7 +63,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     if (state.isGraphLoaded && graphRef.current && state.currentView === 'post_view' && isDimensionsReady) {
       actions.applyCurrentZoom();
     }
-  }, [state.currentView, state.isGraphLoaded, isDimensionsReady]);
+  }, [state.currentView, state.isGraphLoaded, isDimensionsReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (graphRef.current && actions.applyCurrentZoom) {

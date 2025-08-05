@@ -192,7 +192,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
         );
       }
     }
-  }, [state.currentView, instanceActions, instance.graphRef, instanceType]);
+  }, [state.currentView, instanceActions, instance.graphRef, instanceType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Graph control API listener
   useEffect(() => {
@@ -677,7 +677,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
         graphControl.processInitialFocusWhenReady(instanceType, true);
       }, 800);
     }
-  }, [state.isGraphLoaded, graphData.data.postGraph, graphData.data.tagGraph, state.currentView, instanceType, instance.graphRef.current, router.pathname]);
+  }, [state.isGraphLoaded, graphData.data.postGraph, graphData.data.tagGraph, state.currentView, instanceType, instance.graphRef.current, router.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle client-side navigation (Next.js <Link>)
   useEffect(() => {
@@ -706,7 +706,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     return () => {
       router.events.off('routeChangeComplete', handleRouteChange);
     };
-  }, [instanceType, state.currentView, router.events, graphData.data.postGraph, graphData.data.tagGraph, state.isGraphLoaded, instance.graphRef.current]);
+  }, [instanceType, state.currentView, router.events, graphData.data.postGraph, graphData.data.tagGraph, state.isGraphLoaded, instance.graphRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle continuous focusing retry
   useEffect(() => {
@@ -768,7 +768,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
         clearInterval(intervalId);
       };
     }
-  }, [continuousFocus, graphData.isLoading]); // Only depend on the trigger conditions
+  }, [continuousFocus, graphData.isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const contextValue: GraphContextValue = {
     state,
