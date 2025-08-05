@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useGraphContext } from '../GraphProvider';
 import { useDarkMode } from '@/lib/use-dark-mode';
 import { GRAPH_CONFIG, GRAPH_COLORS, HOME_NODE_ID } from '../utils/graphConfig';
+import { graphControl } from '../utils/graph-control';
 import type { GraphNode } from '../types/graph.types';
 
 const ForceGraphWrapper = dynamic(() => import('../ForceGraphWrapper'), {
@@ -327,6 +328,9 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
             if (isDimensionsReady) {
               console.log('[PostGraphView] Applying zoom with dimensions:', { width: graphWidth, height: graphHeight });
             }
+            // Process pending fitToHome operations
+            const instanceType = state.displayType === 'home' ? 'home' : 'sidenav';
+            graphControl.processPendingFitToHome(instanceType);
           }}
           onReady={(instance) => {
             setGraphInstance(instance);

@@ -36,6 +36,7 @@ class GraphControlAPI {
   private instanceState: Map<string, any> = new Map();
   private listeners: Map<string, Array<(message: any) => void>> = new Map();
   private focusIntervals: Map<string, NodeJS.Timeout> = new Map();
+  private pendingFitToHome: Map<string, boolean> = new Map();
   private instanceStates = new Map<string, {
     currentView: GraphViewType;
     focusTarget: FocusTarget | null;
@@ -363,12 +364,33 @@ class GraphControlAPI {
       case 'all-tags':
         console.log(`[GraphControl] Switching to tag view for all-tags`);
         this.changeView('tag_view', instanceType);
+        this.scheduleFitToHome(instanceType);
         break;
         
       default:
         console.log(`[GraphControl] Unknown segment for initial focus: ${request.segment}`);
         this.changeView('post_view', instanceType);
+        this.scheduleFitToHome(instanceType);
         break;
+    }
+  }
+
+  /**
+   * Schedule fitToHome to run after graph is ready
+   */
+  scheduleFitToHome(instanceType: 'sidenav' | 'home' = 'sidenav') {
+    console.log(`[GraphControl] Scheduling fitToHome for ${instanceType}`);
+    this.pendingFitToHome.set(instanceType, true);
+  }
+
+  /**
+   * Process pending fitToHome operations when graph becomes ready
+   */
+  processPendingFitToHome(instanceType: 'sidenav' | 'home' = 'sidenav') {
+    if (this.pendingFitToHome.get(instanceType)) {
+      console.log(`[GraphControl] Executing pending fitToHome for ${instanceType}`);
+      this.pendingFitToHome.set(instanceType, false);
+      this.fitToHome(instanceType);
     }
   }
 

@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useGraphContext } from '../GraphProvider';
 import { useDarkMode } from '@/lib/use-dark-mode';
 import { GRAPH_CONFIG, GRAPH_COLORS } from '../utils/graphConfig';
+import { graphControl } from '../utils/graph-control';
 import type { GraphNode } from '../types/graph.types';
 
 const ForceGraphWrapper = dynamic(() => import('../ForceGraphWrapper'), {
@@ -278,6 +279,9 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
           onEngineStop={() => {
             actions.setIsGraphLoaded(true);
             actions.applyCurrentZoom();
+            // Process pending fitToHome operations
+            const instanceType = state.displayType === 'home' ? 'home' : 'sidenav';
+            graphControl.processPendingFitToHome(instanceType);
           }}
           onReady={(instance) => {
             setGraphInstance(instance);
