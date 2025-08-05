@@ -4,6 +4,8 @@ import ForceGraph2D from 'react-force-graph-2d';
 // 필요한 메서드만 노출하는 인터페이스 정의
 export interface GraphMethods {
   zoomToFit: (ms?: number, padding?: number, nodeFilter?: (node: any) => boolean) => void;
+  width: () => number;
+  height: () => number;
 }
 
 type ForceGraphProps = React.ComponentProps<typeof ForceGraph2D> & {
@@ -30,6 +32,12 @@ const ForceGraphWrapper = React.forwardRef<GraphMethods, ForceGraphProps>(
         } else {
           console.error('[ForceGraphWrapper] zoomToFit failed: internalRef not available', { internalRef });
         }
+      },
+      width: () => {
+        return internalRef.current?.width?.() || 0;
+      },
+      height: () => {
+        return internalRef.current?.height?.() || 0;
       }
     }), []);
     
