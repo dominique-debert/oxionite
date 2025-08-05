@@ -5,6 +5,8 @@ import 'styles/global.css'
 import 'styles/notion.css'
 import 'styles/prism-theme.css'
 
+const SHOW_DEBUG_CONTROLS = false
+
 import type { AppProps } from 'next/app'
 import cs from 'classnames'
 import * as Fathom from 'fathom-client'
@@ -343,7 +345,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
   return (
     <AppContext.Provider value={appContextValue}>
-      <DebugControls />
+      {SHOW_DEBUG_CONTROLS && <DebugControls />}
       <style jsx global>{`
         :root {
           --font-noto-sans-kr: ${notoKR.style.fontFamily};
