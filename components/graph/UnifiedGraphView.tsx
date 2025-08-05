@@ -68,6 +68,90 @@ const GraphContent: React.FC<{
     }
   }, [viewType, state.currentView, router.asPath]);
 
+  const shouldDisableLocationButton = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    
+    const pathname = window.location.pathname;
+    const segments = pathname.split('/').filter(Boolean);
+    
+    // Find the route segment (post, category, tag, all-tags)
+    const routeTypes = ['post', 'category', 'tag', 'all-tags'];
+    let routeSegment = '';
+    
+    for (let i = 0; i < segments.length; i++) {
+      if (routeTypes.includes(segments[i])) {
+        routeSegment = segments[i];
+        break;
+      }
+    }
+    
+    const currentView = state.currentView;
+
+    console.log(`[GraphContent] Current view: ${currentView}`);
+    console.log(`[GraphContent] Route segment: ${routeSegment}`);
+    console.log(`[GraphContent] Segments: ${segments}`);
+    
+    // Case 1: root/ - disable in both views
+    if (segments.length < 2) {
+      return true;
+    }
+    
+    // Case 2: root/(locale)/category - disable in tag view
+    if (routeSegment === 'category' && currentView === 'tag_view') {
+      return true;
+    }
+    
+    // Case 3: root/(locale)/tag - disable in post view
+    if (routeSegment === 'tag' && currentView === 'post_view') {
+      return true;
+    }
+    
+    // Case 4: root/(locale)/all-tags - disable in both views
+    if (routeSegment === 'all-tags') {
+      return true;
+    }
+    
+    // Default: enable button
+    return false;
+  }, [state.currentView, router.asPath]);
+
+  const getLocationButtonTooltip = useCallback(() => {
+    if (typeof window === 'undefined') return "Focus on current page";
+    
+    const pathname = window.location.pathname;
+    const segments = pathname.split('/').filter(Boolean);
+    
+    const routeTypes = ['post', 'category', 'tag', 'all-tags'];
+    let routeSegment = '';
+    
+    for (let i = 0; i < segments.length; i++) {
+      if (routeTypes.includes(segments[i])) {
+        routeSegment = segments[i];
+        break;
+      }
+    }
+    
+    const currentView = state.currentView;
+    
+    if (segments.length === 0) {
+      return "Focus not available on home page";
+    }
+    
+    if (routeSegment === 'category' && currentView === 'tag_view') {
+      return "Focus not available for categories in tag view";
+    }
+    
+    if (routeSegment === 'tag' && currentView === 'post_view') {
+      return "Focus not available for tags in post view";
+    }
+    
+    if (routeSegment === 'all-tags') {
+      return "Focus not available on all-tags page";
+    }
+    
+    return "Focus on current page";
+  }, [state.currentView, router.asPath]);
+
   const handleFitToHome = useCallback(() => {
     actions.zoomToFit();
   }, [actions]);
@@ -100,6 +184,8 @@ const GraphContent: React.FC<{
               onClick={handleFocusCurrent} 
               className={styles.button}
               aria-label="Focus on current"
+              disabled={shouldDisableLocationButton()}
+              title={getLocationButtonTooltip()}
             >
               <MdMyLocation size={20} />
             </button>
@@ -159,6 +245,8 @@ const GraphContent: React.FC<{
             onClick={handleFocusCurrent} 
             className={styles.button}
             aria-label="Focus on current"
+            disabled={shouldDisableLocationButton()}
+            title={getLocationButtonTooltip()}
           >
             <MdMyLocation size={20} />
           </button>
