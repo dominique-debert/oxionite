@@ -6,6 +6,7 @@
 
 import type { GraphViewType } from '../types/graph.types';
 import { GRAPH_CONFIG } from '../utils/graphConfig';
+import type { SiteMap } from '@/lib/context/types';
 
 export interface GraphControlMessage {
   type: 'fitToHome' | 'focusNode' | 'focusNodes' | 'changeView' | 'highlightNodes' | 'clearHighlight' | 'focusBySlug';
@@ -39,11 +40,167 @@ class GraphControlAPI {
     focusTarget: FocusTarget | null;
     isModalOpen: boolean;
   }> = new Map();
+  private siteMap: SiteMap | null = null;
+  private recordMap: any | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
       (window as any).__graphControl = this;
     }
+  }
+
+  /**
+   * Set the siteMap for accessing page information
+   */
+  setSiteMap(siteMap: SiteMap) {
+    this.siteMap = siteMap;
+  }
+
+  /**
+   * Set the recordMap for accessing detailed page data including tags
+   */
+  setRecordMap(recordMap: any) {
+    this.recordMap = recordMap;
+  }
+
+  /**
+   * Get tags for a page by slug using recordMap for accurate tag extraction from ISR cache
+   */
+  private getTagsBySlug(slug: string): string[] {
+    if (!this.siteMap) {
+      console.warn('[GraphControl] No siteMap available');
+      return [];
+    }
+
+    // Debug: log siteMap structure
+    console.log('[GraphControl] Debug - siteMap structure:', {
+      hasPageInfoMap: !!this.siteMap.pageInfoMap,
+      pageInfoKeys: this.siteMap.pageInfoMap ? Object.keys(this.siteMap.pageInfoMap).slice(0, 5) : [],
+      samplePage: this.siteMap.pageInfoMap ? this.siteMap.pageInfoMap[Object.keys(this.siteMap.pageInfoMap)[0]] : null
+    });
+
+    // Find page by slug
+    const pageInfo = Object.values(this.siteMap.pageInfoMap).find(
+      (page) => page.slug === slug
+    );
+
+    if (!pageInfo) {
+      console.warn(`[GraphControl] No page found for slug: ${slug}`);
+      
+      // Debug: show all available slugs
+      const allSlugs = Object.values(this.siteMap.pageInfoMap).map(p => ({ slug: p.slug, title: p.title }));
+      console.log('[GraphControl] Debug - All available slugs:', allSlugs);
+      
+      return [];
+    }
+
+    console.log(`[GraphControl] Debug - PageInfo for slug '${slug}':`, {
+      pageId: pageInfo.pageId,
+      title: pageInfo.title,
+      tags: pageInfo.tags,
+      hasRecordMap: !!this.recordMap,
+      recordMapKeys: this.recordMap ? Object.keys(this.recordMap).slice(0, 10) : [],
+      hasPageInRecordMap: this.recordMap ? !!this.recordMap[pageInfo.pageId] : false
+    });
+
+    // If we have recordMap, use it to get tags like PostHeader.tsx does
+    if (this.recordMap && this.recordMap[pageInfo.pageId]) {
+      const block = this.recordMap[pageInfo.pageId];
+      console.log(`[GraphControl] Debug - recordMap block structure for page ${pageInfo.pageId}:`, {
+        hasValue: !!block?.value,
+        hasProperties: !!block?.value?.properties,
+        keys: block ? Object.keys(block) : [],
+        valueKeys: block?.value ? Object.keys(block.value) : []
+      });
+      
+      if (block?.value?.properties) {
+        const properties = block.value.properties;
+        console.log(`[GraphControl] Debug - all properties for page ${pageInfo.pageId}:`, Object.keys(properties));
+        
+        // Check all possible tag property names
+        const possibleTagKeys = ['Tags', 'tags', 'TAGS', 'Tag', 'tag'];
+        let tagsProperty = null;
+        let foundKey = null;
+        
+        for (const key of possibleTagKeys) {
+          if (properties[key]) {
+            tagsProperty = properties[key];
+            foundKey = key;
+            break;
+          }
+        }
+        
+        console.log(`[GraphControl] Debug - found tagsProperty using key '${foundKey}':`, tagsProperty);
+        
+        if (tagsProperty) {
+          let tags: string[] = [];
+          
+          // Handle different Notion property formats
+          if (Array.isArray(tagsProperty)) {
+            tags = tagsProperty
+              .filter((tag: any) => {
+                if (typeof tag === 'string') return tag.trim().length > 0;
+                if (tag && typeof tag === 'object') {
+                  return tag.name && typeof tag.name === 'string' && tag.name.trim().length > 0;
+                }
+                return false;
+              })
+              .map((tag: any) => {
+                if (typeof tag === 'string') return tag.trim();
+                return tag.name.trim();
+              });
+          } else if (typeof tagsProperty === 'string' && tagsProperty.trim().length > 0) {
+            tags = [tagsProperty.trim()];
+          } else if (tagsProperty && typeof tagsProperty === 'object') {
+            // Handle multi_select format (most common for Notion)
+            if (tagsProperty.multi_select) {
+              tags = tagsProperty.multi_select
+                .map((tag: any) => tag.name || tag)
+                .filter((tag: any) => typeof tag === 'string' && tag.trim().length > 0)
+                .map((tag: any) => tag.trim());
+            } else if (tagsProperty.name && typeof tagsProperty.name === 'string' && tagsProperty.name.trim().length > 0) {
+              tags = [tagsProperty.name.trim()];
+            } else if (tagsProperty.results) {
+              // Handle relation format
+              tags = tagsProperty.results
+                .filter((tag: any) => tag.title && typeof tag.title === 'string' && tag.title.trim().length > 0)
+                .map((tag: any) => tag.title.trim());
+            }
+          }
+          
+          console.log(`[GraphControl] Found tags via recordMap for slug '${slug}' (page: ${pageInfo.title}):`, tags);
+          return tags;
+        }
+      }
+    }
+
+    // Fallback to pageInfo.tags if recordMap is not available
+    const rawTags = pageInfo.tags || [];
+    
+    // Process tags similar to PostHeader.tsx logic
+    let tags: string[] = [];
+    
+    if (Array.isArray(rawTags)) {
+      tags = rawTags
+        .filter((tag: unknown) => typeof tag === 'string' && (tag as string).trim().length > 0)
+        .map((tag: unknown) => (tag as string).trim());
+    } else if (typeof rawTags === 'string' && (rawTags as string).trim().length > 0) {
+      tags = [(rawTags as string).trim()];
+    } else if (rawTags && typeof rawTags === 'object') {
+      // Handle multi_select format from Notion
+      const tagObj = rawTags as Record<string, any>;
+      if (tagObj.multi_select) {
+        tags = tagObj.multi_select
+          .map((tag: any) => tag.name || tag)
+          .filter((tag: unknown) => typeof tag === 'string' && (tag as string).trim().length > 0)
+          .map((tag: unknown) => (tag as string).trim());
+      } else if (tagObj.name && typeof tagObj.name === 'string' && (tagObj.name as string).trim().length > 0) {
+        tags = [(tagObj.name as string).trim()];
+      }
+    }
+
+    console.log(`[GraphControl] Fallback to pageInfo.tags for slug '${slug}' (page: ${pageInfo.title}):`, tags);
+    return tags;
   }
 
   /**
@@ -98,7 +255,7 @@ class GraphControlAPI {
   /**
    * Handle URL-based routing
    */
-  handleUrlFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav') {
+  handleUrlFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType) {
     console.log(`[GraphControl] Handling URL: ${pathname} for ${instanceType}`);
     
     // Parse URL path without creating URL object to avoid hostname issues
@@ -127,49 +284,57 @@ class GraphControlAPI {
     const segment = relevantSegments[0];
     const slug = relevantSegments[1] || '';
     
-    // Get current view from instance state
-    const currentView = this.instanceStates.get(instanceType)?.currentView || 'post_view';
+    // Use provided currentView or fallback to instance state
+    const effectiveCurrentView = currentView || this.instanceStates.get(instanceType)?.currentView || 'post_view';
     
-    console.log(`[GraphControl] Segment: ${segment}, Slug: ${slug}, CurrentView: ${currentView}`);
+    console.log(`[GraphControl] Segment: ${segment}, Slug: ${slug}, CurrentView: ${effectiveCurrentView}`);
 
     // Handle based on segment and view type
     switch (segment) {
       case 'post':
-        if (currentView === 'post_view' && slug) {
+        if (effectiveCurrentView === 'post_view' && slug) {
           // Post segment with post_view: implement focus functionality
           this.changeViewAndFocusBySlug('post_view', slug, instanceType);
           this.highlightBySlug([slug], instanceType);
-        } else if (currentView === 'tag_view') {
-          // Post segment with tag_view: TODO - implement later
-          console.log(`[GraphControl] TODO: Handle post segment in tag_view`);
+        } else if (effectiveCurrentView === 'tag_view' && slug) {
+          // Post segment with tag_view: extract tags and focus on them
+          const tags = this.getTagsBySlug(slug);
+          if (tags.length > 0) {
+            console.log(`[GraphControl] Found tags for post ${slug}:`, tags);
+            this.changeViewAndFocusNode('tag_view', tags, instanceType);
+            this.highlightByTag(tags, instanceType);
+          } else {
+            console.log(`[GraphControl] No tags found for post ${slug}`);
+            this.changeView('tag_view', instanceType);
+          }
         }
         break;
         
       case 'category':
-        if (currentView === 'post_view') {
+        if (effectiveCurrentView === 'post_view') {
           // Category segment with post_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle category segment in post_view`);
-        } else if (currentView === 'tag_view') {
+        } else if (effectiveCurrentView === 'tag_view') {
           // Category segment with tag_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle category segment in tag_view`);
         }
         break;
         
       case 'tag':
-        if (currentView === 'post_view') {
+        if (effectiveCurrentView === 'post_view') {
           // Tag segment with post_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle tag segment in post_view`);
-        } else if (currentView === 'tag_view' && slug) {
+        } else if (effectiveCurrentView === 'tag_view' && slug) {
           // Tag segment with tag_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle tag segment in tag_view`);
         }
         break;
         
       case 'all-tags':
-        if (currentView === 'post_view') {
+        if (effectiveCurrentView === 'post_view') {
           // All-tags segment with post_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle all-tags segment in post_view`);
-        } else if (currentView === 'tag_view') {
+        } else if (effectiveCurrentView === 'tag_view') {
           // All-tags segment with tag_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle all-tags segment in tag_view`);
         }

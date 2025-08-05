@@ -39,14 +39,26 @@ const GraphContext = createContext<GraphContextValue | undefined>(undefined);
 export interface GraphProviderProps {
   children: ReactNode;
   siteMap?: SiteMap;
+  recordMap?: any;
   locale?: string;
 }
 
 export const GraphProvider: React.FC<GraphProviderProps> = ({ 
   children, 
   siteMap, 
+  recordMap,
   locale = localeConfig.defaultLocale 
 }) => {
+  // Set siteMap and recordMap in graphControl when available
+  useEffect(() => {
+    if (siteMap) {
+      graphControl.setSiteMap(siteMap);
+    }
+    if (recordMap) {
+      graphControl.setRecordMap(recordMap);
+    }
+  }, [siteMap, recordMap]);
+
   const { state, actions: stateActions } = useGraphState();
   const graphData = useGraphData(siteMap, locale);
   const { instance, actions: instanceActions } = useGraphInstance();

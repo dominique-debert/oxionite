@@ -16,6 +16,7 @@ import { graphControl } from './utils/graph-control';
 
 interface UnifiedGraphViewProps {
   siteMap?: SiteMap;
+  recordMap?: any;
   viewType?: 'home' | 'sidenav';
   className?: string;
   currentTag?: string;
@@ -55,9 +56,9 @@ const GraphContent: React.FC<{
 
   const handleFocusCurrent = useCallback(() => {
     if (typeof window !== 'undefined') {
-      graphControl.handleUrlFocus(window.location.pathname, viewType);
+      graphControl.handleUrlFocus(window.location.pathname, viewType, state.currentView);
     }
-  }, [viewType]);
+  }, [viewType, state.currentView]);
 
   const handleFitToHome = useCallback(() => {
     actions.zoomToFit();
@@ -204,6 +205,7 @@ const GraphContent: React.FC<{
 
 export const UnifiedGraphView: React.FC<UnifiedGraphViewProps> = ({
   siteMap,
+  recordMap,
   viewType = 'home',
   className,
   currentTag,
@@ -212,7 +214,7 @@ export const UnifiedGraphView: React.FC<UnifiedGraphViewProps> = ({
   const locale = router.locale || localeConfig.defaultLocale;
   
   return (
-    <GraphProvider siteMap={siteMap} locale={locale}>
+    <GraphProvider siteMap={siteMap} recordMap={recordMap} locale={locale}>
       <div className={className}>
         <GraphContent viewType={viewType} currentTag={currentTag} />
       </div>
