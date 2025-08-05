@@ -635,9 +635,12 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
           case 'changeView':
             console.log(`[GraphProvider ${currentInstanceType}] Executing changeView:`, message.payload?.view);
             if (message.payload?.view) {
-              stateActions.setCurrentView(message.payload.view);
+              stateActions.setCurrentView(message.payload?.view);
               
-              // Don't clear pending operations - let them process with new view
+              // Process any pending fitToHome operations immediately for the new view
+              setTimeout(() => {
+                graphControl.processPendingFitToHome(currentInstanceType);
+              }, 100);
             }
             break;
         }

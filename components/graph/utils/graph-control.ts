@@ -295,7 +295,8 @@ class GraphControlAPI {
     const { segment, slug } = this.urlParser(pathname);
     
     if (!segment) {
-      console.log(`[GraphControl] Root path - no initial focus`);
+      this.changeView('post_view', instanceType);
+      this.scheduleFitToHome(instanceType);
       return;
     }
 
