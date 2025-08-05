@@ -127,7 +127,7 @@ const GraphContent: React.FC<{
   );
 
   return (
-    <div className={`${styles.graphContainer} ${viewType === 'home' ? styles.homeView : ''}`}>
+    <div className={`${styles.graphContainer} ${viewType === 'home' ? styles.homeView : ''} ${viewType === 'sidenav' ? styles.sideNavView : ''}`}>
       <div className={styles.viewNavContainer}>
         <nav className={styles.viewNav}>
           <button
