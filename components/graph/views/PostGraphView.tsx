@@ -184,12 +184,12 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
       const outerPathSize = nodeSize - W_OUTER;
       const outerPathRadius = cornerRadius - (W_OUTER / 2);
       ctx.beginPath();
-      ctx.roundRect(outerPathX, outerPathY, outerPathSize, outerPathSize, outerPathRadius > 0 ? outerPathRadius : 0);
+      ctx.roundRect(outerPathX, outerPathY, outerPathSize, outerPathSize, Math.max(outerPathRadius, 0));
       ctx.stroke();
     } else {
       const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
       ctx.beginPath();
-      ctx.arc(node.x, node.y, outerPathRadius > 0 ? outerPathRadius : 0, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, Math.max(outerPathRadius, 0), 0, 2 * Math.PI);
       ctx.stroke();
     }
 
@@ -201,12 +201,12 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
       const innerPathSize = nodeSize - (2 * W_OUTER) - W_INNER;
       const innerPathRadius = cornerRadius - W_OUTER - (W_INNER / 2);
       ctx.beginPath();
-      ctx.roundRect(innerPathX, innerPathY, innerPathSize, innerPathSize, innerPathRadius > 0 ? innerPathRadius : 0);
+      ctx.roundRect(innerPathX, innerPathY, innerPathSize, innerPathSize, Math.max(innerPathRadius, 0));
       ctx.stroke();
     } else {
       const innerPathRadius = (nodeSize / 2) - W_OUTER - (W_INNER / 2);
       ctx.beginPath();
-      ctx.arc(node.x, node.y, innerPathRadius > 0 ? innerPathRadius : 0, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, Math.max(innerPathRadius, 0), 0, 2 * Math.PI);
       ctx.stroke();
     }
 
@@ -217,12 +217,12 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
       const fillSize = nodeSize - 2 * (W_OUTER + W_INNER);
       const fillRadius = cornerRadius - W_OUTER - W_INNER;
       ctx.beginPath();
-      ctx.roundRect(fillX, fillY, fillSize, fillSize, fillRadius > 0 ? fillRadius : 0);
+      ctx.roundRect(fillX, fillY, fillSize, fillSize, Math.max(fillRadius, 0));
       ctx.fill();
     } else {
       const fillRadius = (nodeSize / 2) - W_OUTER - W_INNER;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, fillRadius > 0 ? fillRadius : 0, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, Math.max(fillRadius, 0), 0, 2 * Math.PI);
       ctx.fill();
     }
 
@@ -234,7 +234,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
         if (node.type === 'Category') {
           const imageCornerRadius = cornerRadius - imageAreaOffset;
           ctx.beginPath();
-          ctx.roundRect(node.x! - imageAreaSize / 2, node.y! - imageAreaSize / 2, imageAreaSize, imageAreaSize, imageCornerRadius > 0 ? imageCornerRadius : 0);
+          ctx.roundRect(node.x! - imageAreaSize / 2, node.y! - imageAreaSize / 2, imageAreaSize, imageAreaSize, Math.max(imageCornerRadius, 0));
         } else {
           const imageRadius = imageAreaSize / 2;
           ctx.beginPath();

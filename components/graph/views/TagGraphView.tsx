@@ -153,7 +153,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     ctx.lineWidth = W_OUTER;
     const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
     ctx.beginPath();
-    ctx.arc(node.x, node.y, outerPathRadius > 0 ? outerPathRadius : 0, 0, 2 * Math.PI);
+    ctx.arc(node.x, node.y, Math.max(outerPathRadius, 0), 0, 2 * Math.PI);
     ctx.stroke();
 
     // Inner border
@@ -161,14 +161,14 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     ctx.lineWidth = W_INNER;
     const innerPathRadius = (nodeSize / 2) - W_OUTER - (W_INNER / 2);
     ctx.beginPath();
-    ctx.arc(node.x, node.y, innerPathRadius > 0 ? innerPathRadius : 0, 0, 2 * Math.PI);
+    ctx.arc(node.x, node.y, Math.max(innerPathRadius, 0), 0, 2 * Math.PI);
     ctx.stroke();
 
     // Main fill
     ctx.fillStyle = isCurrentTag ? colors.highlight : colors.node;
     const fillRadius = (nodeSize / 2) - W_OUTER - W_INNER;
     ctx.beginPath();
-    ctx.arc(node.x, node.y, fillRadius > 0 ? fillRadius : 0, 0, 2 * Math.PI);
+    ctx.arc(node.x, node.y, Math.max(fillRadius, 0), 0, 2 * Math.PI);
     ctx.fill();
 
     // Draw count inside the node for both 'Tag' and 'Root' types
