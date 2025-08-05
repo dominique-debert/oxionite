@@ -173,7 +173,7 @@
   z-index: 0;
   background-color: var(--hover-bg-color);
   border: 1px solid var(--hover-border-color);
-  border-radius: 9999px;
+  border-radius: 16px;
   transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
   pointer-events: none;
 }
@@ -188,7 +188,7 @@
   z-index: 1;
   display: block;
   padding: 0.5rem 0.75rem; /* Reduced padding */
-  border-radius: 9999px;
+  border-radius: 16px;
   color: var(--primary-text-color);
   text-decoration: none;
   transition: background-color 0.2s ease, border-color 0.2s ease;

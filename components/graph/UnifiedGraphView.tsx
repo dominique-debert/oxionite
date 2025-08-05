@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next'
@@ -30,6 +30,12 @@ const GraphContent: React.FC<{
   const router = useRouter()
   const { t } = useTranslation('common')
 
+  // Mouse tracking pill effect for view switcher
+  const [hoveredViewIndex, setHoveredViewIndex] = useState<number | null>(null);
+  const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 });
+  const viewNavRef = useRef<HTMLElement>(null);
+  const viewItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
   // Automatically handle URL-based focus on mount and route changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -60,6 +66,57 @@ const GraphContent: React.FC<{
       }
     }, 100);
   }, [actions, viewType]);
+
+  const handleViewNavMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (!viewNavRef.current) return;
+
+    const navRect = viewNavRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - navRect.left;
+    const mouseY = e.clientY - navRect.top;
+
+    let closestIndex = -1;
+    let minDistance = Infinity;
+
+    viewItemRefs.current.forEach((item, index) => {
+      if (item) {
+        const itemRect = item.getBoundingClientRect();
+        const itemCenterX = itemRect.left - navRect.left + itemRect.width / 2;
+        const itemCenterY = itemRect.top - navRect.top + itemRect.height / 2;
+
+        const dx = mouseX - itemCenterX;
+        const dy = mouseY - itemCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = index;
+        }
+      }
+    });
+
+    setHoveredViewIndex(closestIndex);
+  }, []);
+
+  const handleViewNavMouseLeave = useCallback(() => {
+    setHoveredViewIndex(null);
+  }, []);
+
+  useEffect(() => {
+    if (hoveredViewIndex !== null && viewItemRefs.current[hoveredViewIndex]) {
+      const item = viewItemRefs.current[hoveredViewIndex];
+      if (item) {
+        setPillStyle({
+          top: item.offsetTop,
+          left: item.offsetLeft,
+          width: item.offsetWidth,
+          height: item.offsetHeight,
+          opacity: 1
+        });
+      }
+    } else {
+      setPillStyle((prevStyle) => ({ ...prevStyle, opacity: 0 }));
+    }
+  }, [hoveredViewIndex]);
 
   const handleModalToggle = useCallback(() => {
     if (state.isModalOpen) {
@@ -226,8 +283,15 @@ const GraphContent: React.FC<{
   return (
     <div className={`${styles.graphContainer} ${viewType === 'home' ? styles.homeView : ''} ${viewType === 'sidenav' ? styles.sideNavView : ''}`}>
       <div className={styles.viewNavContainer}>
-        <nav className={styles.viewNav}>
+        <nav 
+          ref={viewNavRef}
+          className={styles.viewNav}
+          onMouseMove={handleViewNavMouseMove}
+          onMouseLeave={handleViewNavMouseLeave}
+        >
+          <div className={styles.viewNavPill} style={pillStyle} />
           <button
+            ref={(el) => { viewItemRefs.current[0] = el }}
             className={`${styles.viewNavItem} ${state.currentView === 'post_view' ? styles.active : ''}`}
             onClick={() => handleViewChange('post_view')}
           >
@@ -235,6 +299,7 @@ const GraphContent: React.FC<{
             {t('postView')}
           </button>
           <button
+            ref={(el) => { viewItemRefs.current[1] = el }}
             className={`${styles.viewNavItem} ${state.currentView === 'tag_view' ? styles.active : ''}`}
             onClick={() => handleViewChange('tag_view')}
           >
