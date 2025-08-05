@@ -16,8 +16,7 @@ export const GRAPH_CONFIG = {
     TAG_NAME_FONT_SIZE: 2,
     GLOW_SIZE_MULTIPLIER: 20, // pixels for zoom-independent glow size
     GLOW_OPACITY: 0.6,
-    ZOOM_INDEPENDENT_OUTER_BORDER_WIDTH: 2, // pixels for zoom-independent outer border
-    ZOOM_INDEPENDENT_INNER_BORDER_WIDTH: 1, // pixels for zoom-independent inner border (highlight mode)
+    GLOW_MIN_OFFSET_SIZE: 2, // offset added to node size for minimum glow size
   },
 
   // Zoom configuration

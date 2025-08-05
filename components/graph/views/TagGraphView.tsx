@@ -110,7 +110,10 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
 
     // Draw glow effect for highlighted nodes
     if (isTagHighlighted) {
-      const glowSize = GRAPH_CONFIG.visual.GLOW_SIZE_MULTIPLIER / globalScale;
+      const glowSize = Math.max(
+        GRAPH_CONFIG.visual.GLOW_SIZE_MULTIPLIER / globalScale,
+        nodeSize + GRAPH_CONFIG.visual.GLOW_MIN_OFFSET_SIZE
+      );
       const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize);
       gradient.addColorStop(0, colors.nodeGlow);
       gradient.addColorStop(1, colors.nodeGlowEnd);
