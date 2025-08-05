@@ -90,11 +90,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     options?: any;
   } | null>(null);
 
-  // Debug wrapper for continuous focus
-  const setContinuousFocusDebug = useCallback((focus: any) => {
-    console.log(`[GraphProvider] setContinuousFocus called with:`, focus);
-    setContinuousFocus(focus);
-  }, []);
+
 
   // Create slug-to-id mapping based on specified view type
   const createSlugToIdMapping = useCallback((viewType?: GraphViewType): Map<string, string> => {
@@ -308,11 +304,21 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             } else {
               console.log(`[GraphProvider ${currentInstanceType}] Executing focusNode:`, message.payload?.nodeId);
               if (message.payload?.nodeId) {
-                instanceActions.zoomToNode(
-                  message.payload.nodeId,
-                  message.payload?.options?.duration,
-                  message.payload?.options?.padding
-                );
+                const node = (state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph)?.nodes?.find((n: any) => n.id === message.payload.nodeId);
+                if (node) {
+                  instanceActions.zoomToNode(
+                    message.payload.nodeId,
+                    message.payload?.options?.duration,
+                    message.payload?.options?.padding
+                  );
+                } else if (message.payload?.continuous) {
+                  // Node not found, set up continuous retry
+                  setContinuousFocus({
+                    type: 'node',
+                    target: message.payload.nodeId,
+                    options: message.payload.options
+                  });
+                }
               }
             }
             break;
@@ -391,9 +397,9 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 }
                 
                 if (message.payload?.continuous) {
-                  setContinuousFocusDebug({
-                    type: 'nodes',
-                    target: nodeIds,
+                  setContinuousFocus({
+                    type: 'slug',
+                    target: message.payload.nodeIds[0],
                     options: message.payload.options
                   });
                 }
@@ -503,9 +509,9 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 
                 // Handle continuous focusing
                 if (message.payload?.continuous) {
-                  setContinuousFocusDebug({
-                    type: 'nodes',
-                    target: message.payload.nodeIds,
+                  setContinuousFocus({
+                    type: 'node',
+                    target: message.payload.nodeIds[0],
                     options: message.payload.options
                   });
                 }
@@ -546,7 +552,16 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   );
 
                   if (targetNodes.length === 0) {
-                    console.warn(`[GraphProvider ${currentInstanceType}] No matching nodes found for provided node IDs:`, nodeIds);
+                    if (message.payload?.continuous) {
+                      // Nodes not found, set up continuous retry
+                      setContinuousFocus({
+                        type: 'slug',
+                        target: message.payload.slugs[0],
+                        options: message.payload.options
+                      });
+                    } else {
+                      console.warn(`[GraphProvider ${currentInstanceType}] No matching nodes found for provided node IDs:`, nodeIds);
+                    }
                     return;
                   }
 
@@ -602,17 +617,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                       );
                     }
                   }
-                  
-                  // Handle continuous focusing
-                  if (message.payload?.continuous) {
-                    setContinuousFocusDebug({
-                      type: 'slugs',
-                      target: message.payload.slugs,
-                      options: message.payload.options
-                    });
-                  }
-                } else {
-                  console.warn(`[GraphProvider ${currentInstanceType}] No nodes found for slugs:`, message.payload.slugs);
                 }
               }
             }
@@ -753,12 +757,12 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
           if (retryCount >= maxRetries) {
             const totalElapsed = Date.now() - startTime;
             console.log(`[GraphProvider] Max retries (${maxRetries}) reached after ${totalElapsed}ms, stopping continuous focus`);
-            setContinuousFocusDebug(null);
+            setContinuousFocus(null);
             clearInterval(intervalId);
           }
         } catch (error) {
           console.warn(`[GraphProvider] Error in continuous focus:`, error);
-          setContinuousFocusDebug(null);
+          setContinuousFocus(null);
           clearInterval(intervalId);
         }
       }, retryInterval);
