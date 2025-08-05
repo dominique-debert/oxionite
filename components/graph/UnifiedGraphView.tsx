@@ -12,6 +12,7 @@ import type { SiteMap } from '@/lib/context/types';
 import { PostGraphView } from './views/PostGraphView';
 import { TagGraphView } from './views/TagGraphView';
 import { GRAPH_CONFIG } from './utils/graphConfig';
+import { graphControl } from './utils/graph-control';
 
 interface UnifiedGraphViewProps {
   siteMap?: SiteMap;
@@ -53,14 +54,10 @@ const GraphContent: React.FC<{
   }, [actions, state.isModalOpen]);
 
   const handleFocusCurrent = useCallback(() => {
-    if (state.currentView === 'post_view') {
-      // Focus home in post view
-      actions.zoomToNode('__HOME__');
-    } else if (state.currentView === 'tag_view' && currentTag) {
-      // Focus current tag in tag view
-      actions.zoomToNode(currentTag);
+    if (typeof window !== 'undefined') {
+      graphControl.handleUrlFocus(window.location.pathname, viewType);
     }
-  }, [actions, state.currentView, currentTag]);
+  }, [viewType]);
 
   const handleFitToHome = useCallback(() => {
     actions.zoomToFit();

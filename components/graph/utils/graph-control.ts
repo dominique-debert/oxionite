@@ -98,16 +98,12 @@ class GraphControlAPI {
   /**
    * Handle URL-based routing
    */
-  handleUrlRouting(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav') {
+  handleUrlFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav') {
     console.log(`[GraphControl] Handling URL: ${pathname} for ${instanceType}`);
     
     // Parse URL path without creating URL object to avoid hostname issues
     const segments = pathname.split('/').filter(Boolean);
     
-    let targetView: GraphViewType = 'post_view';
-    let focusTarget: FocusTarget | null = null;
-    let currentSegment = '';
-
     // Smart approach: Look for actual routing patterns
     // Find the first occurrence of our known route types and use everything after
     const routeTypes = ['post', 'category', 'tag', 'all-tags'];
@@ -124,49 +120,64 @@ class GraphControlAPI {
 
     if (relevantSegments.length === 0) {
       // Root path: / or /{locale}/ - no focus
-      focusTarget = null;
-      currentSegment = 'home';
-    } else if (relevantSegments[0] === 'post' && relevantSegments[1]) {
-      // /post/{slug} or /post/{slug}/{subpage}
-      targetView = 'post_view';
-      focusTarget = { type: 'post', id: relevantSegments[1] };
-      currentSegment = `post/${relevantSegments[1]}`;
-    } else if (relevantSegments[0] === 'category' && relevantSegments[1]) {
-      // /category/{slug}
-      targetView = 'post_view';
-      focusTarget = { type: 'category', id: relevantSegments[1] };
-      currentSegment = `category/${relevantSegments[1]}`;
-    } else if (relevantSegments[0] === 'tag' && relevantSegments[1]) {
-      // /tag/{tag}
-      targetView = 'tag_view';
-      focusTarget = { type: 'tag', id: relevantSegments[1] };
-      currentSegment = `tag/${relevantSegments[1]}`;
-    } else if (relevantSegments[0] === 'all-tags') {
-      // /all-tags - no focus
-      targetView = 'tag_view';
-      focusTarget = null;
-      currentSegment = 'all-tags';
+      console.log(`[GraphControl] Root path - no focus`);
+      return;
     }
 
-    console.log(`[GraphControl] Current segment: ${currentSegment}`);
+    const segment = relevantSegments[0];
+    const slug = relevantSegments[1] || '';
+    
+    // Get current view from instance state
+    const currentView = this.instanceStates.get(instanceType)?.currentView || 'post_view';
+    
+    console.log(`[GraphControl] Segment: ${segment}, Slug: ${slug}, CurrentView: ${currentView}`);
 
-    // Send appropriate messages
-    if (focusTarget && focusTarget.id) {
-      const { type, id } = focusTarget;
-      
-      if (type === 'post' || type === 'category') {
-        // Use changeViewAndFocusBySlug for post and category targets
-        this.changeViewAndFocusBySlug(targetView, id, instanceType);
-      } else if (type === 'tag') {
-        // Use changeViewAndFocusNode for tag targets
-        this.changeViewAndFocusNode(targetView, id, instanceType);
-      }
-    } else {
-      // No focus target, just change view if needed
-      if (targetView !== this.instanceStates.get(instanceType)?.currentView) {
-        this.changeView(targetView, instanceType);
-      }
-      this.fitToHome(instanceType);
+    // Handle based on segment and view type
+    switch (segment) {
+      case 'post':
+        if (currentView === 'post_view' && slug) {
+          // Post segment with post_view: implement focus functionality
+          this.changeViewAndFocusBySlug('post_view', slug, instanceType);
+          this.highlightBySlug([slug], instanceType);
+        } else if (currentView === 'tag_view') {
+          // Post segment with tag_view: TODO - implement later
+          console.log(`[GraphControl] TODO: Handle post segment in tag_view`);
+        }
+        break;
+        
+      case 'category':
+        if (currentView === 'post_view') {
+          // Category segment with post_view: TODO - implement later
+          console.log(`[GraphControl] TODO: Handle category segment in post_view`);
+        } else if (currentView === 'tag_view') {
+          // Category segment with tag_view: TODO - implement later
+          console.log(`[GraphControl] TODO: Handle category segment in tag_view`);
+        }
+        break;
+        
+      case 'tag':
+        if (currentView === 'post_view') {
+          // Tag segment with post_view: TODO - implement later
+          console.log(`[GraphControl] TODO: Handle tag segment in post_view`);
+        } else if (currentView === 'tag_view' && slug) {
+          // Tag segment with tag_view: TODO - implement later
+          console.log(`[GraphControl] TODO: Handle tag segment in tag_view`);
+        }
+        break;
+        
+      case 'all-tags':
+        if (currentView === 'post_view') {
+          // All-tags segment with post_view: TODO - implement later
+          console.log(`[GraphControl] TODO: Handle all-tags segment in post_view`);
+        } else if (currentView === 'tag_view') {
+          // All-tags segment with tag_view: TODO - implement later
+          console.log(`[GraphControl] TODO: Handle all-tags segment in tag_view`);
+        }
+        break;
+        
+      default:
+        console.log(`[GraphControl] Unknown segment: ${segment}`);
+        break;
     }
   }
 
