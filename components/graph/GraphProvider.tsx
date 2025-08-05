@@ -128,6 +128,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       payload?: any;
       options?: any;
       targetView?: string;
+      continuous?: boolean;
     }> = [];
     
 
@@ -175,11 +176,20 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
             if (nodeIds.length === 1) {
               console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusBySlug:`, slugs[0], '->', nodeIds[0]);
-              instanceActions.zoomToNode(
-                nodeIds[0],
-                operation.options?.duration,
-                operation.options?.padding
-              );
+              if (operation.continuous) {
+                console.log(`[GraphProvider ${currentInstanceType}] Starting continuous focus for slug:`, slugs[0]);
+                setContinuousFocus({
+                  type: 'slug',
+                  target: slugs[0],
+                  options: operation.options
+                });
+              } else {
+                instanceActions.zoomToNode(
+                  nodeIds[0],
+                  operation.options?.duration,
+                  operation.options?.padding
+                );
+              }
             } else {
               console.log(`[GraphProvider ${currentInstanceType}] Processing queued multi-slug focus:`, slugs, '->', nodeIds);
               // For multiple nodes, we need to handle this differently
@@ -191,11 +201,20 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             
           case 'focusNode':
             console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusNode:`, operation.payload);
-            instanceActions.zoomToNode(
-              operation.payload,
-              operation.options?.duration,
-              operation.options?.padding
-            );
+            if (operation.continuous) {
+              console.log(`[GraphProvider ${currentInstanceType}] Starting continuous focus for node:`, operation.payload);
+              setContinuousFocus({
+                type: 'node',
+                target: operation.payload,
+                options: operation.options
+              });
+            } else {
+              instanceActions.zoomToNode(
+                operation.payload,
+                operation.options?.duration,
+                operation.options?.padding
+              );
+            }
             break;
             
           case 'focusNodes':
@@ -216,12 +235,23 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 }
 
                 if (targetNodes.length === 1) {
-                  instanceActions.zoomToNode(
-                    targetNodes[0].id,
-                    operation.options?.duration,
-                    operation.options?.padding
-                  );
+                  if (operation.continuous) {
+                    console.log(`[GraphProvider ${currentInstanceType}] Starting continuous focus for single node:`, targetNodes[0].id);
+                    setContinuousFocus({
+                      type: 'node',
+                      target: targetNodes[0].id,
+                      options: operation.options
+                    });
+                  } else {
+                    instanceActions.zoomToNode(
+                      targetNodes[0].id,
+                      operation.options?.duration,
+                      operation.options?.padding
+                    );
+                  }
                 } else {
+                  // For multiple nodes, we don't support continuous retry yet
+                  // Just perform the zoom operation once
                   const xCoords = targetNodes.map((node: any) => node.x);
                   const yCoords = targetNodes.map((node: any) => node.y);
                   const minX = Math.min(...xCoords);
@@ -270,11 +300,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 }
             }
             break;
-            
-          case 'focusBySlugs':
-            console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusBySlugs:`, operation.payload);
-            // focusBySlugs is handled by the main focusNodes case when queue is processed
-            break;
         }
       }
     };
@@ -299,7 +324,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 type: 'focusNode',
                 payload: message.payload?.nodeId,
                 options: message.payload?.options,
-                targetView: state.currentView
+                targetView: state.currentView,
+                continuous: message.payload?.continuous
               });
             } else {
               console.log(`[GraphProvider ${currentInstanceType}] Executing focusNode:`, message.payload?.nodeId);
@@ -330,7 +356,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 type: 'focusNodes',
                 payload: message.payload?.nodeIds,
                 options: message.payload?.options,
-                targetView: state.currentView
+                targetView: state.currentView,
+                continuous: message.payload?.continuous
               });
             } else {
               console.log(`[GraphProvider ${currentInstanceType}] Executing focusNodes:`, message.payload?.nodeIds);
@@ -415,7 +442,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 type: 'focusBySlug',
                 payload: { slugs, options: message.payload?.options },
                 options: message.payload?.options,
-                targetView: state.currentView
+                targetView: state.currentView,
+                continuous: message.payload?.continuous
               });
             } else {
               console.log(`[GraphProvider ${currentInstanceType}] Executing focusBySlug:`, message.payload?.slug || message.payload?.slugs);
@@ -527,7 +555,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 type: 'focusBySlugs',
                 payload: message.payload?.slugs,
                 options: message.payload?.options,
-                targetView: state.currentView
+                targetView: state.currentView,
+                continuous: message.payload?.continuous
               });
             } else {
               console.log(`[GraphProvider ${currentInstanceType}] Executing focusBySlugs:`, message.payload?.slugs);

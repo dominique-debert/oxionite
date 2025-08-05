@@ -12,6 +12,7 @@ export interface GraphControlMessage {
   type: 'fitToHome' | 'focusNode' | 'focusNodes' | 'changeView' | 'highlightNodes' | 'clearHighlight' | 'focusBySlug';
   instanceType: 'sidenav' | 'home';
   payload?: any;
+  continuous?: boolean;
 }
 
 export interface FocusTarget {
@@ -520,31 +521,34 @@ class GraphControlAPI {
    * Sequential operation: change view and then focus by slug(s) with continuous retry
    */
   changeViewAndFocusBySlug(view: GraphViewType, slug: string | string[], instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
-    // Always force view change based on segment type, regardless of current state
-    console.log(`[GraphControl] Force changing view to ${view} for ${instanceType}`);
-    this.changeView(view, instanceType);
+    const currentState = this.instanceStates.get(instanceType);
+    const needsViewChange = !currentState || currentState.currentView !== view;
+    
+    if (needsViewChange) {
+      console.log(`[GraphControl] Changing view to ${view} for ${instanceType}`);
+      this.changeView(view, instanceType);
+    }
     
     // Normalize slug to array
     const slugs = Array.isArray(slug) ? slug : [slug];
     
-    // Always use delay to ensure view change completes
     setTimeout(() => {
       if (slugs.length === 1) {
         // Single slug: use existing behavior
         this.sendMessage({
           type: 'focusBySlug',
           instanceType,
-          payload: { slug: slugs[0], options, continuous: true }
+          payload: { slug: slugs[0], options, continuous: needsViewChange }
         });
       } else {
         // Multiple slugs: use focusBySlug with array for zoom-to-fit
         this.sendMessage({
           type: 'focusBySlug',
           instanceType,
-          payload: { slugs, options: { ...options, continuous: true } }
+          payload: { slugs, options: { ...options, continuous: needsViewChange } }
         });
       }
-    },  100);
+    }, needsViewChange ? 50 : 0);
   }
 
 
