@@ -533,6 +533,8 @@ class GraphControlAPI {
     
     // Normalize slug to array
     const slugs = Array.isArray(slug) ? slug : [slug];
+
+    console.log(`[GraphControl] changeViewAndFocusBySlug: ${instanceType} changing to ${view} and focusing on ${slugs} with options ${options} and continuous ${continuous}`);
     
     setTimeout(() => {
       if (slugs.length === 1) {

@@ -446,7 +446,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 continuous: message.payload?.continuous
               });
             } else {
-              console.log(`[GraphProvider ${currentInstanceType}] Executing focusBySlug:`, message.payload?.slug || message.payload?.slugs);
+              console.log(`[GraphProvider ${currentInstanceType}] Executing focusBySlug:`, message.payload?.slug || message.payload?.slugs, message.payload?.options, message.payload?.continuous);
               
               // Handle both single slug (string) and multiple slugs (array)
               const slugs = message.payload?.slugs || (message.payload?.slug ? [message.payload.slug] : []);
@@ -537,6 +537,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 
                 // Handle continuous focusing
                 if (message.payload?.continuous) {
+                  console.log(`[GraphProvider ${currentInstanceType}] Setting continuous focus to node:`, message.payload.nodeIds[0]);
                   setContinuousFocus({
                     type: 'node',
                     target: message.payload.nodeIds[0],

@@ -56,6 +56,7 @@ const GraphContent: React.FC<{
     // Always trigger URL focus when switching views
     setTimeout(() => {
       if (typeof window !== 'undefined') {
+        console.log(`[GraphControl] handleUrlCurrentFocus: ${window.location.pathname} for ${viewType}, currentView: ${view}, continuousFocus: true`);
         graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, view, true);
       }
     }, 100);
