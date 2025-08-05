@@ -105,14 +105,18 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     actions.saveCurrentZoom();
   }, [actions]);
 
-  const nodeCanvasObject = useCallback((_node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const node = _node as Required<GraphNode>;
+  const nodeCanvasObject = useCallback((node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    // Skip rendering if coordinates are invalid
+    if (node.x == null || node.y == null || isNaN(node.x) || isNaN(node.y)) {
+      return;
+    }
+    
+    const nodeWithCoords = node as Required<GraphNode>;
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
-    const isHoveredHighlighted = highlightedNodeIds.has(node.id);
-    const isTagHighlighted = state.highlightTags.length > 0 && node.id && state.highlightTags.includes(node.id);
-    ctx.globalAlpha = !hoveredNode || isHoveredHighlighted ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
-
     const isCurrentTag = currentTag === node.id;
+    const isTagHighlighted = state.highlightTags.length > 0 && state.highlightTags.includes(node.id as string);
+    const isHoveredHighlighted = highlightedNodeIds.has(node.id);
+    ctx.globalAlpha = !hoveredNode || hoveredNode.id === node.id ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
     const label = node.type === 'Tag' ? `# ${node.name}` : node.name;
 
     const baseSize = 2;
@@ -123,21 +127,25 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     const W_INNER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
     // Draw glow effect for highlighted nodes
-    if (isTagHighlighted) {
+    if (isTagHighlighted && node.x != null && node.y != null && !isNaN(node.x) && !isNaN(node.y)) {
       const glowSize = Math.max(
         GRAPH_CONFIG.visual.GLOW_SIZE_MULTIPLIER / globalScale,
         nodeSize + GRAPH_CONFIG.visual.GLOW_MIN_OFFSET_SIZE
       );
-      const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize);
-      gradient.addColorStop(0, colors.nodeGlow);
-      gradient.addColorStop(1, colors.nodeGlowEnd);
       
-      ctx.fillStyle = gradient;
-      ctx.globalAlpha = GRAPH_CONFIG.visual.GLOW_OPACITY;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, glowSize, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      // Ensure glowSize is also valid
+      if (!isNaN(glowSize) && isFinite(glowSize)) {
+        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize);
+        gradient.addColorStop(0, colors.nodeGlow);
+        gradient.addColorStop(1, colors.nodeGlowEnd);
+        
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = GRAPH_CONFIG.visual.GLOW_OPACITY;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, glowSize, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     }
 
     // Outer border

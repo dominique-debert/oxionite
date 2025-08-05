@@ -125,6 +125,11 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
   }, []);
 
   const nodeCanvasObject = useCallback((node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    // Skip rendering if coordinates are invalid
+    if (node.x == null || node.y == null || isNaN(node.x) || isNaN(node.y)) {
+      return;
+    }
+    
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
     const isSlugHighlighted = state.highlightSlugs.length > 0 && node.slug && state.highlightSlugs.includes(node.slug);
     const isHoveredHighlighted = highlightedNodeIds.has(node.id as string);
@@ -149,28 +154,32 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     const W_INNER = GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
     // Draw glow effect for highlighted nodes
-    if (isSlugHighlighted) {
+    if (isSlugHighlighted && node.x != null && node.y != null && !isNaN(node.x) && !isNaN(node.y)) {
       const glowSize = Math.max(
         GRAPH_CONFIG.visual.GLOW_SIZE_MULTIPLIER / globalScale,
         nodeSize + GRAPH_CONFIG.visual.GLOW_MIN_OFFSET_SIZE
       );
-      const gradient = ctx.createRadialGradient(node.x!, node.y!, 0, node.x!, node.y!, glowSize);
-      gradient.addColorStop(0, colors.nodeGlow);
-      gradient.addColorStop(1, colors.nodeGlowEnd);
       
-      ctx.fillStyle = gradient;
-      ctx.globalAlpha = GRAPH_CONFIG.visual.GLOW_OPACITY;
-      ctx.beginPath();
-      ctx.arc(node.x!, node.y!, glowSize, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      // Ensure glowSize is also valid
+      if (!isNaN(glowSize) && isFinite(glowSize)) {
+        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize);
+        gradient.addColorStop(0, colors.nodeGlow);
+        gradient.addColorStop(1, colors.nodeGlowEnd);
+        
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = GRAPH_CONFIG.visual.GLOW_OPACITY;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, glowSize, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     }
 
     ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;
     ctx.lineWidth = W_OUTER;
     if (node.type === 'Category') {
-      const outerPathX = node.x! - (nodeSize / 2) + (W_OUTER / 2);
-      const outerPathY = node.y! - (nodeSize / 2) + (W_OUTER / 2);
+      const outerPathX = node.x - (nodeSize / 2) + (W_OUTER / 2);
+      const outerPathY = node.y - (nodeSize / 2) + (W_OUTER / 2);
       const outerPathSize = nodeSize - W_OUTER;
       const outerPathRadius = cornerRadius - (W_OUTER / 2);
       ctx.beginPath();
@@ -179,15 +188,15 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     } else {
       const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
       ctx.beginPath();
-      ctx.arc(node.x!, node.y!, outerPathRadius > 0 ? outerPathRadius : 0, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, outerPathRadius > 0 ? outerPathRadius : 0, 0, 2 * Math.PI);
       ctx.stroke();
     }
 
     ctx.strokeStyle = colors.nodeInnerBorder;
     ctx.lineWidth = W_INNER;
     if (node.type === 'Category') {
-      const innerPathX = node.x! - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
-      const innerPathY = node.y! - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
+      const innerPathX = node.x - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
+      const innerPathY = node.y - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
       const innerPathSize = nodeSize - (2 * W_OUTER) - W_INNER;
       const innerPathRadius = cornerRadius - W_OUTER - (W_INNER / 2);
       ctx.beginPath();
@@ -196,14 +205,14 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     } else {
       const innerPathRadius = (nodeSize / 2) - W_OUTER - (W_INNER / 2);
       ctx.beginPath();
-      ctx.arc(node.x!, node.y!, innerPathRadius > 0 ? innerPathRadius : 0, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, innerPathRadius > 0 ? innerPathRadius : 0, 0, 2 * Math.PI);
       ctx.stroke();
     }
 
     ctx.fillStyle = colors.node;
     if (node.type === 'Category') {
-      const fillX = node.x! - (nodeSize / 2) + W_OUTER + W_INNER;
-      const fillY = node.y! - (nodeSize / 2) + W_OUTER + W_INNER;
+      const fillX = node.x - (nodeSize / 2) + W_OUTER + W_INNER;
+      const fillY = node.y - (nodeSize / 2) + W_OUTER + W_INNER;
       const fillSize = nodeSize - 2 * (W_OUTER + W_INNER);
       const fillRadius = cornerRadius - W_OUTER - W_INNER;
       ctx.beginPath();
@@ -212,7 +221,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     } else {
       const fillRadius = (nodeSize / 2) - W_OUTER - W_INNER;
       ctx.beginPath();
-      ctx.arc(node.x!, node.y!, fillRadius > 0 ? fillRadius : 0, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, fillRadius > 0 ? fillRadius : 0, 0, 2 * Math.PI);
       ctx.fill();
     }
 
