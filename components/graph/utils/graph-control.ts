@@ -356,8 +356,8 @@ class GraphControlAPI {
         
       case 'tag':
         console.log(`[GraphControl] Processing initial focus request for tag: ${request.slug}`);
-        this.changeViewAndFocusBySlug('tag_view', request.slug, instanceType);
-        this.highlightBySlug([request.slug], instanceType);
+        this.changeViewAndFocusNode('tag_view', request.slug, instanceType);
+        this.highlightByTag([request.slug], instanceType);
         break;
         
       case 'all-tags':
@@ -367,6 +367,7 @@ class GraphControlAPI {
         
       default:
         console.log(`[GraphControl] Unknown segment for initial focus: ${request.segment}`);
+        this.changeView('post_view', instanceType);
         break;
     }
   }
@@ -416,28 +417,14 @@ class GraphControlAPI {
           this.changeViewAndFocusBySlug('post_view', slug, instanceType, undefined, continuousFocus);
           this.highlightBySlug([slug], instanceType);
         } else if (effectiveCurrentView === 'tag_view') {
-          // Category segment with tag_view: TODO - implement later
-          console.log(`[GraphControl] TODO: Handle category segment in tag_view`);
         }
         break;
         
       case 'tag':
-        if (effectiveCurrentView === 'post_view') {
-          // Tag segment with post_view: TODO - implement later
-          console.log(`[GraphControl] TODO: Handle tag segment in post_view`);
+        if (effectiveCurrentView === 'post_view') {``
         } else if (effectiveCurrentView === 'tag_view' && slug) {
           this.changeViewAndFocusBySlug('tag_view', slug, instanceType, undefined, continuousFocus);
           this.highlightByTag([slug], instanceType);
-        }
-        break;
-        
-      case 'all-tags':
-        if (effectiveCurrentView === 'post_view') {
-          // All-tags segment with post_view: TODO - implement later
-          console.log(`[GraphControl] TODO: Handle all-tags segment in post_view`);
-        } else if (effectiveCurrentView === 'tag_view') {
-          // All-tags segment with tag_view: TODO - implement later
-          console.log(`[GraphControl] TODO: Handle all-tags segment in tag_view`);
         }
         break;
         
