@@ -374,8 +374,8 @@ class GraphControlAPI {
   /**
    * Handle URL-based routing
    */
-  handleUrlCurrentFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType) {
-    console.log(`[GraphControl] handleUrlCurrentFocus: ${pathname} for ${instanceType}, currentView: ${currentView}`);
+  handleUrlCurrentFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType, continuousFocus: boolean = false) {
+    console.log(`[GraphControl] handleUrlCurrentFocus: ${pathname} for ${instanceType}, currentView: ${currentView}, continuousFocus: ${continuousFocus}`);
     
     const { segment, slug } = this.urlParser(pathname);
     
@@ -394,14 +394,14 @@ class GraphControlAPI {
       case 'post':
         if (effectiveCurrentView === 'post_view' && slug) {
           // Post segment with post_view: implement focus functionality
-          this.changeViewAndFocusBySlug('post_view', slug, instanceType);
+          this.changeViewAndFocusBySlug('post_view', slug, instanceType, undefined, continuousFocus);
           this.highlightBySlug([slug], instanceType);
         } else if (effectiveCurrentView === 'tag_view' && slug) {
           // Post segment with tag_view: extract tags and focus on them
           const tags = this.getTagsBySlug(slug);
           if (tags.length > 0) {
             console.log(`[GraphControl] Found tags for post ${slug}:`, tags);
-            this.changeViewAndFocusNode('tag_view', tags, instanceType);
+            this.changeViewAndFocusNode('tag_view', tags, instanceType, undefined, continuousFocus);
             this.highlightByTag(tags, instanceType);
           } else {
             console.log(`[GraphControl] No tags found for post ${slug}`);
@@ -413,8 +413,8 @@ class GraphControlAPI {
       case 'category':
         if (effectiveCurrentView === 'post_view') {
           // Category segment with post_view: TODO - implement later
-        this.changeViewAndFocusBySlug('post_view', slug, instanceType);
-        this.highlightBySlug([slug], instanceType);
+          this.changeViewAndFocusBySlug('post_view', slug, instanceType, undefined, continuousFocus);
+          this.highlightBySlug([slug], instanceType);
         } else if (effectiveCurrentView === 'tag_view') {
           // Category segment with tag_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle category segment in tag_view`);
@@ -426,8 +426,8 @@ class GraphControlAPI {
           // Tag segment with post_view: TODO - implement later
           console.log(`[GraphControl] TODO: Handle tag segment in post_view`);
         } else if (effectiveCurrentView === 'tag_view' && slug) {
-          // Tag segment with tag_view: TODO - implement later
-          console.log(`[GraphControl] TODO: Handle tag segment in tag_view`);
+          this.changeViewAndFocusBySlug('tag_view', slug, instanceType, undefined, continuousFocus);
+          this.highlightByTag([slug], instanceType);
         }
         break;
         
@@ -520,13 +520,15 @@ class GraphControlAPI {
   /**
    * Sequential operation: change view and then focus by slug(s) with continuous retry
    */
-  changeViewAndFocusBySlug(view: GraphViewType, slug: string | string[], instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
+  changeViewAndFocusBySlug(view: GraphViewType, slug: string | string[], instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions, continuous?: boolean) {
     const currentState = this.instanceStates.get(instanceType);
     const needsViewChange = !currentState || currentState.currentView !== view;
     
     if (needsViewChange) {
-      console.log(`[GraphControl] Changing view to ${view} for ${instanceType}`);
+      console.log(`[needsViewChange] Changing view to ${view} for ${instanceType}`);
       this.changeView(view, instanceType);
+    } else {
+      console.log(`[needsViewChange] View ${view} already active for ${instanceType}`);
     }
     
     // Normalize slug to array
@@ -538,14 +540,14 @@ class GraphControlAPI {
         this.sendMessage({
           type: 'focusBySlug',
           instanceType,
-          payload: { slug: slugs[0], options, continuous: needsViewChange }
+          payload: { slug: slugs[0], options, continuous: continuous ?? needsViewChange }
         });
       } else {
         // Multiple slugs: use focusBySlug with array for zoom-to-fit
         this.sendMessage({
           type: 'focusBySlug',
           instanceType,
-          payload: { slugs, options: { ...options, continuous: needsViewChange } }
+          payload: { slugs, options: { ...options, continuous: continuous ?? needsViewChange } }
         });
       }
     }, needsViewChange ? 50 : 0);
@@ -556,7 +558,7 @@ class GraphControlAPI {
   /**
    * Sequential operation: change view and then focus node(s) with continuous retry
    */
-  changeViewAndFocusNode(view: GraphViewType, nodeId: string | string[], instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions) {
+  changeViewAndFocusNode(view: GraphViewType, nodeId: string | string[], instanceType: 'sidenav' | 'home' = 'sidenav', options?: GraphControlOptions, continuous?: boolean) {
     const currentState = this.instanceStates.get(instanceType);
     const needsViewChange = !currentState || currentState.currentView !== view;
     
@@ -575,14 +577,14 @@ class GraphControlAPI {
         this.sendMessage({
           type: 'focusNode',
           instanceType,
-          payload: { nodeId: nodeIds[0], options, continuous: true }
+          payload: { nodeId: nodeIds[0], options, continuous: continuous ?? true }
         });
       } else {
         // Multiple nodes: use focusNodes for zoom-to-fit
         this.sendMessage({
           type: 'focusNodes',
           instanceType,
-          payload: { nodeIds, options: { ...options, continuous: true } }
+          payload: { nodeIds, options: { ...options, continuous: continuous ?? true } }
         });
       }
     }, needsViewChange ? 50 : 0);

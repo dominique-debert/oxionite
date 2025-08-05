@@ -56,7 +56,7 @@ const GraphContent: React.FC<{
     // Always trigger URL focus when switching views
     setTimeout(() => {
       if (typeof window !== 'undefined') {
-        graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, view);
+        graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, view, true);
       }
     }, 100);
   }, [actions, viewType]);
@@ -71,7 +71,7 @@ const GraphContent: React.FC<{
 
   const handleFocusCurrent = useCallback(() => {
     if (typeof window !== 'undefined') {
-      graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, state.currentView);
+      graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, state.currentView, true);
     }
   }, [viewType, state.currentView, router.asPath]);
 
