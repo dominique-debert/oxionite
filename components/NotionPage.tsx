@@ -20,6 +20,7 @@ import { mapImageUrl } from '@/lib/map-image-url'
 import { buildPageUrl } from '@/lib/context/build-page-url'
 import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
+const localeConfig = require('../site.locale.json')
 
 import { Loading } from './Loading'
 import { NotionComments } from './NotionComments'
@@ -209,11 +210,11 @@ export function NotionPageContent({
         const postIndex = pathSegments.indexOf('post')
         const currentPath = postIndex !== -1 ? pathSegments.slice(postIndex + 1) : []
         
-        return buildPageUrl(pageId, siteMap, currentPath)
+        return buildPageUrl(pageId, siteMap, currentPath, router.locale || localeConfig.defaultLocale)
       }
       return '/'
     },
-    [siteMap, router.asPath]
+    [siteMap, router.asPath, router.locale]
   )   
 
   const { block, tweetId } = useMemo(() => {

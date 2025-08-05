@@ -1,4 +1,5 @@
 import type { SiteMap } from './types'
+const localeConfig = require('../../site.locale.json')
 
 /**
  * Builds hierarchical URLs for pages based on current navigation context.
@@ -9,13 +10,14 @@ import type { SiteMap } from './types'
 export function buildPageUrl(
   pageId: string,
   siteMap: SiteMap,
-  _currentPath: string[] = []
+  _currentPath: string[] = [],
+  locale: string = localeConfig.defaultLocale
 ): string {
   const pageInfo = siteMap.pageInfoMap[pageId]
   
   // Root page (Post/Home with slug)
   if (pageInfo && (pageInfo.type === 'Post' || pageInfo.type === 'Home')) {
-    return `/post/${pageInfo.slug}`
+    return `/${locale}/post/${pageInfo.slug}`
   }
   
   // Subpage - use current path context
@@ -24,19 +26,19 @@ export function buildPageUrl(
     const subpageTitle = pageInfo?.title || 'page'
     const subpageSlug = subpageTitle.toLowerCase().replace(/\s+/g, '-')
     
-    // Build hierarchical path: /post/{root-slug}/{hierarchy}-{pageId}
+    // Build hierarchical path: /locale/post/{root-slug}/{hierarchy}-{pageId}
     const pathSegments = [..._currentPath]
     if (pathSegments.length === 1) {
       // Direct subpage of root
-      return `/post/${currentSlug}/${subpageSlug}-${pageId}`
+      return `/${locale}/post/${currentSlug}/${subpageSlug}-${pageId}`
     } else {
       // Deep nested
-      return `/post/${currentSlug}/${pathSegments.slice(1).join('/')}/${subpageSlug}-${pageId}`
+      return `/${locale}/post/${currentSlug}/${pathSegments.slice(1).join('/')}/${subpageSlug}-${pageId}`
     }
   }
   
   // Fallback - direct page access
-  return `/post/${pageId}`
+  return `/${locale}/post/${pageId}`
 }
 
 /**
@@ -62,7 +64,7 @@ export function extractPageIdFromUrl(segments: string[]): string {
 /**
  * Builds breadcrumb from URL segments
  */
-export function buildBreadcrumb(segments: string[], siteMap: SiteMap): Array<{title: string, href: string}> {
+export function buildBreadcrumb(segments: string[], siteMap: SiteMap, locale: string = localeConfig.defaultLocale): Array<{title: string, href: string}> {
   const breadcrumbs = []
   let _currentPath = ''
   
@@ -75,14 +77,14 @@ export function buildBreadcrumb(segments: string[], siteMap: SiteMap): Array<{ti
       const pageInfo = Object.values(siteMap.pageInfoMap).find(p => p.slug === segment)
       breadcrumbs.push({
         title: pageInfo?.title || segment,
-        href: `/post/${segment}`
+        href: `/${locale}/post/${segment}`
       })
     } else {
       // Subpage
       const pageId = extractPageIdFromUrl([segment])
       breadcrumbs.push({
         title: segment.replace(`-${pageId}`, ''),
-        href: `/post/${segments.slice(0, i + 1).join('/')}`
+        href: `/${locale}/post/${segments.slice(0, i + 1).join('/')}`
       })
     }
   }
