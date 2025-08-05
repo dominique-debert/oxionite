@@ -72,7 +72,7 @@ const GraphContent: React.FC<{
 
   const handleFocusCurrent = useCallback(() => {
     if (typeof window !== 'undefined') {
-      graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, state.currentView, true);
+      graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, state.currentView);
     }
   }, [viewType, state.currentView, router.asPath]);
 

@@ -448,32 +448,19 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             } else {
               console.log(`[GraphProvider ${currentInstanceType}] Executing focusBySlug:`, message.payload?.slug || message.payload?.slugs, message.payload?.options, message.payload?.continuous);
               
-              // Handle both single slug (string) and multiple slugs (array)
-              const slugs = message.payload?.slugs || (message.payload?.slug ? [message.payload.slug] : []);
-              
-              if (slugs && slugs.length > 0) {
-                const slugToIdMapping = createSlugToIdMapping();
-                const nodeIds = slugs
-                  .map((slug: string) => slugToIdMapping.get(slug))
-                  .filter((id: string | undefined): id is string => id !== undefined);
-                
-                if (nodeIds.length === 0) {
-                  console.warn(`[GraphProvider ${currentInstanceType}] No nodes found for slugs:`, slugs);
-                  console.log(`[GraphProvider ${currentInstanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
-                  return;
-                }
-
+              // Helper function to perform the actual focus operation
+              const performFocus = (nodeIds: string[], options?: any) => {
                 if (nodeIds.length === 1) {
                   // Single node: use zoomToNode
-                  console.log(`[GraphProvider ${currentInstanceType}] Found node ID for slug:`, slugs[0], '->', nodeIds[0]);
+                  console.log(`[GraphProvider ${currentInstanceType}] Found node ID for slug:`, nodeIds[0]);
                   instanceActions.zoomToNode(
                     nodeIds[0],
-                    message.payload?.options?.duration,
-                    message.payload?.options?.padding
+                    options?.duration,
+                    options?.padding
                   );
                 } else {
                   // Multiple nodes: use multi-node zooming
-                  console.log(`[GraphProvider ${currentInstanceType}] Found node IDs for slugs:`, slugs, '->', nodeIds);
+                  console.log(`[GraphProvider ${currentInstanceType}] Found node IDs for slugs:`, nodeIds);
                   
                   const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
                   if (!currentGraphData || !currentGraphData.nodes) {
@@ -511,7 +498,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   }
 
                   const { width: canvasWidth, height: canvasHeight } = getCanvasDimensions(graphInstance, state.currentView);
-                  const padding = message.payload?.options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
+                  const padding = options?.padding || GRAPH_CONFIG.zoom.DEFAULT_PADDING;
                   
                   const zoomLevel = calculateZoomLevel(
                     { minX, maxX, minY, maxY },
@@ -522,30 +509,83 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
                   // Apply the calculated zoom and center
                   if (typeof graphInstance.centerAt === 'function' && typeof graphInstance.zoom === 'function') {
-                    const duration = message.payload?.options?.duration || 400;
+                    const duration = options?.duration || 400;
                     graphInstance.centerAt(centerX, centerY, duration);
                     graphInstance.zoom(zoomLevel, duration);
                   } else {
                     // Fallback to zoomToFit with filter
                     const nodeIdSet = new Set(nodeIds);
                     graphInstance.zoomToFit(
-                      message.payload?.options?.duration,
-                      message.payload?.options?.padding,
+                      options?.duration,
+                      options?.padding,
                       (node: any) => nodeIdSet.has(node.id)
                     );
                   }
-                
-                // Handle continuous focusing
-                if (message.payload?.continuous) {
-                  console.log(`[GraphProvider ${currentInstanceType}] Setting continuous focus to node:`, message.payload.nodeIds[0]);
-                  setContinuousFocus({
-                    type: 'node',
-                    target: message.payload.nodeIds[0],
-                    options: message.payload.options
-                  });
                 }
+              };
+              
+              // Handle both single slug (string) and multiple slugs (array)
+              const slugs = message.payload?.slugs || (message.payload?.slug ? [message.payload.slug] : []);
+              
+              if (slugs && slugs.length > 0) {
+                console.log(`[GraphProvider ${currentInstanceType}] Received focusBySlug message:`, slugs, message.payload?.continuous);
+                const slugToIdMapping = createSlugToIdMapping();
+                const nodeIds = slugs
+                  .map((slug: string) => slugToIdMapping.get(slug))
+                  .filter((id: string | undefined): id is string => id !== undefined);
+                
+                if (nodeIds.length === 0) {
+                  console.warn(`[GraphProvider ${currentInstanceType}] No nodes found for slugs:`, slugs);
+                  console.log(`[GraphProvider ${currentInstanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
+                }
+                
+                // Handle continuous retry if enabled
+                console.log(`[GraphProvider ${currentInstanceType}] Checking continuous retry for focusBySlug:`, message.payload?.continuous);
+                if (message.payload?.continuous) {
+                  let retryCount = 0;
+                  const maxRetries = GRAPH_CONFIG.performance.focusTry;
+                  const retryInterval = GRAPH_CONFIG.performance.focusFrequency;
+                  
+                  console.log(`[GraphProvider ${currentInstanceType}] Starting local continuous retry for focusBySlug: maxRetries=${maxRetries}, interval=${retryInterval}ms`);
+                  
+                  const startTime = Date.now();
+                  const intervalId = setInterval(() => {
+                    try {
+                      retryCount++;
+                      const elapsed = Date.now() - startTime;
+                      console.log(`[GraphProvider ${currentInstanceType}] Local retry attempt ${retryCount}/${maxRetries} for slugs:`, slugs, `(${elapsed}ms elapsed)`);
+                      
+                      const currentSlugToIdMapping = createSlugToIdMapping();
+                      const currentNodeIds = slugs
+                        .map((slug: string) => currentSlugToIdMapping.get(slug))
+                        .filter((id: string | undefined): id is string => id !== undefined);
+                      
+                      if (currentNodeIds.length > 0) {
+                        console.log(`[GraphProvider ${currentInstanceType}] Local retry attempt ${retryCount}/${maxRetries} - performing focus on node IDs:`, currentNodeIds);
+                        performFocus(currentNodeIds, message.payload?.options);
+                        
+                        if (retryCount >= maxRetries) {
+                          const totalElapsed = Date.now() - startTime;
+                          console.log(`[GraphProvider ${currentInstanceType}] Local retry completed all ${maxRetries} attempts after ${totalElapsed}ms, stopping for slugs:`, slugs);
+                          clearInterval(intervalId);
+                        }
+                      } else if (retryCount >= maxRetries) {
+                        const totalElapsed = Date.now() - startTime;
+                        console.log(`[GraphProvider ${currentInstanceType}] Local retry max retries (${maxRetries}) reached after ${totalElapsed}ms, stopping for slugs:`, slugs);
+                        clearInterval(intervalId);
+                      }
+                    } catch (error) {
+                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, error);
+                      clearInterval(intervalId);
+                    }
+                  }, retryInterval);
+                } else if (nodeIds.length > 0) {
+                  // Single execution - perform focus immediately only if nodes found and no continuous retry
+                  console.log(`[GraphProvider ${currentInstanceType}] Performing Single focusBySlug:`, slugs);
+                  performFocus(nodeIds, message.payload?.options);
+                }
+                
               }
-            }
           }
           break;
             
