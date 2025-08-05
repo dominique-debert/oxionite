@@ -14,6 +14,10 @@ export const GRAPH_CONFIG = {
     CATEGORY_FONT_SIZE: 2,
     POST_FONT_SIZE: 1,
     TAG_NAME_FONT_SIZE: 2,
+    GLOW_SIZE_MULTIPLIER: 20, // pixels for zoom-independent glow size
+    GLOW_OPACITY: 0.6,
+    ZOOM_INDEPENDENT_OUTER_BORDER_WIDTH: 2, // pixels for zoom-independent outer border
+    ZOOM_INDEPENDENT_INNER_BORDER_WIDTH: 1, // pixels for zoom-independent inner border (highlight mode)
   },
 
   // Zoom configuration
@@ -81,6 +85,8 @@ export const GRAPH_COLORS = {
     nodeInnerBorder: 'rgba(255, 255, 255, 0.18)',
     nodeOuterBorder: 'rgba(0, 0, 0, 0.1)',
     nodeHighlightOuterBorder: 'rgba(0, 0, 0, 0.5)',
+    nodeGlow: 'rgba(23, 77, 255, 0.8)',
+    nodeGlowEnd: 'rgba(23, 77, 255, 0)',
   },
   dark: {
     link: 'rgba(255, 255, 255, 0.2)',
@@ -90,5 +96,7 @@ export const GRAPH_COLORS = {
     nodeInnerBorder: 'rgba(0, 0, 0, 0.3)',
     nodeOuterBorder: 'rgba(255, 255, 255, 0.1)',
     nodeHighlightOuterBorder: 'rgba(255, 255, 255, 0.5)',
+    nodeGlow: 'rgba(23, 77, 255, 0.8)',
+    nodeGlowEnd: 'rgba(23, 77, 255, 0)',
   },
 };

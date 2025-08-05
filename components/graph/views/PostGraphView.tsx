@@ -134,6 +134,21 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     const W_OUTER = GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
     const W_INNER = GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
+    // Draw glow effect for highlighted nodes
+    if (isSlugHighlighted) {
+      const glowSize = GRAPH_CONFIG.visual.GLOW_SIZE_MULTIPLIER / globalScale;
+      const gradient = ctx.createRadialGradient(node.x!, node.y!, 0, node.x!, node.y!, glowSize);
+      gradient.addColorStop(0, colors.nodeGlow);
+      gradient.addColorStop(1, colors.nodeGlowEnd);
+      
+      ctx.fillStyle = gradient;
+      ctx.globalAlpha = GRAPH_CONFIG.visual.GLOW_OPACITY;
+      ctx.beginPath();
+      ctx.arc(node.x!, node.y!, glowSize, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
     ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;
     ctx.lineWidth = W_OUTER;
     if (node.type === 'Category') {

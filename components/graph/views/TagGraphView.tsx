@@ -91,7 +91,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     actions.saveCurrentZoom();
   }, [actions]);
 
-  const nodeCanvasObject = useCallback((_node: GraphNode, ctx: CanvasRenderingContext2D) => {
+  const nodeCanvasObject = useCallback((_node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const node = _node as Required<GraphNode>;
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
     const isHoveredHighlighted = highlightedNodeIds.has(node.id);
@@ -107,6 +107,21 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
 
     const W_OUTER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
     const W_INNER = isCurrentTag ? 2 : GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
+
+    // Draw glow effect for highlighted nodes
+    if (isTagHighlighted) {
+      const glowSize = GRAPH_CONFIG.visual.GLOW_SIZE_MULTIPLIER / globalScale;
+      const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize);
+      gradient.addColorStop(0, colors.nodeGlow);
+      gradient.addColorStop(1, colors.nodeGlowEnd);
+      
+      ctx.fillStyle = gradient;
+      ctx.globalAlpha = GRAPH_CONFIG.visual.GLOW_OPACITY;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, glowSize, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
 
     // Outer border
     ctx.strokeStyle = isTagHighlighted ? colors.nodeHighlightOuterBorder : 
