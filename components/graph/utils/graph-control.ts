@@ -248,38 +248,26 @@ class GraphControlAPI {
     
     if (needsViewChange) {
       this.changeView(view, instanceType);
-      
-      // Let GraphProvider handle the 50 retry attempts internally
-      setTimeout(() => {
-        if (slugs.length === 1) {
-          // Single slug: use existing behavior
-          this.sendMessage({
-            type: 'focusBySlug',
-            instanceType,
-            payload: { slug: slugs[0], options, continuous: true }
-          });
-        } else {
-          // Multiple slugs: use focusBySlugs for zoom-to-fit
-          this.sendMessage({
-            type: 'focusBySlug',
-            instanceType,
-            payload: { slugs, options: { ...options, continuous: true } }
-          });
-        }
-      }, 50);
-    } else {
-      // View type is already correct, focus directly without continuous retry
+    }
+    
+    // Always use continuous retry when view type changes (regardless of same/different)
+    setTimeout(() => {
       if (slugs.length === 1) {
-        this.focusBySlug(slugs[0], instanceType, options);
-      } else {
-        // Multiple slugs: use focusBySlug with slugs array
+        // Single slug: use existing behavior
         this.sendMessage({
           type: 'focusBySlug',
           instanceType,
-          payload: { slugs, options }
+          payload: { slug: slugs[0], options, continuous: true }
+        });
+      } else {
+        // Multiple slugs: use focusBySlugs for zoom-to-fit
+        this.sendMessage({
+          type: 'focusBySlug',
+          instanceType,
+          payload: { slugs, options: { ...options, continuous: true } }
         });
       }
-    }
+    }, needsViewChange ? 50 : 0);
   }
 
 
@@ -296,33 +284,26 @@ class GraphControlAPI {
     
     if (needsViewChange) {
       this.changeView(view, instanceType);
-      
-      // Let GraphProvider handle the 50 retry attempts internally
-      setTimeout(() => {
-        if (nodeIds.length === 1) {
-          // Single node: use existing behavior
-          this.sendMessage({
-            type: 'focusNode',
-            instanceType,
-            payload: { nodeId: nodeIds[0], options, continuous: true }
-          });
-        } else {
-          // Multiple nodes: use focusNodes for zoom-to-fit
-          this.sendMessage({
-            type: 'focusNodes',
-            instanceType,
-            payload: { nodeIds, options: { ...options, continuous: true } }
-          });
-        }
-      }, 50);
-    } else {
-      // View type is already correct, focus directly without continuous retry
-      if (nodeIds.length === 1) {
-        this.focusNode(nodeIds[0], instanceType, options);
-      } else {
-        this.focusNodes(nodeIds, instanceType, options);
-      }
     }
+    
+    // Always use continuous retry when view type changes (regardless of same/different)
+    setTimeout(() => {
+      if (nodeIds.length === 1) {
+        // Single node: use existing behavior
+        this.sendMessage({
+          type: 'focusNode',
+          instanceType,
+          payload: { nodeId: nodeIds[0], options, continuous: true }
+        });
+      } else {
+        // Multiple nodes: use focusNodes for zoom-to-fit
+        this.sendMessage({
+          type: 'focusNodes',
+          instanceType,
+          payload: { nodeIds, options: { ...options, continuous: true } }
+        });
+      }
+    }, needsViewChange ? 50 : 0);
   }
 
   /**
