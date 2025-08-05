@@ -59,7 +59,7 @@ export const useGraphData = (siteMap?: SiteMap, locale = localeConfig.defaultLoc
       setIsLoading(false);
       return { nodes: [], links: [] };
     }
-  }, [siteMap?.tagGraphData, locale]);
+  }, [siteMap?.tagGraphData, locale, t]);
 
   // Invalidate cache when siteMap changes significantly
   useEffect(() => {

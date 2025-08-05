@@ -79,7 +79,7 @@ export const createPostGraphData = (
       size: pageInfo.type === 'Category' 
         ? GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE 
         : GRAPH_CONFIG.visual.POST_NODE_SIZE,
-      imageUrl: imageUrl,
+      imageUrl,
       val: pageInfo.type === 'Category' 
         ? GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE 
         : GRAPH_CONFIG.visual.POST_NODE_SIZE,
