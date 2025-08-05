@@ -253,11 +253,9 @@ class GraphControlAPI {
   }
 
   /**
-   * Handle URL-based routing
+   * Parse URL to extract segment and slug information
    */
-  handleUrlFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType) {
-    console.log(`[GraphControl] Handling URL: ${pathname} for ${instanceType}`);
-    
+  private urlParser(pathname: string): { segment: string; slug: string; segments: string[] } {
     // Parse URL path without creating URL object to avoid hostname issues
     const segments = pathname.split('/').filter(Boolean);
     
@@ -277,13 +275,102 @@ class GraphControlAPI {
 
     if (relevantSegments.length === 0) {
       // Root path: / or /{locale}/ - no focus
-      console.log(`[GraphControl] Root path - no focus`);
-      return;
+      return { segment: '', slug: '', segments: [] };
     }
 
     const segment = relevantSegments[0];
     const slug = relevantSegments[1] || '';
     
+    return { segment, slug, segments: relevantSegments };
+  }
+
+  /**
+   * Handle initial URL-based focus when graph first loads
+   */
+  handleUrlInitialFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav') {
+    console.log(`[GraphControl] Handling initial URL focus: ${pathname} for ${instanceType}`);
+    
+    const { segment, slug } = this.urlParser(pathname);
+    
+    if (!segment) {
+      console.log(`[GraphControl] Root path - no initial focus`);
+      return;
+    }
+
+    // Store the initial focus request to be processed when graph is ready
+    this.setInitialFocusRequest({ segment, slug, instanceType });
+  }
+
+  /**
+   * Store initial focus request for processing when graph is ready
+   */
+  private setInitialFocusRequest(request: { segment: string; slug: string; instanceType: 'sidenav' | 'home' }) {
+    if (typeof window !== 'undefined') {
+      // Store in a temporary variable that can be accessed by GraphProvider
+      if (!(window as any).__graphInitialFocus) {
+        (window as any).__graphInitialFocus = {};
+      }
+      (window as any).__graphInitialFocus[request.instanceType] = request;
+      console.log(`[GraphControl] Stored initial focus request for ${request.instanceType}:`, request);
+    }
+  }
+
+  /**
+   * Process initial focus request when graph is ready
+   */
+  processInitialFocusWhenReady(instanceType: 'sidenav' | 'home', graphReady: boolean) {
+    if (!graphReady || typeof window === 'undefined') {
+      return;
+    }
+
+    const request = (window as any).__graphInitialFocus?.[instanceType];
+    if (!request) {
+      return;
+    }
+
+    console.log(`[GraphControl] Processing initial focus request for ${instanceType}:`, request);
+    
+    // Remove the request to prevent duplicate processing
+    delete (window as any).__graphInitialFocus[instanceType];
+
+    // Handle based on segment only (view type independent)
+    switch (request.segment) {
+      case 'post':
+        this.changeViewAndFocusBySlug('post_view', request.slug, instanceType);
+        this.highlightBySlug([request.slug], instanceType);
+        break;
+        
+      case 'category':
+        // Handle category segment for initial focus
+        break;
+        
+      case 'tag':
+        // Handle tag segment for initial focus
+        break;
+        
+      case 'all-tags':
+        // Handle all-tags segment for initial focus
+        break;
+        
+      default:
+        console.log(`[GraphControl] Unknown segment for initial focus: ${request.segment}`);
+        break;
+    }
+  }
+
+  /**
+   * Handle URL-based routing
+   */
+  handleUrlCurrentFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType) {
+    console.log(`[GraphControl] Handling URL: ${pathname} for ${instanceType}`);
+    
+    const { segment, slug } = this.urlParser(pathname);
+    
+    if (!segment) {
+      console.log(`[GraphControl] Root path - no focus`);
+      return;
+    }
+
     // Use provided currentView or fallback to instance state
     const effectiveCurrentView = currentView || this.instanceStates.get(instanceType)?.currentView || 'post_view';
     

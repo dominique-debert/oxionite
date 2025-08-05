@@ -314,7 +314,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
             onClick={() => {
               const path = window.location.pathname;
               console.log(`[Debug] Current URL: ${path}`);
-              graphControl.handleUrlFocus(path, 'sidenav');
+              graphControl.handleUrlCurrentFocus(path, 'sidenav');
             }}
             style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
           >

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next'
@@ -27,8 +27,16 @@ const GraphContent: React.FC<{
   currentTag?: string;
 }> = ({ viewType, currentTag }) => {
   const { state, actions } = useGraphContext();
-  const { locale } = useRouter()
+  const router = useRouter()
+  const { locale } = router
   const { t } = useTranslation('common')
+
+  // Automatically handle URL-based focus on mount and route changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      graphControl.handleUrlInitialFocus(window.location.pathname, viewType);
+    }
+  }, [viewType, router.asPath]); // Re-run when route changes
 
   const getDimensions = (): { width: number; height: number } | null => {
     switch (viewType) {
@@ -56,9 +64,9 @@ const GraphContent: React.FC<{
 
   const handleFocusCurrent = useCallback(() => {
     if (typeof window !== 'undefined') {
-      graphControl.handleUrlFocus(window.location.pathname, viewType, state.currentView);
+      graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, state.currentView);
     }
-  }, [viewType, state.currentView]);
+  }, [viewType, state.currentView, router.asPath]);
 
   const handleFitToHome = useCallback(() => {
     actions.zoomToFit();
@@ -214,7 +222,7 @@ export const UnifiedGraphView: React.FC<UnifiedGraphViewProps> = ({
   const locale = router.locale || localeConfig.defaultLocale;
   
   return (
-    <GraphProvider siteMap={siteMap} recordMap={recordMap} locale={locale}>
+    <GraphProvider siteMap={siteMap} recordMap={recordMap} locale={locale} instanceType={viewType}>
       <div className={className}>
         <GraphContent viewType={viewType} currentTag={currentTag} />
       </div>

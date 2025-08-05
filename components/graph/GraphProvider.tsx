@@ -41,13 +41,15 @@ export interface GraphProviderProps {
   siteMap?: SiteMap;
   recordMap?: any;
   locale?: string;
+  instanceType?: 'sidenav' | 'home';
 }
 
 export const GraphProvider: React.FC<GraphProviderProps> = ({ 
   children, 
   siteMap, 
   recordMap,
-  locale = localeConfig.defaultLocale 
+  locale = localeConfig.defaultLocale,
+  instanceType = 'sidenav'
 }) => {
   // Set siteMap and recordMap in graphControl when available
   useEffect(() => {
@@ -120,16 +122,14 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
   // Graph control API listener
   useEffect(() => {
-    // Determine instance type based on context usage
-    // This should be enhanced to detect actual instance type from props
-    const instanceType = 'sidenav';
+    const currentInstanceType = instanceType || 'sidenav';
     
     // Queue for pending focus operations
     let pendingFocusQueue: Array<{
-      type: 'focusBySlug' | 'focusNode' | 'focusNodes' | 'focusBySlugs';
-      payload: any;
+      type: string;
+      payload?: any;
       options?: any;
-      targetView?: GraphViewType;
+      targetView?: string;
     }> = [];
     
 
@@ -163,7 +163,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
         
         switch (operation.type) {
           case 'focusBySlug':
-            const slugToIdMapping = createSlugToIdMapping(operation.targetView);
+            const slugToIdMapping = createSlugToIdMapping(operation.targetView as GraphViewType);
             const slugs = operation.payload?.slugs || (operation.payload ? [operation.payload] : []);
             
             const nodeIds = slugs
@@ -171,28 +171,28 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               .filter((id: string | undefined): id is string => id !== undefined);
             
             if (nodeIds.length === 0) {
-              console.warn(`[GraphProvider ${instanceType}] Queued slugs not found:`, slugs);
+              console.warn(`[GraphProvider ${currentInstanceType}] Queued slugs not found:`, slugs);
               return;
             }
 
             if (nodeIds.length === 1) {
-              console.log(`[GraphProvider ${instanceType}] Processing queued focusBySlug:`, slugs[0], '->', nodeIds[0]);
+              console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusBySlug:`, slugs[0], '->', nodeIds[0]);
               instanceActions.zoomToNode(
                 nodeIds[0],
                 operation.options?.duration,
                 operation.options?.padding
               );
             } else {
-              console.log(`[GraphProvider ${instanceType}] Processing queued multi-slug focus:`, slugs, '->', nodeIds);
+              console.log(`[GraphProvider ${currentInstanceType}] Processing queued multi-slug focus:`, slugs, '->', nodeIds);
               // For multiple nodes, we need to handle this differently
               // This will be processed by the main focusNodes case when the queue is executed
               // For now, we'll just log it and let it be handled by the main logic
-              console.log(`[GraphProvider ${instanceType}] Multi-slug focus queued for:`, nodeIds);
+              console.log(`[GraphProvider ${currentInstanceType}] Multi-slug focus queued for:`, nodeIds);
             }
             break;
             
           case 'focusNode':
-            console.log(`[GraphProvider ${instanceType}] Processing queued focusNode:`, operation.payload);
+            console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusNode:`, operation.payload);
             instanceActions.zoomToNode(
               operation.payload,
               operation.options?.duration,
@@ -201,19 +201,19 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             break;
             
           case 'focusNodes':
-            console.log(`[GraphProvider ${instanceType}] Processing queued focusNodes:`, operation.payload);
+            console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusNodes:`, operation.payload);
             const queuedNodeIds = operation.payload;
             if (queuedNodeIds && Array.isArray(queuedNodeIds) && queuedNodeIds.length > 0) {
                 const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
                 if (!currentGraphData || !currentGraphData.nodes) {
-                  console.warn(`[GraphProvider ${instanceType}] No graph data available for queued multi-node focus`);
+                  console.warn(`[GraphProvider ${currentInstanceType}] No graph data available for queued multi-node focus`);
                   return;
                 }
 
                 const targetNodes = currentGraphData.nodes.filter((node: any) => queuedNodeIds.includes(node.id));
 
                 if (targetNodes.length === 0) {
-                  console.warn(`[GraphProvider ${instanceType}] No matching nodes found for queued node IDs:`, queuedNodeIds);
+                  console.warn(`[GraphProvider ${currentInstanceType}] No matching nodes found for queued node IDs:`, queuedNodeIds);
                   return;
                 }
 
@@ -236,7 +236,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
                   const graphInstance = instance.graphRef.current;
                   if (!graphInstance) {
-                    console.warn(`[GraphProvider ${instanceType}] Graph instance not available for queued focus`);
+                    console.warn(`[GraphProvider ${currentInstanceType}] Graph instance not available for queued focus`);
                     return;
                   }
 
@@ -274,7 +274,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             break;
             
           case 'focusBySlugs':
-            console.log(`[GraphProvider ${instanceType}] Processing queued focusBySlugs:`, operation.payload);
+            console.log(`[GraphProvider ${currentInstanceType}] Processing queued focusBySlugs:`, operation.payload);
             // focusBySlugs is handled by the main focusNodes case when queue is processed
             break;
         }
@@ -282,13 +282,13 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     };
     
     const handleControlMessage = (message: any) => {
-      console.log(`[GraphProvider ${instanceType}] Received control message:`, message);
+      console.log(`[GraphProvider ${currentInstanceType}] Received control message:`, message);
       
-      if (message.instanceType === instanceType) {
+      if (message.instanceType === currentInstanceType) {
         switch (message.type) {
           
           case 'fitToHome':
-            console.log(`[GraphProvider ${instanceType}] Executing fitToHome`);
+            console.log(`[GraphProvider ${currentInstanceType}] Executing fitToHome`);
             instanceActions.zoomToFit(
               message.payload?.options?.duration,
               message.payload?.options?.padding
@@ -296,7 +296,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             break;
           case 'focusNode':
             if (graphData.isLoading) {
-              console.log(`[GraphProvider ${instanceType}] Queueing focusNode:`, message.payload?.nodeId);
+              console.log(`[GraphProvider ${currentInstanceType}] Queueing focusNode:`, message.payload?.nodeId);
               pendingFocusQueue.push({
                 type: 'focusNode',
                 payload: message.payload?.nodeId,
@@ -304,7 +304,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 targetView: state.currentView
               });
             } else {
-              console.log(`[GraphProvider ${instanceType}] Executing focusNode:`, message.payload?.nodeId);
+              console.log(`[GraphProvider ${currentInstanceType}] Executing focusNode:`, message.payload?.nodeId);
               if (message.payload?.nodeId) {
                 instanceActions.zoomToNode(
                   message.payload.nodeId,
@@ -317,7 +317,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
           case 'focusNodes':
             if (graphData.isLoading) {
-              console.log(`[GraphProvider ${instanceType}] Queueing focusNodes:`, message.payload?.nodeIds);
+              console.log(`[GraphProvider ${currentInstanceType}] Queueing focusNodes:`, message.payload?.nodeIds);
               pendingFocusQueue.push({
                 type: 'focusNodes',
                 payload: message.payload?.nodeIds,
@@ -325,19 +325,19 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 targetView: state.currentView
               });
             } else {
-              console.log(`[GraphProvider ${instanceType}] Executing focusNodes:`, message.payload?.nodeIds);
+              console.log(`[GraphProvider ${currentInstanceType}] Executing focusNodes:`, message.payload?.nodeIds);
               const nodeIds = message.payload?.nodeIds;
               if (nodeIds && Array.isArray(nodeIds) && nodeIds.length > 0) {
                 const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
                 if (!currentGraphData || !currentGraphData.nodes) {
-                  console.warn(`[GraphProvider ${instanceType}] No graph data available for multi-node focus`);
+                  console.warn(`[GraphProvider ${currentInstanceType}] No graph data available for multi-node focus`);
                   return;
                 }
 
                 const targetNodes = currentGraphData.nodes.filter((node: any) => nodeIds.includes(node.id));
 
                 if (targetNodes.length === 0) {
-                  console.warn(`[GraphProvider ${instanceType}] No matching nodes found for provided node IDs:`, nodeIds);
+                  console.warn(`[GraphProvider ${currentInstanceType}] No matching nodes found for provided node IDs:`, nodeIds);
                   return;
                 }
 
@@ -360,7 +360,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
                   const graphInstance = instance.graphRef.current;
                   if (!graphInstance) {
-                    console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
+                    console.warn(`[GraphProvider ${currentInstanceType}] Graph instance not available`);
                     return;
                   }
 
@@ -402,7 +402,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
           case 'focusBySlug':
             if (graphData.isLoading) {
               const slugs = message.payload?.slugs || (message.payload?.slug ? [message.payload.slug] : []);
-              console.log(`[GraphProvider ${instanceType}] Queueing focusBySlug:`, slugs);
+              console.log(`[GraphProvider ${currentInstanceType}] Queueing focusBySlug:`, slugs);
               pendingFocusQueue.push({
                 type: 'focusBySlug',
                 payload: { slugs, options: message.payload?.options },
@@ -410,7 +410,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 targetView: state.currentView
               });
             } else {
-              console.log(`[GraphProvider ${instanceType}] Executing focusBySlug:`, message.payload?.slug || message.payload?.slugs);
+              console.log(`[GraphProvider ${currentInstanceType}] Executing focusBySlug:`, message.payload?.slug || message.payload?.slugs);
               
               // Handle both single slug (string) and multiple slugs (array)
               const slugs = message.payload?.slugs || (message.payload?.slug ? [message.payload.slug] : []);
@@ -422,14 +422,14 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   .filter((id: string | undefined): id is string => id !== undefined);
                 
                 if (nodeIds.length === 0) {
-                  console.warn(`[GraphProvider ${instanceType}] No nodes found for slugs:`, slugs);
-                  console.log(`[GraphProvider ${instanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
+                  console.warn(`[GraphProvider ${currentInstanceType}] No nodes found for slugs:`, slugs);
+                  console.log(`[GraphProvider ${currentInstanceType}] Available slugs:`, Array.from(slugToIdMapping.keys()));
                   return;
                 }
 
                 if (nodeIds.length === 1) {
                   // Single node: use zoomToNode
-                  console.log(`[GraphProvider ${instanceType}] Found node ID for slug:`, slugs[0], '->', nodeIds[0]);
+                  console.log(`[GraphProvider ${currentInstanceType}] Found node ID for slug:`, slugs[0], '->', nodeIds[0]);
                   instanceActions.zoomToNode(
                     nodeIds[0],
                     message.payload?.options?.duration,
@@ -437,11 +437,11 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   );
                 } else {
                   // Multiple nodes: use multi-node zooming
-                  console.log(`[GraphProvider ${instanceType}] Found node IDs for slugs:`, slugs, '->', nodeIds);
+                  console.log(`[GraphProvider ${currentInstanceType}] Found node IDs for slugs:`, slugs, '->', nodeIds);
                   
                   const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
                   if (!currentGraphData || !currentGraphData.nodes) {
-                    console.warn(`[GraphProvider ${instanceType}] No graph data available for multi-slug focus`);
+                    console.warn(`[GraphProvider ${currentInstanceType}] No graph data available for multi-slug focus`);
                     return;
                   }
 
@@ -451,7 +451,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   );
 
                   if (targetNodes.length === 0) {
-                    console.warn(`[GraphProvider ${instanceType}] No matching nodes found for provided node IDs:`, nodeIds);
+                    console.warn(`[GraphProvider ${currentInstanceType}] No matching nodes found for provided node IDs:`, nodeIds);
                     return;
                   }
 
@@ -470,7 +470,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
                   const graphInstance = instance.graphRef.current;
                   if (!graphInstance) {
-                    console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
+                    console.warn(`[GraphProvider ${currentInstanceType}] Graph instance not available`);
                     return;
                   }
 
@@ -514,7 +514,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             
           case 'focusBySlugs':
             if (graphData.isLoading) {
-              console.log(`[GraphProvider ${instanceType}] Queueing focusBySlugs:`, message.payload?.slugs);
+              console.log(`[GraphProvider ${currentInstanceType}] Queueing focusBySlugs:`, message.payload?.slugs);
               pendingFocusQueue.push({
                 type: 'focusBySlugs',
                 payload: message.payload?.slugs,
@@ -522,7 +522,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 targetView: state.currentView
               });
             } else {
-              console.log(`[GraphProvider ${instanceType}] Executing focusBySlugs:`, message.payload?.slugs);
+              console.log(`[GraphProvider ${currentInstanceType}] Executing focusBySlugs:`, message.payload?.slugs);
               if (message.payload?.slugs && Array.isArray(message.payload.slugs)) {
                 const slugToIdMapping = createSlugToIdMapping();
                 const nodeIds = message.payload.slugs
@@ -530,11 +530,11 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   .filter((id: string | undefined): id is string => id !== undefined);
                 
                 if (nodeIds.length > 0) {
-                  console.log(`[GraphProvider ${instanceType}] Found node IDs for slugs:`, message.payload.slugs, '->', nodeIds);
+                  console.log(`[GraphProvider ${currentInstanceType}] Found node IDs for slugs:`, message.payload.slugs, '->', nodeIds);
                   
                   const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
                   if (!currentGraphData || !currentGraphData.nodes) {
-                    console.warn(`[GraphProvider ${instanceType}] No graph data available for multi-slug focus`);
+                    console.warn(`[GraphProvider ${currentInstanceType}] No graph data available for multi-slug focus`);
                     return;
                   }
 
@@ -544,7 +544,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   );
 
                   if (targetNodes.length === 0) {
-                    console.warn(`[GraphProvider ${instanceType}] No matching nodes found for provided node IDs:`, nodeIds);
+                    console.warn(`[GraphProvider ${currentInstanceType}] No matching nodes found for provided node IDs:`, nodeIds);
                     return;
                   }
 
@@ -571,7 +571,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
                     const graphInstance = instance.graphRef.current;
                     if (!graphInstance) {
-                      console.warn(`[GraphProvider ${instanceType}] Graph instance not available`);
+                      console.warn(`[GraphProvider ${currentInstanceType}] Graph instance not available`);
                       return;
                     }
 
@@ -610,14 +610,14 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                     });
                   }
                 } else {
-                  console.warn(`[GraphProvider ${instanceType}] No nodes found for slugs:`, message.payload.slugs);
+                  console.warn(`[GraphProvider ${currentInstanceType}] No nodes found for slugs:`, message.payload.slugs);
                 }
               }
             }
             break;
 
           case 'highlightNodes':
-            console.log(`[GraphProvider ${instanceType}] Executing highlightNodes:`, message.payload);
+            console.log(`[GraphProvider ${currentInstanceType}] Executing highlightNodes:`, message.payload);
             if (message.payload?.type === 'slug') {
               stateActions.setHighlightSlugs(message.payload.values || []);
             } else if (message.payload?.type === 'tag') {
@@ -626,12 +626,12 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
             break;
 
           case 'clearHighlight':
-            console.log(`[GraphProvider ${instanceType}] Executing clearHighlight`);
+            console.log(`[GraphProvider ${currentInstanceType}] Executing clearHighlight`);
             stateActions.clearHighlight();
             break;
             
           case 'changeView':
-            console.log(`[GraphProvider ${instanceType}] Executing changeView:`, message.payload?.view);
+            console.log(`[GraphProvider ${currentInstanceType}] Executing changeView:`, message.payload?.view);
             if (message.payload?.view) {
               stateActions.setCurrentView(message.payload.view);
               // Don't clear pending operations - let them process with new view
@@ -644,12 +644,52 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     // Process pending operations when data is loaded
     processPendingFocus();
     
-    graphControl.addListener(instanceType, handleControlMessage);
+    graphControl.addListener(currentInstanceType, handleControlMessage);
     
     return () => {
-      graphControl.removeListener(instanceType, handleControlMessage);
+      graphControl.removeListener(currentInstanceType, handleControlMessage);
     };
   }, [instanceActions, stateActions, graphData.data.postGraph, graphData.isLoading, state.currentView]);
+
+  // Process initial focus when graph is ready
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const checkReadiness = () => {
+      // Check if graph is ready - need both data and instance
+      const hasPostData = graphData.data.postGraph && graphData.data.postGraph.nodes.length > 0;
+      const hasTagData = graphData.data.tagGraph && graphData.data.tagGraph.nodes.length > 0;
+      const hasGraphInstance = instance.graphRef.current !== null;
+      const graphReady = !graphData.isLoading && hasGraphInstance &&
+        ((state.currentView === 'post_view' && hasPostData) || 
+         (state.currentView === 'tag_view' && hasTagData));
+      
+      console.log(`[GraphProvider ${instanceType}] Graph readiness check:`, {
+        isLoading: graphData.isLoading,
+        hasPostData,
+        hasTagData,
+        hasGraphInstance,
+        currentView: state.currentView,
+        graphReady
+      });
+      
+      if (graphReady) {
+        console.log(`[GraphProvider ${instanceType}] Graph is ready, processing initial focus...`);
+        // Add a small delay to ensure graph is fully initialized
+        timeoutId = setTimeout(() => {
+          graphControl.processInitialFocusWhenReady(instanceType, true);
+        }, 100);
+      }
+    };
+    
+    checkReadiness();
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [graphData.isLoading, graphData.data.postGraph, graphData.data.tagGraph, state.currentView, instanceType, instance.graphRef.current]);
 
   // Handle continuous focusing retry
   useEffect(() => {
