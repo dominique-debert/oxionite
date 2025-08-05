@@ -301,6 +301,12 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
           >
             Highlight Tag
           </button>
+          <button 
+            onClick={() => graphControl.clearHighlight('sidenav')}
+            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px', backgroundColor: '#f44336' }}
+          >
+            Clear Highlights
+          </button>
         </div>
 
         <div style={{ marginTop: '8px' }}>

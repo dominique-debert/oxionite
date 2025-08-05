@@ -223,7 +223,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     ctx.fillText(label, node.x!, node.y! + textYOffset);
     
     ctx.globalAlpha = 1;
-  }, [isDarkMode, hoveredNode, highlightedNodeIds, drawImageFillShape]);
+  }, [isDarkMode, hoveredNode, highlightedNodeIds, state.highlightSlugs, drawImageFillShape]);
 
   const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
