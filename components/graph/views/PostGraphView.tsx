@@ -278,7 +278,6 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
             actions.setIsGraphLoaded(true);
             if (isDimensionsReady) {
               console.log('[PostGraphView] Applying zoom with dimensions:', { width: graphWidth, height: graphHeight });
-              actions.applyCurrentZoom(true);
             }
           }}
           onReady={(instance) => {
