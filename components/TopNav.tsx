@@ -102,7 +102,6 @@ export const TopNav: React.FC<TopNavProps> = ({
 }) => {
   const router = useRouter()
   const { siteMap, pageId, recordMap } = pageProps
-  const { locale } = router
   const { t } = useTranslation('common')
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     const { pathname, query, asPath } = router

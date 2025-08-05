@@ -1,5 +1,5 @@
 import type { SiteMap } from './types'
-const localeConfig = require('../../site.locale.json')
+import localeConfig from '../../site.locale.json'
 
 /**
  * Builds hierarchical URLs for pages based on current navigation context.

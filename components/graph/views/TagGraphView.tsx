@@ -112,11 +112,9 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
       return;
     }
     
-    const nodeWithCoords = node as Required<GraphNode>;
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
     const isCurrentTag = currentTag === node.id;
     const isTagHighlighted = state.highlightTags.length > 0 && state.highlightTags.includes(node.id as string);
-    const isHoveredHighlighted = highlightedNodeIds.has(node.id);
     ctx.globalAlpha = !hoveredNode || hoveredNode.id === node.id ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
     const label = node.type === 'Tag' ? `# ${node.name}` : node.name;
 
@@ -176,15 +174,15 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     // Draw count inside the node for both 'Tag' and 'Root' types
     if (node.count) {
       const maxTextWidth = fillRadius > 0 ? fillRadius * 1.6 : 0;
-      let countFontSize = nodeSize * 0.4;
+      const countFontSize = nodeSize * 0.4;
       ctx.font = `${countFontSize}px sans-serif`;
       
       const countText = node.count.toString();
-      let textMetrics = ctx.measureText(countText);
+      const textMetrics = ctx.measureText(countText);
 
       if (textMetrics.width > maxTextWidth && maxTextWidth > 0) {
-        countFontSize = countFontSize * (maxTextWidth / textMetrics.width);
-        ctx.font = `${countFontSize}px sans-serif`;
+        const newCountFontSize = countFontSize * (maxTextWidth / textMetrics.width);
+        ctx.font = `${newCountFontSize}px sans-serif`;
       }
 
       ctx.textAlign = 'center';

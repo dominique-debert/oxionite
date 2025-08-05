@@ -2,7 +2,7 @@ import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import siteConfig from 'site.config'
 import styles from 'styles/components/home.module.css'
-import { useWindowSize } from 'react-use'
+
 import localeConfig from '../../site.locale.json'
 import { FaArrowRight } from 'react-icons/fa'
 import { useTranslation } from 'next-i18next'

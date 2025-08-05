@@ -201,7 +201,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     const currentInstanceType = instanceType || 'sidenav';
     
     // Queue for pending focus operations
-    let pendingFocusQueue: Array<{
+    const pendingFocusQueue: Array<{
       type: string;
       payload?: any;
       options?: any;

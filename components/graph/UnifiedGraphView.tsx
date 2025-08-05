@@ -11,7 +11,7 @@ import styles from '@/styles/components/GraphView.module.css';
 import type { SiteMap } from '@/lib/context/types';
 import { PostGraphView } from './views/PostGraphView';
 import { TagGraphView } from './views/TagGraphView';
-import { GRAPH_CONFIG } from './utils/graphConfig';
+
 import { graphControl } from './utils/graph-control';
 
 interface UnifiedGraphViewProps {
@@ -28,7 +28,6 @@ const GraphContent: React.FC<{
 }> = ({ viewType, currentTag }) => {
   const { state, actions } = useGraphContext();
   const router = useRouter()
-  const { locale } = router
   const { t } = useTranslation('common')
 
   // Automatically handle URL-based focus on mount and route changes

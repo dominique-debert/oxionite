@@ -1,4 +1,3 @@
-import { useRouter } from 'next/router'
 import cs from 'classnames'
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import styles from 'styles/components/home.module.css'
@@ -13,7 +12,6 @@ interface HomeNavProps {
 }
 
 export default function HomeNav({ homePages, activeTab, onNavClick }: HomeNavProps) {
-  const { locale } = useRouter()
   const { t } = useTranslation('common')
   const navItems = ['recentPosts', 'graphView', 'allTags']
   const allNavItems = [

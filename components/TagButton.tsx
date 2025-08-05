@@ -12,7 +12,7 @@ interface TagButtonProps {
 
 export function TagButton({ tag }: TagButtonProps) {
   const router = useRouter()
-  const { siteMap, pageInfo } = useAppContext()
+  const { siteMap } = useAppContext()
   const locale = router.locale!
 
   if (!tag || tag.trim() === '') {
@@ -24,8 +24,8 @@ export function TagButton({ tag }: TagButtonProps) {
     try {
       const count = siteMap?.tagGraphData?.locales?.[locale]?.tagCounts?.[tag] || 0;
       return count;
-    } catch (error) {
-      console.warn('Error accessing tag count:', error)
+    } catch (err) {
+      console.warn('Error accessing tag count:', err)
       return 0
     }
   }

@@ -1,5 +1,4 @@
 import { IoSearchOutline, IoCloseCircleOutline } from 'react-icons/io5'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
 import React from 'react'
 import { createPortal } from 'react-dom'
