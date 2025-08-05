@@ -35,6 +35,12 @@ const GraphContent: React.FC<{
   const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 });
   const viewNavRef = useRef<HTMLElement>(null);
   const viewItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  
+  // Separate refs and state for modal view
+  const [modalHoveredViewIndex, setModalHoveredViewIndex] = useState<number | null>(null);
+  const [modalPillStyle, setModalPillStyle] = useState<React.CSSProperties>({ opacity: 0 });
+  const modalViewNavRef = useRef<HTMLElement>(null);
+  const modalViewItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Automatically handle URL-based focus on mount and route changes
   useEffect(() => {
@@ -101,6 +107,40 @@ const GraphContent: React.FC<{
     setHoveredViewIndex(null);
   }, []);
 
+  const handleModalViewNavMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (!modalViewNavRef.current) return;
+
+    const navRect = modalViewNavRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - navRect.left;
+    const mouseY = e.clientY - navRect.top;
+
+    let closestIndex = -1;
+    let minDistance = Infinity;
+
+    modalViewItemRefs.current.forEach((item, index) => {
+      if (item) {
+        const itemRect = item.getBoundingClientRect();
+        const itemCenterX = itemRect.left - navRect.left + itemRect.width / 2;
+        const itemCenterY = itemRect.top - navRect.top + itemRect.height / 2;
+
+        const dx = mouseX - itemCenterX;
+        const dy = mouseY - itemCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = index;
+        }
+      }
+    });
+
+    setModalHoveredViewIndex(closestIndex);
+  }, []);
+
+  const handleModalViewNavMouseLeave = useCallback(() => {
+    setModalHoveredViewIndex(null);
+  }, []);
+
   useEffect(() => {
     if (hoveredViewIndex !== null && viewItemRefs.current[hoveredViewIndex]) {
       const item = viewItemRefs.current[hoveredViewIndex];
@@ -117,6 +157,23 @@ const GraphContent: React.FC<{
       setPillStyle((prevStyle) => ({ ...prevStyle, opacity: 0 }));
     }
   }, [hoveredViewIndex]);
+
+  useEffect(() => {
+    if (modalHoveredViewIndex !== null && modalViewItemRefs.current[modalHoveredViewIndex]) {
+      const item = modalViewItemRefs.current[modalHoveredViewIndex];
+      if (item) {
+        setModalPillStyle({
+          top: item.offsetTop,
+          left: item.offsetLeft,
+          width: item.offsetWidth,
+          height: item.offsetHeight,
+          opacity: 1
+        });
+      }
+    } else {
+      setModalPillStyle((prevStyle) => ({ ...prevStyle, opacity: 0 }));
+    }
+  }, [modalHoveredViewIndex]);
 
   const handleModalToggle = useCallback(() => {
     if (state.isModalOpen) {
@@ -222,8 +279,15 @@ const GraphContent: React.FC<{
     <div className={styles.modalOverlay} onClick={handleModalToggle}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.viewNavContainer}>
-          <nav className={styles.viewNav}>
+          <nav 
+            ref={modalViewNavRef}
+            className={styles.viewNav}
+            onMouseMove={handleModalViewNavMouseMove}
+            onMouseLeave={handleModalViewNavMouseLeave}
+          >
+            <div className={styles.viewNavPill} style={modalPillStyle} />
             <button
+              ref={(el) => { modalViewItemRefs.current[0] = el }}
               className={`${styles.viewNavItem} ${state.currentView === 'post_view' ? styles.active : ''}`}
               onClick={() => handleViewChange('post_view')}
             >
@@ -231,6 +295,7 @@ const GraphContent: React.FC<{
               {t('postView')}
             </button>
             <button
+              ref={(el) => { modalViewItemRefs.current[1] = el }}
               className={`${styles.viewNavItem} ${state.currentView === 'tag_view' ? styles.active : ''}`}
               onClick={() => handleViewChange('tag_view')}
             >
