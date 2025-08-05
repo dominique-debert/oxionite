@@ -65,6 +65,12 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     }
   }, [state.currentView, state.isGraphLoaded, isDimensionsReady]);
 
+  useEffect(() => {
+    if (graphRef.current && actions.applyCurrentZoom) {
+      actions.applyCurrentZoom();
+    }
+  }, [graphRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleNodeHover = useCallback((node: GraphNode | null) => {
     if (!isMouseInCanvas) return;
     

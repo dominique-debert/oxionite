@@ -59,7 +59,7 @@ const GraphContent: React.FC<{
         graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, view, true);
       }
     }, 100);
-  }, [actions, viewType]);
+  }, [actions, viewType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleModalToggle = useCallback(() => {
     if (state.isModalOpen) {
@@ -73,7 +73,7 @@ const GraphContent: React.FC<{
     if (typeof window !== 'undefined') {
       graphControl.handleUrlCurrentFocus(window.location.pathname, viewType, state.currentView);
     }
-  }, [viewType, state.currentView, router.asPath]);
+  }, [viewType, state.currentView, router.asPath]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const shouldDisableLocationButton = useCallback(() => {
     if (typeof window === 'undefined') return false;

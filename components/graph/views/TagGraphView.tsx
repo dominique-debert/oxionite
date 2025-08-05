@@ -38,7 +38,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
   const { tagGraphData } = data;
   const { graphRef, setGraphInstance } = instance;
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
-  const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set()); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [highlightedLinks, setHighlightedLinks] = useState<Set<any>>(new Set());
   const [isMouseInCanvas, setIsMouseInCanvas] = useState(false);
 
@@ -50,7 +50,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     if (node.url && node.url !== '#') {
       void router.push(node.url);
     }
-  }, [router, actions, state.isModalOpen]);
+  }, [router, actions, state.isModalOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (state.isGraphLoaded && graphRef.current && state.currentView === 'tag_view' && isDimensionsReady) {
@@ -204,7 +204,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     ctx.fillText(label, node.x, node.y + textYOffset);
     
     ctx.globalAlpha = 1;
-  }, [isDarkMode, currentTag, hoveredNode, highlightedNodeIds, state.highlightTags]);
+  }, [isDarkMode, currentTag, hoveredNode, state.highlightTags]);
 
   const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
