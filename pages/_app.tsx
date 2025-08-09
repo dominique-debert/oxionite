@@ -6,6 +6,7 @@ import 'styles/notion.css'
 import 'styles/prism-theme.css'
 
 const SHOW_DEBUG_CONTROLS = false
+const SHOW_DEBUG_SOCIAL_IMAGE = true
 
 import type { AppProps } from 'next/app'
 import cs from 'classnames'
@@ -25,7 +26,8 @@ import {
   fathomConfig,
   fathomId,
   posthogConfig,
-  posthogId
+  posthogId,
+  rootNotionPageId
 } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { AppContext } from '@/lib/context/app-context'
@@ -391,6 +393,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
         pageId={pageProps.pageId}
       />
       {SHOW_DEBUG_CONTROLS && <DebugControls />}
+      {SHOW_DEBUG_SOCIAL_IMAGE && <SocialImageDebug pageId={pageProps.pageId} />}
       <style jsx global>{`
         :root {
           --font-noto-sans-kr: ${notoKR.style.fontFamily};
@@ -484,6 +487,146 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
       </div>
     </AppContext.Provider>
   )
+}
+
+// Debug component for social image testing
+function SocialImageDebug({ pageId }: { pageId?: string }) {
+  const router = useRouter();
+  const [currentPageId, setCurrentPageId] = React.useState(pageId || '');
+  const [imageUrl, setImageUrl] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (pageId) {
+      setCurrentPageId(pageId);
+    }
+  }, [pageId]);
+
+  React.useEffect(() => {
+    if (currentPageId) {
+      const url = `/api/social-image?id=${currentPageId}`;
+      setImageUrl(url);
+    }
+  }, [currentPageId]);
+
+  const handleGenerate = () => {
+    if (currentPageId) {
+      setLoading(true);
+      const url = `/api/social-image?id=${currentPageId}`;
+      setImageUrl(url + '&t=' + Date.now()); // Force refresh
+      setTimeout(() => setLoading(false), 1000);
+    }
+  };
+
+  const handlePageIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentPageId(e.target.value);
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 9999,
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      color: 'white',
+      padding: '20px',
+      borderRadius: '8px',
+      fontSize: '12px',
+      maxWidth: '400px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)'
+    }}>
+      <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '14px' }}>
+        🎨 Social Image Debug
+      </div>
+      
+      <div style={{ marginBottom: '10px' }}>
+        <label style={{ display: 'block', marginBottom: '5px' }}>
+          Page ID:
+        </label>
+        <input
+          type="text"
+          value={currentPageId}
+          onChange={handlePageIdChange}
+          style={{
+            width: '100%',
+            padding: '5px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '4px',
+            color: 'white',
+            fontSize: '11px'
+          }}
+          placeholder="Enter page ID..."
+        />
+      </div>
+
+      <div style={{ marginBottom: '10px' }}>
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          style={{
+            padding: '5px 10px',
+            backgroundColor: loading ? '#666' : '#0070f3',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontSize: '11px',
+            marginRight: '10px'
+          }}
+        >
+          {loading ? 'Loading...' : 'Generate'}
+        </button>
+        
+        <button
+          onClick={() => {
+            setCurrentPageId(rootNotionPageId || '');
+          }}
+          style={{
+            padding: '5px 10px',
+            backgroundColor: '#333',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '11px'
+          }}
+        >
+          Use Root
+        </button>
+      </div>
+
+      {imageUrl && (
+        <div>
+          <div style={{ marginBottom: '5px', fontSize: '10px', color: '#ccc' }}>
+            Preview (1200×630):
+          </div>
+          <img
+            src={imageUrl}
+            alt="Social preview"
+            style={{
+              width: '100%',
+              height: 'auto',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              maxHeight: '200px',
+              objectFit: 'contain'
+            }}
+            onError={(e) => {
+              console.error('Social image failed to load:', imageUrl);
+            }}
+          />
+          <div style={{ marginTop: '5px', fontSize: '9px', color: '#888', wordBreak: 'break-all' }}>
+            {imageUrl}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default appWithTranslation(App)
