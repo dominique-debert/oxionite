@@ -66,6 +66,7 @@ interface BackgroundProps {
 function Background({ source, scrollProgress = 0 }: BackgroundProps) {
   const { isDarkMode } = useDarkMode()
   const [overlayOpacity, setOverlayOpacity] = useState(0.4)
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const backgroundRef = useRef<HTMLDivElement>(null)
   const animationFrameRef = useRef<number | null>(null)
@@ -73,6 +74,40 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
   const isElementSource = source instanceof Element
 
   // --- Opacity Calculation ---
+  useEffect(() => {
+    // Find and set default background image
+    const findDefaultBackground = () => {
+      if (!source) {
+        const supportedFormats = ['webp', 'jpg', 'jpeg', 'png', 'avif']
+        const basePath = '/default_background'
+        
+        // Try loading images in order of preference (webp first for performance)
+        const tryLoadImage = (format: string): Promise<string | null> => {
+          return new Promise((resolve) => {
+            const img = new Image()
+            img.onload = () => resolve(`${basePath}.${format}`)
+            img.onerror = () => resolve(null)
+            img.src = `${basePath}.${format}`
+          })
+        }
+
+        // Try all formats and use the first one that loads
+        Promise.all(supportedFormats.map(tryLoadImage))
+          .then((results) => {
+            const foundImage = results.find(url => url !== null)
+            setBackgroundImageUrl(foundImage || '/default_background.webp')
+          })
+          .catch(() => {
+            setBackgroundImageUrl('/default_background.webp')
+          })
+      } else {
+        setBackgroundImageUrl(null) // Use provided source
+      }
+    }
+
+    findDefaultBackground()
+  }, [source])
+
   useEffect(() => {
     if (typeof source === 'string') {
       let isMounted = true
@@ -90,10 +125,27 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
       }
       void calculateAndSetOpacity()
       return () => { isMounted = false }
+    } else if (backgroundImageUrl && !source) {
+      // Calculate opacity for default background
+      let isMounted = true
+      const calculateAndSetOpacity = async () => {
+        const luminance = await getAverageLuminance(backgroundImageUrl)
+        if (!isMounted) return
+
+        let newOpacity: number
+        if (isDarkMode) {
+          newOpacity = mapRange(luminance, 0, 255, DARK_MODE_OPACITY_RANGE.min, DARK_MODE_OPACITY_RANGE.max)
+        } else {
+          newOpacity = mapRange(luminance, 0, 255, LIGHT_MODE_OPACITY_RANGE.max, LIGHT_MODE_OPACITY_RANGE.min)
+        }
+        setOverlayOpacity(newOpacity)
+      }
+      void calculateAndSetOpacity()
+      return () => { isMounted = false }
     } else {
       setOverlayOpacity(0.4) // Default for video/element-based backgrounds
     }
-  }, [source, isDarkMode])
+  }, [source, backgroundImageUrl, isDarkMode])
 
   // --- Canvas Drawing Logic (for Hero) ---
   useEffect(() => {
@@ -202,7 +254,7 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
           ref={backgroundRef}
           style={{
             ...blurredStyle,
-            backgroundImage: `url(${source || '/default_background.webp'})`,
+            backgroundImage: `url(${source || backgroundImageUrl || '/default_background.webp'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}
