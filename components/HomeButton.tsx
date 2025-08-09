@@ -9,7 +9,7 @@ export function HomeButton() {
     <Link href='/' className={styles.homeButton}>
       <Image
         className={styles.icon}
-        src='/favicon.png'
+        src='/icon.png'
         alt='favicon'
         width={42}
         height={42}

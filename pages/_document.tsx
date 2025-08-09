@@ -8,14 +8,10 @@ export default class MyDocument extends Document {
         <Html lang={this.props.locale}>
           <Head>
             <link rel='shortcut icon' href='/favicon.ico' />
-            <link
-              rel='icon'
-              type='image/png'
-              sizes='32x32'
-              href='favicon.png'
-            />
+            <link rel='icon' type='image/png' href='/icon.png' />
+            <link rel='apple-touch-icon' href='/apple-touch-icon.png' />
 
-            <link rel='manifest' href='/manifest.json' />
+            <link rel='manifest' href='/api/manifest' />
           </Head>
 
           <body>

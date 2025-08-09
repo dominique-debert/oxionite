@@ -17,8 +17,7 @@
 }
 
 .icon {
-  border-radius: 50%;
-  object-fit: cover;
+  object-fit: contain;
   margin-right: 12px;
 }
 

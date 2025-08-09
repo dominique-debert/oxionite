@@ -37,7 +37,7 @@ export const createPostGraphData = (
   }
 
   // Create home node with favicon
-  const homeImageUrl = '/favicon.ico';
+  const homeImageUrl = '/icon.png';
   const homeNode: GraphNode = {
     id: HOME_NODE_ID,
     name: siteConfig.name,
