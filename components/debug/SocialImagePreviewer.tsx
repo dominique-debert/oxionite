@@ -8,10 +8,12 @@ export function SocialImagePreviewer() {
 
   const handleGenerate = () => {
     setLoading(true)
-    const baseUrl = '/api/social-image';
-    const searchParams = new URLSearchParams(window.location.search);
-    searchParams.set('t', Date.now().toString());
-    const finalUrl = `${baseUrl}?${searchParams.toString()}`;
+    // The social image API route is `/api/social-image`. 
+    // We need to pass the current page's path to it. 
+    // The API handler will read this from the `req.nextUrl.pathname`.
+    // So we construct the URL like `/api/social-image/current/path`
+    const pagePath = router.asPath === '/' ? '' : router.asPath;
+    const finalUrl = `/api/social-image${pagePath}?t=${Date.now()}`;
     setImageUrl(finalUrl);
     setTimeout(() => setLoading(false), 1000);
   };
