@@ -229,10 +229,7 @@ async function getAllPagesFromDatabase(
           : null,
         coverImage: processedCoverImage,
         coverImageBlock: block,
-        status:
-          getPageProperty<string>('status', block, recordMap) ||
-          getPageProperty<string>('Status', block, recordMap) ||
-          'draft',
+
         tags: getPageProperty<string[]>('Tags', block, collectionRecordMap) || [],
         children: []
       }

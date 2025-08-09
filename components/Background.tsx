@@ -85,8 +85,8 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
         const tryLoadImage = (format: string): Promise<string | null> => {
           return new Promise((resolve) => {
             const img = new Image()
-            img.onload = () => resolve(`${basePath}.${format}`)
-            img.onerror = () => resolve(null)
+            img.addEventListener('load', () => resolve(`${basePath}.${format}`))
+            img.addEventListener('error', () => resolve(null))
             img.src = `${basePath}.${format}`
           })
         }
