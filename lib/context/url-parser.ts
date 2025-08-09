@@ -18,7 +18,7 @@ export interface ParsedUrl {
 const ROUTE_TYPES = new Set(['post', 'category', 'tag', 'all-tags']);
 
 // Import locale configuration from site.locale.json
-import siteLocale from '../../../site.locale.json';
+import siteLocale from '../../site.locale.json';
 const LOCALE_CODES = new Set(siteLocale.localeList);
 
 /**

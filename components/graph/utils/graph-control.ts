@@ -7,7 +7,7 @@
 import type { GraphViewType } from '../types/graph.types';
 import { GRAPH_CONFIG } from '../utils/graphConfig';
 import type { SiteMap } from '@/lib/context/types';
-import { parseUrlPathname } from './url-parser';
+import { parseUrlPathname } from '@/lib/context/url-parser';
 
 export interface GraphControlMessage {
   type: 'fitToHome' | 'focusNode' | 'focusNodes' | 'changeView' | 'highlightNodes' | 'clearHighlight' | 'focusBySlug';
