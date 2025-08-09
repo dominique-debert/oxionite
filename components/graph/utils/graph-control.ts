@@ -7,6 +7,7 @@
 import type { GraphViewType } from '../types/graph.types';
 import { GRAPH_CONFIG } from '../utils/graphConfig';
 import type { SiteMap } from '@/lib/context/types';
+import { parseUrlPathname } from './url-parser';
 
 export interface GraphControlMessage {
   type: 'fitToHome' | 'focusNode' | 'focusNodes' | 'changeView' | 'highlightNodes' | 'clearHighlight' | 'focusBySlug';
@@ -254,37 +255,7 @@ class GraphControlAPI {
     this.instanceStates.set(instanceType, { ...current, ...state });
   }
 
-  /**
-   * Parse URL to extract segment and slug information
-   */
-  private urlParser(pathname: string): { segment: string; slug: string; segments: string[] } {
-    // Parse URL path without creating URL object to avoid hostname issues
-    const segments = pathname.split('/').filter(Boolean);
-    
-    // Smart approach: Look for actual routing patterns
-    // Find the first occurrence of our known route types and use everything after
-    const routeTypes = new Set(['post', 'category', 'tag', 'all-tags']);
-    let startIndex = 0;
-    
-    for (const [i, segment] of segments.entries()) {
-      if (routeTypes.has(segment)) {
-        startIndex = i;
-        break;
-      }
-    }
-    
-    const relevantSegments = segments.slice(startIndex);
-
-    if (relevantSegments.length === 0) {
-      // Root path: / or /{locale}/ - no focus
-      return { segment: '', slug: '', segments: [] };
-    }
-
-    const segment = relevantSegments[0];
-    const slug = relevantSegments[1] || '';
-    
-    return { segment, slug, segments: relevantSegments };
-  }
+  
 
   /**
    * Handle initial URL-based focus when graph first loads
@@ -292,7 +263,7 @@ class GraphControlAPI {
   handleUrlInitialFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav') {
     console.log(`[GraphControl] Handling initial URL focus: ${pathname} for ${instanceType}`);
     
-    const { segment, slug } = this.urlParser(pathname);
+    const { segment, slug } = parseUrlPathname(pathname);
     
     if (!segment) {
       this.changeView('post_view', instanceType);
@@ -401,7 +372,7 @@ class GraphControlAPI {
   handleUrlCurrentFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType, continuousFocus = false) {
     console.log(`[GraphControl] handleUrlCurrentFocus: ${pathname} for ${instanceType}, currentView: ${currentView}, continuousFocus: ${continuousFocus}`);
     
-    const { segment, slug } = this.urlParser(pathname);
+    const { segment, slug } = parseUrlPathname(pathname);
     
     if (!segment) {
       console.log(`[GraphControl] Root path - no focus`);
