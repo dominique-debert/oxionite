@@ -5,7 +5,7 @@ import 'styles/global.css'
 import 'styles/notion.css'
 import 'styles/prism-theme.css'
 
-const SHOW_DEBUG_CONTROLS = false
+const SHOW_DEBUG_CONTROLS = true
 const SHOW_DEBUG_SOCIAL_IMAGE = true
 
 import type { AppProps } from 'next/app'
@@ -19,6 +19,9 @@ import styles from 'styles/components/common.module.css'
 import type * as types from '@/lib/context/types'
 import Background from '@/components/Background'
 import { Footer } from '@/components/Footer'
+
+import { GraphController } from '@/components/debug/GraphController'
+import { SocialImagePreviewer } from '@/components/debug/SocialImagePreviewer'
 import { SideNav } from '@/components/SideNav'
 import { TopNav } from '@/components/TopNav'
 import { bootstrap } from '@/lib/bootstrap-client'
@@ -33,10 +36,8 @@ import { mapImageUrl } from '@/lib/map-image-url'
 import { AppContext } from '@/lib/context/app-context'
 import { Noto_Sans_KR } from 'next/font/google'
 import { appWithTranslation } from 'next-i18next'
-import { graphControl } from '@/components/graph/utils/graph-control'
-import { PageHead } from '@/components/PageHead'
 import { getBlockTitle } from 'notion-utils'
-
+import { PageHead } from '@/components/PageHead'
 
 const notoKR = Noto_Sans_KR({
   subsets: ['latin'],
@@ -164,7 +165,6 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
   const paddingRight = showTOC ? '32rem' : '0'
 
-
   const closeMobileMenu = React.useCallback(() => {
     setIsMobileMenuOpen(false)
   }, [])
@@ -173,174 +173,9 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     return null
   }
 
-  // Debug controls for testing graph functionality
-  const DebugControls = () => {
-    const [slugInput, setSlugInput] = React.useState('');
-    const [tagInput, setTagInput] = React.useState('');
-
-    const handleSlugFocus = () => {
-      if (slugInput.trim()) {
-        const slugs = slugInput.split(',').map(s => s.trim()).filter(Boolean);
-        console.log(`[Debug] Focusing on slugs:`, slugs);
-        graphControl.changeViewAndFocusBySlug('post_view', slugs, 'sidenav');
-      }
-    };
-
-    const handleTagFocus = () => {
-      if (tagInput.trim()) {
-        const tags = tagInput.split(',').map(s => s.trim()).filter(Boolean);
-        console.log(`[Debug] Focusing on tags:`, tags);
-        graphControl.changeViewAndFocusNode('tag_view', tags, 'sidenav');
-      }
-    };
-
-    const handleSlugHighlight = () => {
-      if (slugInput.trim()) {
-        const slugs = slugInput.split(',').map(s => s.trim()).filter(Boolean);
-        console.log(`[Debug] Highlighting slugs:`, slugs);
-        graphControl.highlightBySlug(slugs, 'sidenav');
-      }
-    };
-
-    const handleTagHighlight = () => {
-      if (tagInput.trim()) {
-        const tags = tagInput.split(',').map(s => s.trim()).filter(Boolean);
-        console.log(`[Debug] Highlighting tags:`, tags);
-        graphControl.highlightByTag(tags, 'sidenav');
-      }
-    };
-
-    return (
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        right: 0,
-        zIndex: 9999,
-        background: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: '10px',
-        fontSize: '12px',
-        fontFamily: 'monospace',
-        maxWidth: '300px'
-      }}>
-        <div><strong>Graph Debug Controls:</strong></div>
-        
-        <div style={{ marginTop: '8px' }}>
-          <div>Basic Controls:</div>
-          <button 
-            onClick={() => graphControl.fitToHome('sidenav')}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-          >
-            Fit Home
-          </button>
-          <button 
-            onClick={() => graphControl.changeView('post_view', 'sidenav')}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-          >
-            Post View
-          </button>
-          <button 
-            onClick={() => graphControl.changeView('tag_view', 'sidenav')}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-          >
-            Tag View
-          </button>
-        </div>
-
-        <div style={{ marginTop: '8px' }}>
-          <div>Slug Input (Post/Category):</div>
-          <input
-            type="text"
-            value={slugInput}
-            onChange={(e) => setSlugInput(e.target.value)}
-            placeholder="Enter slug(s), comma-separated..."
-            style={{ 
-              width: '120px', 
-              fontSize: '10px', 
-              padding: '2px', 
-              marginRight: '2px',
-              background: '#333',
-              color: 'white',
-              border: '1px solid #555'
-            }}
-          />
-          <button 
-            onClick={handleSlugFocus}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-          >
-            Focus Slug
-          </button>
-          <button 
-            onClick={handleSlugHighlight}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px', backgroundColor: '#ff9800' }}
-          >
-            Highlight Slug
-          </button>
-        </div>
-
-        <div style={{ marginTop: '8px' }}>
-          <div>Tag Input:</div>
-          <input
-            type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            placeholder="Enter tag(s), comma-separated..."
-            style={{ 
-              width: '120px', 
-              fontSize: '10px', 
-              padding: '2px', 
-              marginRight: '2px',
-              background: '#333',
-              color: 'white',
-              border: '1px solid #555'
-            }}
-          />
-          <button 
-            onClick={handleTagFocus}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-          >
-            Focus Tag
-          </button>
-          <button 
-            onClick={handleTagHighlight}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px', backgroundColor: '#ff9800' }}
-          >
-            Highlight Tag
-          </button>
-          <button 
-            onClick={() => graphControl.clearHighlight('sidenav')}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px', backgroundColor: '#f44336' }}
-          >
-            Clear Highlights
-          </button>
-        </div>
-
-        <div style={{ marginTop: '8px' }}>
-          <button 
-            onClick={() => {
-              const path = window.location.pathname;
-              console.log(`[Debug] Current URL: ${path}`);
-              graphControl.handleUrlCurrentFocus(path, 'sidenav');
-            }}
-            style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}
-          >
-            Test Current URL
-          </button>
-        </div>
-
-        <div style={{ marginTop: '8px', fontSize: '10px', color: '#ccc' }}>
-          <div>Usage:</div>
-          <div>• Slug: post slug or category slug (comma-separated for multiple)</div>
-          <div>• Tag: exact tag name (comma-separated for multiple)</div>
-          <div>• Check console for logs</div>
-        </div>
-      </div>
-    );
-  };
-
   // Check if this is a 404 page
   const is404Page = router.pathname === '/404';
-  
+
   if (!siteMap && !is404Page) {
     return <Component {...pageProps} />
   }
@@ -392,8 +227,8 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
         title={pageTitle}
         pageId={pageProps.pageId}
       />
-      {SHOW_DEBUG_CONTROLS && <DebugControls />}
-      {SHOW_DEBUG_SOCIAL_IMAGE && <SocialImageDebug pageId={pageProps.pageId} />}
+      {SHOW_DEBUG_CONTROLS && <GraphController />}
+      {SHOW_DEBUG_SOCIAL_IMAGE && <SocialImagePreviewer />}
       <style jsx global>{`
         :root {
           --font-noto-sans-kr: ${notoKR.style.fontFamily};
@@ -487,146 +322,6 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
       </div>
     </AppContext.Provider>
   )
-}
-
-// Debug component for social image testing
-function SocialImageDebug({ pageId }: { pageId?: string }) {
-  const router = useRouter();
-  const [currentPageId, setCurrentPageId] = React.useState(pageId || '');
-  const [imageUrl, setImageUrl] = React.useState('');
-  const [loading, setLoading] = React.useState(false);
-
-  React.useEffect(() => {
-    if (pageId) {
-      setCurrentPageId(pageId);
-    }
-  }, [pageId]);
-
-  React.useEffect(() => {
-    if (currentPageId) {
-      const url = `/api/social-image?id=${currentPageId}`;
-      setImageUrl(url);
-    }
-  }, [currentPageId]);
-
-  const handleGenerate = () => {
-    if (currentPageId) {
-      setLoading(true);
-      const url = `/api/social-image?id=${currentPageId}`;
-      setImageUrl(url + '&t=' + Date.now()); // Force refresh
-      setTimeout(() => setLoading(false), 1000);
-    }
-  };
-
-  const handlePageIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentPageId(e.target.value);
-  };
-
-  return (
-    <div style={{
-      position: 'fixed',
-      bottom: '20px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 9999,
-      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-      color: 'white',
-      padding: '20px',
-      borderRadius: '8px',
-      fontSize: '12px',
-      maxWidth: '400px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)'
-    }}>
-      <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '14px' }}>
-        🎨 Social Image Debug
-      </div>
-      
-      <div style={{ marginBottom: '10px' }}>
-        <label style={{ display: 'block', marginBottom: '5px' }}>
-          Page ID:
-        </label>
-        <input
-          type="text"
-          value={currentPageId}
-          onChange={handlePageIdChange}
-          style={{
-            width: '100%',
-            padding: '5px',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '4px',
-            color: 'white',
-            fontSize: '11px'
-          }}
-          placeholder="Enter page ID..."
-        />
-      </div>
-
-      <div style={{ marginBottom: '10px' }}>
-        <button
-          onClick={handleGenerate}
-          disabled={loading}
-          style={{
-            padding: '5px 10px',
-            backgroundColor: loading ? '#666' : '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '11px',
-            marginRight: '10px'
-          }}
-        >
-          {loading ? 'Loading...' : 'Generate'}
-        </button>
-        
-        <button
-          onClick={() => {
-            setCurrentPageId(rootNotionPageId || '');
-          }}
-          style={{
-            padding: '5px 10px',
-            backgroundColor: '#333',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '11px'
-          }}
-        >
-          Use Root
-        </button>
-      </div>
-
-      {imageUrl && (
-        <div>
-          <div style={{ marginBottom: '5px', fontSize: '10px', color: '#ccc' }}>
-            Preview (1200×630):
-          </div>
-          <img
-            src={imageUrl}
-            alt="Social preview"
-            style={{
-              width: '100%',
-              height: 'auto',
-              borderRadius: '4px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              maxHeight: '200px',
-              objectFit: 'contain'
-            }}
-            onError={(e) => {
-              console.error('Social image failed to load:', imageUrl);
-            }}
-          />
-          <div style={{ marginTop: '5px', fontSize: '9px', color: '#888', wordBreak: 'break-all' }}>
-            {imageUrl}
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default appWithTranslation(App)

@@ -1,20 +1,8 @@
-import ky from 'ky'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { ImageResponse } from 'next/og'
-import { type PageBlock } from 'notion-types'
-import {
-  getBlockIcon,
-  getBlockTitle,
-  getPageProperty,
-  isUrl,
-  parsePageId} from 'notion-utils'
-
 import * as libConfig from '@/lib/config'
+import { parseUrlPathname } from '@/lib/context/url-parser'
 import interSemiBoldFont from '@/lib/fonts/inter-semibold'
-import { mapImageUrl } from '@/lib/map-image-url'
-import { notion } from '@/lib/notion-api'
-import localeConfig from '../../site.locale.json'
-import { type PageError,type PageInfo } from '@/lib/context/types'
 
 export const runtime = 'edge'
 
@@ -22,23 +10,56 @@ export default async function OGImage(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { searchParams } = new URL(req.url!)
-  const pageId = parsePageId(
-    searchParams.get('id') || libConfig.rootNotionPageId
+  try {
+    const url = new URL(req.url!, `https://${req.headers.host || 'localhost'}`)
+    const parsed = parseUrlPathname(url.pathname)
+
+    if (parsed.isRoot) {
+      return createMinimalSocialImage()
+    }
+
+    return createPostSocialImage()
+  } catch (error) {
+    console.error('Error generating social image:', error)
+    return createMinimalSocialImage()
+  }
+}
+
+/**
+ * For the home page, returns only the background image, filling the canvas.
+ */
+function createMinimalSocialImage() {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+        }}
+      >
+        <img
+          src={new URL('/default_background.png', libConfig.host).toString()}
+          alt="Background"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      </div>
+    ),
+    {
+      width: 1200,
+      height: 630,
+    }
   )
-  if (!pageId) {
-    return new Response('Invalid notion page id', { status: 400 })
-  }
+}
 
-  const pageInfoOrError = await getNotionPageInfo({ pageId })
-  if (pageInfoOrError.type === 'error') {
-    return res.status(pageInfoOrError.error.statusCode).send({
-      error: pageInfoOrError.error.message
-    })
-  }
-  const pageInfo = pageInfoOrError.data
-  console.log(pageInfo)
-
+/**
+ * For post pages, returns an image with text and a dark overlay.
+ */
+function createPostSocialImage() {
   return new ImageResponse(
     (
       <div
@@ -51,107 +72,80 @@ export default async function OGImage(
           backgroundColor: '#1F2027',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'black'
+          color: 'white',
         }}
       >
-        {pageInfo.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={pageInfo.image}
-            style={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-              // TODO: satori doesn't support background-size: cover and seems to
-              // have inconsistent support for filter + transform to get rid of the
-              // blurred edges. For now, we'll go without a blur filter on the
-              // background, but Satori is still very new, so hopefully we can re-add
-              // the blur soon.
-
-              // backgroundImage: pageInfo.image
-              //   ? `url(${pageInfo.image})`
-              //   : undefined,
-              // backgroundSize: '100% 100%'
-              // TODO: pageInfo.imageObjectPosition
-              // filter: 'blur(8px)'
-              // transform: 'scale(1.05)'
-            }}
-          />
-        )}
-
+        <img
+          src={new URL('/default_background.png', libConfig.host).toString()}
+          alt="Background"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+        />
         <div
           style={{
             position: 'relative',
-            width: 900,
-            height: 465,
             display: 'flex',
             flexDirection: 'column',
-            border: '16px solid rgba(0,0,0,0.3)',
-            borderRadius: 8,
-            zIndex: '1'
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            padding: '0 40px',
           }}
         >
-          <div
+          <h1
             style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-around',
-              backgroundColor: '#fff',
-              padding: 24,
-              alignItems: 'center',
-              textAlign: 'center'
+              fontSize: 60,
+              fontWeight: 700,
+              fontFamily: 'Inter',
+              margin: '0 0 20px',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
             }}
           >
-            {pageInfo.detail && (
-              <div style={{ fontSize: 32, opacity: 0 }}>{pageInfo.detail}</div>
-            )}
-
-            <div
-              style={{
-                fontSize: 70,
-                fontWeight: 700,
-                fontFamily: 'Inter'
-              }}
-            >
-              {pageInfo.title}
-            </div>
-
-            {pageInfo.detail && (
-              <div style={{ fontSize: 32, opacity: 0.6 }}>
-                {pageInfo.detail}
-              </div>
-            )}
-          </div>
+            {libConfig.name}
+          </h1>
+          <p
+            style={{
+              fontSize: 36,
+              fontWeight: 400,
+              fontFamily: 'Inter',
+              margin: 0,
+              opacity: 0.9,
+              textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+            }}
+          >
+            {libConfig.description}
+          </p>
         </div>
-
-        {pageInfo.authorImage && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 47,
-              left: 104,
-              height: 128,
-              width: 128,
-              display: 'flex',
-              borderRadius: '50%',
-              border: '4px solid #fff',
-              zIndex: '5'
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={pageInfo.authorImage}
-              style={{
-                width: '100%',
-                height: '100%'
-                // transform: 'scale(1.04)'
-              }}
-            />
-          </div>
-        )}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 40,
+            right: 40,
+            fontSize: 24,
+            fontWeight: 600,
+            fontFamily: 'Inter',
+            opacity: 0.8,
+            textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+          }}
+        >
+          {libConfig.domain}
+        </div>
       </div>
     ),
     {
@@ -167,158 +161,4 @@ export default async function OGImage(
       ]
     }
   )
-}
-
-export async function getNotionPageInfo({
-  pageId
-}: {
-  pageId: string
-}): Promise<
-  | { type: 'success'; data: PageInfo }
-  | { type: 'error'; error: PageError }
-> {
-  const recordMap = await notion.getPage(pageId)
-
-  const keys = Object.keys(recordMap?.block || {})
-  const block = recordMap?.block?.[keys[0]!]?.value
-
-  if (!block) {
-    throw new Error('Invalid recordMap for page')
-  }
-
-  const blockSpaceId = block.space_id
-
-  if (
-    blockSpaceId &&
-    libConfig.rootNotionSpaceId &&
-    blockSpaceId !== libConfig.rootNotionSpaceId
-  ) {
-    return {
-      type: 'error',
-      error: {
-        statusCode: 400,
-        message: `Notion page "${pageId}" belongs to a different workspace.`
-      }
-    }
-  }
-
-  const isBlogPost =
-    block.type === 'page' && block.parent_table === 'collection'
-  const title = getBlockTitle(block, recordMap) || libConfig.name
-
-  const imageCoverPosition =
-    (block as PageBlock).format?.page_cover_position ??
-    libConfig.defaultPageCoverPosition
-  const imageObjectPosition = imageCoverPosition
-    ? `center ${(1 - imageCoverPosition) * 100}%`
-    : undefined
-
-  const imageBlockUrl = mapImageUrl(
-    getPageProperty<string>('Social Image', block, recordMap) ||
-      (block as PageBlock).format?.page_cover,
-    block
-  )
-  const imageFallbackUrl = mapImageUrl(libConfig.defaultPageCover, block)
-
-  const blockIcon = getBlockIcon(block, recordMap)
-  const authorImageBlockUrl = mapImageUrl(
-    blockIcon && isUrl(blockIcon) ? blockIcon : undefined,
-    block
-  )
-  const authorImageFallbackUrl = mapImageUrl(libConfig.defaultPageIcon, block)
-  const [authorImage, image] = await Promise.all([
-    getCompatibleImageUrl(authorImageBlockUrl, authorImageFallbackUrl),
-    getCompatibleImageUrl(imageBlockUrl, imageFallbackUrl)
-  ])
-
-  const author =
-    getPageProperty<string>('Author', block, recordMap) || libConfig.author
-
-  // const socialDescription =
-  //   getPageProperty<string>('Description', block, recordMap) ||
-  //   libConfig.description
-
-  // const lastUpdatedTime = getPageProperty<number>(
-  //   'Last Updated',
-  //   block,
-  //   recordMap
-  // )
-  const publishedTime = getPageProperty<number>('Published', block, recordMap)
-  const datePublished = publishedTime ? new Date(publishedTime) : undefined
-  // const dateUpdated = lastUpdatedTime
-  //   ? new Date(lastUpdatedTime)
-  //   : publishedTime
-  //   ? new Date(publishedTime)
-  //   : undefined
-  const date =
-    isBlogPost && datePublished
-      ? `${datePublished.toLocaleString(localeConfig.defaultLocale, {
-          month: 'long'
-        })} ${datePublished.getFullYear()}`
-      : undefined
-  const detail = date || author || libConfig.domain
-
-  const pageInfo: PageInfo = {
-    pageId,
-    title,
-    image,
-    imageObjectPosition,
-    author,
-    authorImage,
-    detail,
-
-    // These are not used for social images, but are required by the type
-    type: 'Post',
-    slug: '',
-    parentPageId: null,
-    childrenPageIds: [],
-    language: null,
-    public: true,
-    useOriginalCoverImage: null,
-    description: null,
-    date: null,
-    children: [],
-
-  }
-
-  return {
-    type: 'success',
-    data: pageInfo
-  }
-}
-
-async function isUrlReachable(
-  url: string | undefined | null
-): Promise<boolean> {
-  if (!url) {
-    return false
-  }
-
-  try {
-    await ky.head(url)
-    return true
-  } catch {
-    return false
-  }
-}
-
-async function getCompatibleImageUrl(
-  url: string | undefined | null,
-  fallbackUrl: string | undefined | null
-): Promise<string | undefined> {
-  const image = (await isUrlReachable(url)) ? url : fallbackUrl
-
-  if (image) {
-    const imageUrl = new URL(image)
-
-    if (imageUrl.host === 'images.unsplash.com') {
-      if (!imageUrl.searchParams.has('w')) {
-        imageUrl.searchParams.set('w', '1200')
-        imageUrl.searchParams.set('fit', 'max')
-        return imageUrl.toString()
-      }
-    }
-  }
-
-  return image ?? undefined
 }
