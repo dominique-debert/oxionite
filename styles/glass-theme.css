@@ -238,3 +238,38 @@
   transform: translateX(0);
   opacity: 1;
 }
+
+/* Icon and text alignment for breadcrumb items */
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.breadcrumb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.breadcrumb-icon-inline {
+  margin-right: 0.25rem;
+  font-size: 0.8em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.breadcrumb-text {
+  display: inline-block;
+  line-height: 1;
+}
+
+.site-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  object-fit: contain;
+  display: block;
+}

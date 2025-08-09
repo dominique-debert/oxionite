@@ -13,12 +13,12 @@ export default siteConfig({
   rootNotionSpaceId: null,
 
   // basic site info (required)
-  name: 'Next Notion Blog Engine',
-  domain: 'next-notion-blog-engine.vercel.app',
-  author: 'NNBE',
+  name: 'Noxionite',
+  domain: 'noxionite.vercel.app',
+  author: 'Jzahnny',
 
   // open graph metadata (optional)
-  description: 'Next Notion Blog Engine Example Description',
+  description: 'Effortlessly turn your Notion pages into a stunning blog.',
 
   // locale configuration (optional)
   locale: locale,

@@ -160,8 +160,8 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     const W_OUTER = GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
     const W_INNER = GRAPH_CONFIG.visual.NODE_INNER_BORDER_WIDTH;
 
-    // Draw glow effect for highlighted nodes
-    if (isSlugHighlighted && node.x != null && node.y != null && !isNaN(node.x) && !isNaN(node.y)) {
+    // Draw glow effect for highlighted nodes (only for non-home nodes)
+    if (isSlugHighlighted && node.x != null && node.y != null && !isNaN(node.x) && !isNaN(node.y) && node.id !== HOME_NODE_ID) {
       const glowSize = Math.max(
         GRAPH_CONFIG.visual.GLOW_SIZE_MULTIPLIER / globalScale,
         nodeSize + GRAPH_CONFIG.visual.GLOW_MIN_OFFSET_SIZE
@@ -182,84 +182,88 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
       }
     }
 
-    ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;
-    ctx.lineWidth = W_OUTER;
-    if (node.type === 'Category') {
-      const outerPathX = node.x - (nodeSize / 2) + (W_OUTER / 2);
-      const outerPathY = node.y - (nodeSize / 2) + (W_OUTER / 2);
-      const outerPathSize = nodeSize - W_OUTER;
-      const outerPathRadius = cornerRadius - (W_OUTER / 2);
-      ctx.beginPath();
-      ctx.roundRect(outerPathX, outerPathY, outerPathSize, outerPathSize, Math.max(outerPathRadius, 0));
-      ctx.stroke();
-    } else {
-      const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, Math.max(outerPathRadius, 0), 0, 2 * Math.PI);
-      ctx.stroke();
-    }
-
-    ctx.strokeStyle = colors.nodeInnerBorder;
-    ctx.lineWidth = W_INNER;
-    if (node.type === 'Category') {
-      const innerPathX = node.x - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
-      const innerPathY = node.y - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
-      const innerPathSize = nodeSize - (2 * W_OUTER) - W_INNER;
-      const innerPathRadius = cornerRadius - W_OUTER - (W_INNER / 2);
-      ctx.beginPath();
-      ctx.roundRect(innerPathX, innerPathY, innerPathSize, innerPathSize, Math.max(innerPathRadius, 0));
-      ctx.stroke();
-    } else {
-      const innerPathRadius = (nodeSize / 2) - W_OUTER - (W_INNER / 2);
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, Math.max(innerPathRadius, 0), 0, 2 * Math.PI);
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = colors.node;
-    if (node.type === 'Category') {
-      const fillX = node.x - (nodeSize / 2) + W_OUTER + W_INNER;
-      const fillY = node.y - (nodeSize / 2) + W_OUTER + W_INNER;
-      const fillSize = nodeSize - 2 * (W_OUTER + W_INNER);
-      const fillRadius = cornerRadius - W_OUTER - W_INNER;
-      ctx.beginPath();
-      ctx.roundRect(fillX, fillY, fillSize, fillSize, Math.max(fillRadius, 0));
-      ctx.fill();
-    } else {
-      const fillRadius = (nodeSize / 2) - W_OUTER - W_INNER;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, Math.max(fillRadius, 0), 0, 2 * Math.PI);
-      ctx.fill();
-    }
-
-    if (node.imageUrl && node.img && node.img.complete) {
-      ctx.save();
-      const imageAreaOffset = W_OUTER + W_INNER;
-      const imageAreaSize = nodeSize - 2 * imageAreaOffset;
-      if (imageAreaSize > 0) {
-        if (node.type === 'Category') {
-          const imageCornerRadius = cornerRadius - imageAreaOffset;
-          ctx.beginPath();
-          ctx.roundRect(node.x! - imageAreaSize / 2, node.y! - imageAreaSize / 2, imageAreaSize, imageAreaSize, Math.max(imageCornerRadius, 0));
-        } else {
-          const imageRadius = imageAreaSize / 2;
-          ctx.beginPath();
-          ctx.arc(node.x!, node.y!, imageRadius, 0, 2 * Math.PI);
-        }
-        ctx.clip();
-        const { drawWidth, drawHeight, offsetX, offsetY } = drawImageFillShape(node.img, node.x! - imageAreaSize / 2, node.y! - imageAreaSize / 2, imageAreaSize, imageAreaSize);
-        ctx.drawImage(node.img, node.x! + offsetX - imageAreaSize / 2, node.y! + offsetY - imageAreaSize / 2, drawWidth, drawHeight);
-        ctx.restore();
+    // Special handling for home node - display icon.png directly
+    if (node.id === HOME_NODE_ID) {
+      if (node.img && node.img.complete) {
+        // Draw the icon.png image directly without borders or radius
+        ctx.drawImage(node.img, node.x! - nodeSize / 2, node.y! - nodeSize / 2, nodeSize, nodeSize);
+      } else {
+        // Fallback: draw a simple square if image not loaded
+        ctx.fillStyle = colors.node;
+        ctx.fillRect(node.x! - nodeSize / 2, node.y! - nodeSize / 2, nodeSize, nodeSize);
       }
-    } else if (node.id === HOME_NODE_ID) {
-      const innerOffset = GRAPH_CONFIG.visual.NODE_OUTER_BORDER_WIDTH;
-      const innerSize = nodeSize - 2 * innerOffset;
-      const faviconSize = innerSize * 0.8;
-      ctx.fillStyle = colors.text;
-      ctx.font = `${faviconSize}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🏠', node.x!, node.y!);
+    } else {
+      // Draw borders and background for non-home nodes
+      ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;
+      ctx.lineWidth = W_OUTER;
+      if (node.type === 'Category') {
+        const outerPathX = node.x - (nodeSize / 2) + (W_OUTER / 2);
+        const outerPathY = node.y - (nodeSize / 2) + (W_OUTER / 2);
+        const outerPathSize = nodeSize - W_OUTER;
+        const outerPathRadius = cornerRadius - (W_OUTER / 2);
+        ctx.beginPath();
+        ctx.roundRect(outerPathX, outerPathY, outerPathSize, outerPathSize, Math.max(outerPathRadius, 0));
+        ctx.stroke();
+      } else {
+        const outerPathRadius = (nodeSize / 2) - (W_OUTER / 2);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, Math.max(outerPathRadius, 0), 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = colors.nodeInnerBorder;
+      ctx.lineWidth = W_INNER;
+      if (node.type === 'Category') {
+        const innerPathX = node.x - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
+        const innerPathY = node.y - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
+        const innerPathSize = nodeSize - (2 * W_OUTER) - W_INNER;
+        const innerPathRadius = cornerRadius - W_OUTER - (W_INNER / 2);
+        ctx.beginPath();
+        ctx.roundRect(innerPathX, innerPathY, innerPathSize, innerPathSize, Math.max(innerPathRadius, 0));
+        ctx.stroke();
+      } else {
+        const innerPathRadius = (nodeSize / 2) - W_OUTER - (W_INNER / 2);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, Math.max(innerPathRadius, 0), 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = colors.node;
+      if (node.type === 'Category') {
+        const fillX = node.x - (nodeSize / 2) + W_OUTER + W_INNER;
+        const fillY = node.y - (nodeSize / 2) + W_OUTER + W_INNER;
+        const fillSize = nodeSize - 2 * (W_OUTER + W_INNER);
+        const fillRadius = cornerRadius - W_OUTER - W_INNER;
+        ctx.beginPath();
+        ctx.roundRect(fillX, fillY, fillSize, fillSize, Math.max(fillRadius, 0));
+        ctx.fill();
+      } else {
+        const fillRadius = (nodeSize / 2) - W_OUTER - W_INNER;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, Math.max(fillRadius, 0), 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      if (node.imageUrl && node.img && node.img.complete) {
+        ctx.save();
+        const imageAreaOffset = W_OUTER + W_INNER;
+        const imageAreaSize = nodeSize - 2 * imageAreaOffset;
+        if (imageAreaSize > 0) {
+          if (node.type === 'Category') {
+            const imageCornerRadius = cornerRadius - imageAreaOffset;
+            ctx.beginPath();
+            ctx.roundRect(node.x! - imageAreaSize / 2, node.y! - imageAreaSize / 2, imageAreaSize, imageAreaSize, Math.max(imageCornerRadius, 0));
+          } else {
+            const imageRadius = imageAreaSize / 2;
+            ctx.beginPath();
+            ctx.arc(node.x!, node.y!, imageRadius, 0, 2 * Math.PI);
+          }
+          ctx.clip();
+          const { drawWidth, drawHeight, offsetX, offsetY } = drawImageFillShape(node.img, node.x! - imageAreaSize / 2, node.y! - imageAreaSize / 2, imageAreaSize, imageAreaSize);
+          ctx.drawImage(node.img, node.x! + offsetX - imageAreaSize / 2, node.y! + offsetY - imageAreaSize / 2, drawWidth, drawHeight);
+          ctx.restore();
+        }
+      }
     }
 
     const fontSize = node.type === 'Root' ? GRAPH_CONFIG.visual.HOME_NAME_FONT_SIZE : node.type === 'Category' ? GRAPH_CONFIG.visual.CATEGORY_FONT_SIZE : GRAPH_CONFIG.visual.POST_FONT_SIZE;

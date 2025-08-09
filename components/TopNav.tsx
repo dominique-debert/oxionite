@@ -1,6 +1,4 @@
 import { IoMoonSharp, IoSunnyOutline, IoMenuOutline } from 'react-icons/io5'
-import { FaTags } from 'react-icons/fa'
-import { MdError } from 'react-icons/md'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
@@ -18,6 +16,7 @@ import siteConfig from '../site.config'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { PageSocial } from './PageSocial'
 import { SearchModal } from './SearchModal'
+import { Breadcrumb } from './Breadcrumb'
 
 function ToggleThemeButton() {
   const [hasMounted, setHasMounted] = React.useState(false)
@@ -255,58 +254,11 @@ export const TopNav: React.FC<TopNavProps> = ({
           <MobileMenuButton onToggle={onToggleMobileMenu} />
         )}
         <div className="glass-breadcrumb">
-          {isMobile ? (
-            <Link href="/" className="breadcrumb-item active">
-              {siteConfig.name}
-            </Link>
-          ) : (
-            breadcrumbs.map((crumb, index) => {
-              const isLastCrumb = index === breadcrumbs.length - 1
-              const isFirstCrumb = index === 0
-              const { pathname } = router
-              
-              return (
-                <React.Fragment key={index}>
-                  {!isFirstCrumb && <span className="breadcrumb-separator">›</span>}
-                  {isLastCrumb || !crumb.href ? (
-                    <span className="breadcrumb-item active">
-                      {(index === 1 && pathname.startsWith('/tag/')) || 
-                       (index === 1 && pathname === '/all-tags') ? (
-                        <>
-                          <FaTags style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
-                          {crumb.title}
-                        </>
-                      ) : (pathname === '/404' && index === 1) ? (
-                        <>
-                          <MdError style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
-                          {crumb.title}
-                        </>
-                      ) : (
-                        crumb.title
-                      )}
-                    </span>
-                  ) : (
-                    <Link href={crumb.href} className="breadcrumb-item">
-                      {(index === 1 && pathname.startsWith('/tag/')) || 
-                       (index === 1 && pathname === '/all-tags') ? (
-                        <>
-                          <FaTags style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
-                          {crumb.title}
-                        </>
-                      ) : (pathname === '/404' && index === 1) ? (
-                        <>
-                          <MdError style={{ marginRight: '0.25rem', fontSize: '0.8em' }} />
-                          {crumb.title}
-                        </>
-                      ) : (
-                        crumb.title
-                      )}
-                    </Link>
-                  )}
-                </React.Fragment>
-              )
-            })
-          )}
+          <Breadcrumb 
+            breadcrumbs={breadcrumbs} 
+            isMobile={isMobile} 
+            pathname={router.pathname} 
+          />
         </div>
       </div>
 
