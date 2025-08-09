@@ -229,7 +229,9 @@ async function getAllPagesFromDatabase(
           : null,
         coverImage: processedCoverImage,
         coverImageBlock: block,
-
+        useOriginalCoverImage:
+          getPageProperty<boolean>('Use Original Cover Image', block, collectionRecordMap) ||
+          null,
         tags: getPageProperty<string[]>('Tags', block, collectionRecordMap) || [],
         children: []
       }

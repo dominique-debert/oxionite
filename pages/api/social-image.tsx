@@ -274,6 +274,7 @@ export async function getNotionPageInfo({
     childrenPageIds: [],
     language: null,
     public: true,
+    useOriginalCoverImage: null,
     description: null,
     date: null,
     children: [],

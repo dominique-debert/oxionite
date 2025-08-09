@@ -71,7 +71,7 @@ export interface PageInfo {
   childrenPageIds: string[]
   language: string | null
   public: boolean | null
-
+  useOriginalCoverImage: boolean | null
   description: string | null
   date: string | null
   coverImage?: string | null
