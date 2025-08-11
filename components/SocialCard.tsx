@@ -1,101 +1,218 @@
 import React from 'react'
+import { MdOutlineAccountTree, MdError } from 'react-icons/md'
+import { FaTag, FaTags } from 'react-icons/fa'
+import { useTranslation } from 'next-i18next'
+import { getDefaultBackgroundUrl } from '../lib/get-default-background'
+import siteConfig from '../site.config'
+import styles from '../styles/components/SocialCard.module.css'
 
+// Common components
+const PillBrand: React.FC = () => (
+  <div className={styles.pillBrand}>
+    <img
+      src="/icon.png"
+      alt="Site Icon"
+      width={16}
+      height={16}
+    />
+    <span>{siteConfig.name}</span>
+  </div>
+)
+
+const PillText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className={styles.pillText}>
+    {children}
+  </div>
+)
+
+const TitleBrand: React.FC = () => (
+  <div className={styles.titleBrand}>
+    <img
+      src="/icon.png"
+      alt="Site Icon"
+      width={48}
+      height={48}
+    />
+    <span>{siteConfig.name}</span>
+  </div>
+)
+
+const TitleIcon: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon, text }) => (
+  <div className={styles.titleIcon}>
+    <span className={styles.icon48}>{icon}</span>
+    <span>{text}</span>
+  </div>
+)
+
+const TitlePost: React.FC<{ title: string }> = ({ title }) => (
+  <div className={styles.titlePost}>
+    {title}
+  </div>
+)
+
+// URL Parser and Social Card Component
 export interface SocialCardProps {
-  title: string
-  author?: string
-  date?: string
-  imageUrl: string
+  url: string
+  siteMap?: any // We'll use any for now to avoid type issues
 }
 
-// Note: This component is not intended for direct use in the browser.
-// It's designed to be rendered to an HTML string and then screenshotted by Puppeteer.
-export const SocialCard: React.FC<SocialCardProps> = ({ title, author, date, imageUrl }) => {
-  // CSS to reset body margin and apply box-sizing globally.
-  // This ensures consistent rendering between live preview and Puppeteer.
+export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap }) => {
   const globalStyles = `
     * {
       box-sizing: border-box;
     }
     body {
       margin: 0;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     }
   `
+
+  // Parse URL to determine the type
+  const parseUrl = (url: string) => {
+    try {
+      // Handle both absolute URLs and relative paths
+      const path = url.startsWith('http') ? new URL(url).pathname : url
+      const segments = path.split('/').filter(Boolean)
+
+      if (segments.length === 0) {
+        return { type: 'root' }
+      }
+
+      if (segments[0] === 'post' && segments.length === 2) {
+        return { type: 'post', slug: segments[1] }
+      }
+
+      if (segments[0] === 'category' && segments.length === 2) {
+        return { type: 'category', slug: segments[1] }
+      }
+
+      if (segments[0] === 'tag' && segments.length === 2) {
+        return { type: 'tag', tag: segments[1] }
+      }
+
+      if (segments[0] === 'all-tags') {
+        return { type: 'all-tags' }
+      }
+
+      return { type: '404' }
+    } catch (error) {
+      // Fallback for invalid URLs
+      return { type: 'root' }
+    }
+  }
+
+  const parsed = parseUrl(url)
+
+  // Use i18n for translations
+  const { t } = useTranslation('common')
+
+  const renderContent = () => {
+    const defaultBgStyle = {
+      backgroundImage: `url(${getDefaultBackgroundUrl()})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }
+
+    switch (parsed.type) {
+      case 'root':
+        return (
+          <div 
+            className={styles.container} 
+            style={defaultBgStyle}
+          >
+            <TitleBrand />
+          </div>
+        )
+
+      case 'post':
+        // This is intentionally left empty as requested
+        return (
+          <div 
+            className={styles.container} 
+            style={defaultBgStyle}
+          >
+            <div style={{ color: 'white', fontSize: '24px' }}>
+              Post social card - To be implemented
+            </div>
+          </div>
+        )
+
+      case 'category':
+        return (
+          <div 
+            className={styles.container} 
+            style={defaultBgStyle}
+          >
+            <TitleIcon
+              icon={
+                <MdOutlineAccountTree className={styles.icon48} />
+              }
+              text={parsed.slug || 'Category'}
+            />
+          </div>
+        )
+
+      case 'tag':
+        return (
+          <div 
+            className={styles.container} 
+            style={defaultBgStyle}
+          >
+            <TitleIcon
+              icon={
+                <FaTag className={styles.icon48} />
+              }
+              text={parsed.tag || 'Tag'}
+            />
+          </div>
+        )
+
+      case 'all-tags':
+        return (
+          <div 
+            className={styles.container} 
+            style={defaultBgStyle}
+          >
+            <TitleIcon
+              icon={
+                <FaTags className={styles.icon48} />
+              }
+              text={t('allTags')}
+            />
+          </div>
+        )
+
+      case '404':
+        return (
+          <div 
+            className={styles.container} 
+            style={defaultBgStyle}
+          >
+            <TitleIcon
+              icon={
+                <MdError className={styles.icon48} />
+              }
+              text={t('error.404.title')}
+            />
+          </div>
+        )
+
+      default:
+        return (
+          <div 
+            className={styles.container} 
+            style={defaultBgStyle}
+          >
+            <TitleBrand />
+          </div>
+        )
+    }
+  }
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
-      <div
-      style={{
-        width: '1200px',
-        height: '630px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundImage: `url(${imageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        fontFamily: 'sans-serif' // Placeholder font
-      }}
-    >
-      {/* Glassmorphism Container */}
-      <div
-        style={{
-          position: 'relative',
-          width: '90%',
-          height: '80%',
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)', // For Safari
-          borderRadius: '20px',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '40px',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
-        }}
-      >
-        <h1
-          style={{
-            fontSize: '64px',
-            color: 'white',
-            fontWeight: 'bold',
-            textShadow: '2px 2px 8px rgba(0,0,0,0.6)',
-            margin: 0
-          }}
-        >
-          {title}
-        </h1>
-
-        {author && (
-          <p
-            style={{
-              fontSize: '32px',
-              color: 'rgba(255, 255, 255, 0.9)',
-              textShadow: '1px 1px 4px rgba(0,0,0,0.5)',
-              marginTop: '20px'
-            }}
-          >
-            {author}
-          </p>
-        )}
-
-        {date && (
-          <p
-            style={{
-              fontSize: '24px',
-              color: 'rgba(255, 255, 255, 0.7)',
-              position: 'absolute',
-              bottom: '40px',
-              right: '40px'
-            }}
-          >
-            {date}
-          </p>
-        )}
-      </div>
-    </div>
+      {renderContent()}
     </>
   )
 }
