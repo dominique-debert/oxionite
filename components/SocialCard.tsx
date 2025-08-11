@@ -172,15 +172,15 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
       if (parsed.isRoot) {
         return { type: 'root' }
       } else if (parsed.isPost) {
-        return { type: 'post', slug: parsed.slug }
+        return { type: 'post', slug: parsed.slug, locale: parsed.locale }
       } else if (parsed.isCategory) {
         return { type: 'category', slug: parsed.slug, locale: parsed.locale }
       } else if (parsed.isTag) {
-        return { type: 'tag', tag: parsed.slug }
+        return { type: 'tag', tag: parsed.slug, locale: parsed.locale }
       } else if (parsed.isAllTags) {
-        return { type: 'all-tags' }
+        return { type: 'all-tags', locale: parsed.locale }
       } else {
-        return { type: '404' }
+        return { type: '404', locale: parsed.locale }
       }
     } catch (error) {
       console.error('[SocialCard] Error parsing URL:', error)
