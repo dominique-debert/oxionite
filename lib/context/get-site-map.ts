@@ -233,6 +233,7 @@ async function getAllPagesFromDatabase(
           getPageProperty<boolean>('Use Original Cover Image', block, collectionRecordMap) ||
           null,
         tags: getPageProperty<string[]>('Tags', block, collectionRecordMap) || [],
+        authors: getPageProperty<string[]>('Authors', block, collectionRecordMap) || [],
         children: []
       }
     }

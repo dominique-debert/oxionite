@@ -28,40 +28,39 @@ const Background: React.FC<{ imageUrl?: string; children?: React.ReactNode; base
   return <div style={backgroundStyle}>{children}</div>;
 };
 
-const PillBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
+const PillText: React.FC<{ 
+  iconUrl?: string; 
+  text: string; 
+  isImageCircle?: boolean;
+  fontSize?: string;
+  padding?: string;
+}> = ({ iconUrl, text, isImageCircle = false, fontSize = '36px', padding = '16px 24px' }) => (
   <div style={{
     ...COMMON_STYLES.glass,
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '16px 24px',
-    fontSize: '36px',
+    padding,
+    fontSize,
     fontWeight: 'bold',
     color: 'rgba(255, 255, 255, 0.9)',
   }}>
-    <img
-      src={iconUrl}
-      alt="Site Icon"
-      width={54}
-      height={54}
-    />
-    <span>{siteConfig.name}</span>
+    {iconUrl && (
+      <img
+        src={iconUrl}
+        alt="Icon"
+        width={isImageCircle ? 32 : 54}
+        height={isImageCircle ? 32 : 54}
+        style={{
+          borderRadius: isImageCircle ? '999px' : '0',
+          objectFit: 'cover',
+        }}
+      />
+    )}
+    <span>{text}</span>
   </div>
 )
 
-const PillText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{
-    ...COMMON_STYLES.glass,
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '8px 16px',
-    fontSize: '14px',
-    color: 'rgba(255, 255, 255, 0.9)',
-    margin: '0 4px',
-  }}>
-    {children}
-  </div>
-)
 
 const TitleBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
   <div style={{
@@ -91,14 +90,21 @@ const TitleIcon: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon, te
 const TitlePost: React.FC<{ title: string }> = ({ title }) => (
   <div style={{
     ...COMMON_STYLES.glass,
-    ...COMMON_STYLES.title,
-    padding: '32px 48px',
+    width: '1040px',
+    minHeight: '300px',
+    padding: '48px',
     fontSize: '48px',
+    fontWeight: 'bold',
     color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
-    maxWidth: '80%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    textAlign: 'left',
+    borderRadius: '24px',
   }}>
-    {title}
+    <div style={{ width: '100%', wordWrap: 'break-word' }}>
+      {title}
+    </div>
   </div>
 )
 
@@ -117,7 +123,7 @@ const COMMON_STYLES = {
   },
   glass: {
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    border: '5px solid rgba(255, 255, 255, 0.2)',
+    border: '3px solid rgba(255, 255, 255, 0.2)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     borderRadius: '64px',
@@ -276,15 +282,91 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           }
         }
 
+        const pageInfo = siteMap?.pageInfoMap ? Object.values(siteMap.pageInfoMap).find(
+          (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === parsed.slug && p.language === currentLocale
+        ) : null;
+        
+        // Handle authors array from pageInfo
+        const authors = pageInfo?.authors || [];
+        const firstAuthor = authors[0] || 'Author';
+        const authorDisplayText = authors.length > 1 ? `${firstAuthor} +${authors.length - 1}` : firstAuthor;
+        
+        // Find first author's avatar from siteConfig
+        const firstAuthorConfig = siteConfig.authors?.find((a: any) => a.name === firstAuthor);
+        const authorAvatar = firstAuthorConfig?.avatar_dir;
+
         return (
           <Background imageUrl={postCoverImage} baseUrl={baseUrl}>
-            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <TitleIcon
-                icon={<MdDescription />}
-                text={postTitle}
-              />
-              <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillBrand iconUrl={iconUrl} />
+            <div style={{ 
+              position: 'relative', 
+              width: '100%', 
+              height: '100%', 
+              padding: '80px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              {/* Top row with breadcrumb and authors */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '60px', 
+                left: '80px', 
+                right: '80px', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                zIndex: 10
+              }}>
+                {/* Breadcrumb */}
+                <PillText text="breadcrumb" fontSize="24px" padding="12px 24px" />
+              
+                {/* Author */}
+                <PillText 
+                  iconUrl={authorAvatar} 
+                  text={authorDisplayText} 
+                  fontSize="24px" 
+                  padding="12px 24px"
+                  isImageCircle={true}
+                />
+                
+              </div>
+
+              {/* Main title panel */}
+              <TitlePost title={postTitle} />
+
+              {/* Bottom row with tags and date */}
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '60px', 
+                left: '80px', 
+                right: '80px', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                zIndex: 10
+              }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  {pageInfo?.tags?.map((tag: string, index: number) => (
+                    <PillText 
+                      key={index} 
+                      text={`#${tag}`} 
+                      fontSize="20px" 
+                      padding="8px 16px" 
+                    />
+                  ))}
+                </div>
+                {pageInfo?.date && (
+                  <PillText 
+                    text={new Date(pageInfo.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })} 
+                    fontSize="24px" 
+                    padding="12px 24px" 
+                  />
+                )}
               </div>
             </div>
           </Background>
@@ -337,7 +419,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 text={title}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillBrand iconUrl={iconUrl} />
+                <PillText iconUrl={iconUrl} text={siteConfig.name} />
               </div>
             </div>
           </Background>
@@ -380,7 +462,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 text={`#${parsed.tag || 'Tag'}`}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillBrand iconUrl={iconUrl} />
+                <PillText iconUrl={iconUrl} text={siteConfig.name} />
               </div>
             </div>
           </Background>
@@ -396,7 +478,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 text={t('allTags')}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillBrand iconUrl={iconUrl} />
+                <PillText iconUrl={iconUrl} text={siteConfig.name} />
               </div>
             </div>
           </Background>
