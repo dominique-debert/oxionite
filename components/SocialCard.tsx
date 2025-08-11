@@ -2,54 +2,117 @@ import React from 'react'
 import { MdOutlineAccountTree, MdError } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
-import styles from '../styles/components/SocialCard.module.css'
 import siteConfig from '../site.config'
 import localeConfig from '../site.locale.json'
 import { parseUrlPathname } from '../lib/context/url-parser'
 
 // Common components
-const PillBrand: React.FC = () => (
-  <div className={styles.pillBrand}>
+const PillBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
+  <div style={{
+    ...COMMON_STYLES.glass,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '16px 24px',
+    fontSize: '36px',
+    fontWeight: 'bold',
+    color: 'rgba(255, 255, 255, 0.9)',
+  }}>
     <img
-      src="/icon.png"
+      src={iconUrl}
       alt="Site Icon"
-      width={16}
-      height={16}
+      width={54}
+      height={54}
     />
     <span>{siteConfig.name}</span>
   </div>
 )
 
 const PillText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className={styles.pillText}>
+  <div style={{
+    ...COMMON_STYLES.glass,
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '8px 16px',
+    fontSize: '14px',
+    color: 'rgba(255, 255, 255, 0.9)',
+    margin: '0 4px',
+  }}>
     {children}
   </div>
 )
 
-const TitleBrand: React.FC = () => (
-  <div className={styles.titleBrand}>
+const TitleBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
+  <div style={{
+    ...COMMON_STYLES.glass,
+    ...COMMON_STYLES.title,
+  }}>
     <img
-      src="/icon.png"
+      src={iconUrl}
       alt="Site Icon"
-      width={48}
-      height={48}
+      width={144}
+      height={144}
     />
     <span>{siteConfig.name}</span>
   </div>
 )
 
 const TitleIcon: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon, text }) => (
-  <div className={styles.titleIcon}>
-    <span className={styles.icon48}>{icon}</span>
+  <div style={{
+    ...COMMON_STYLES.glass,
+    ...COMMON_STYLES.title,
+  }}>
+    <span style={{ display: 'flex', alignItems: 'center', fontSize: '72px', color: 'rgba(255, 255, 255, 0.9)' }}>{icon}</span>
     <span>{text}</span>
   </div>
 )
 
 const TitlePost: React.FC<{ title: string }> = ({ title }) => (
-  <div className={styles.titlePost}>
+  <div style={{
+    ...COMMON_STYLES.glass,
+    ...COMMON_STYLES.title,
+    padding: '32px 48px',
+    fontSize: '48px',
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    maxWidth: '80%',
+  }}>
     {title}
   </div>
 )
+
+// Common styles
+const COMMON_STYLES = {
+  container: {
+    width: '1200px',
+    height: '630px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
+  glass: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    border: '5px solid rgba(255, 255, 255, 0.2)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    borderRadius: '64px',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  title: {
+    fontSize: '96px',
+    fontWeight: 'bold',
+    borderRadius: '999px',
+    padding: '32px 48px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '32px',
+    
+  }
+} as const
 
 // URL Parser and Social Card Component
 export interface SocialCardProps {
@@ -139,24 +202,11 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
     console.log('[SocialCard] Parsed result:', parsed)
 
     const containerStyle = {
-      width: '1200px',
-      height: '630px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundImage: `url(${imageUrl || (baseUrl ? `${baseUrl}/default_background.png` : '/default_background.png')})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      ...COMMON_STYLES.container,
+      backgroundImage: imageUrl ? `url(${imageUrl})` : `url(${getDefaultBackgroundUrl()})`,
     }
 
-    const glassStyle = {
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      borderRadius: '32px',
-    }
+    const glassStyle = COMMON_STYLES.glass
 
     const iconUrl = baseUrl ? `${baseUrl}/icon.png` : '/icon.png';
 
@@ -167,18 +217,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] Rendering root view')
         return (
           <div style={containerStyle}>
-            <div style={{
-              ...glassStyle,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              padding: '32px 48px',
-              fontSize: '48px',
-              color: 'rgba(255, 255, 255, 0.9)',
-            }}>
-              <img src={iconUrl} alt="Site Icon" width={48} height={48} />
-              <span>{siteConfig.name}</span>
-            </div>
+            <TitleBrand iconUrl={iconUrl} />
           </div>
         )
 
@@ -196,18 +235,15 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] Rendering category view:', parsed.slug)
         return (
           <div style={containerStyle}>
-            <div style={{
-              ...glassStyle,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              padding: '32px 48px',
-              fontSize: '48px',
-              color: 'rgba(255, 255, 255, 0.9)',
-            }}>
-              <MdOutlineAccountTree style={{ fontSize: '48px' }} />
-              <span>{parsed.slug || t('category')}</span>
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <TitleIcon
+              icon={<MdOutlineAccountTree />}
+              text={parsed.slug || 'Category'}
+            />
+            <div style={{ position: 'absolute', bottom: '-150px' }}>
+              <PillBrand iconUrl={iconUrl}/>
             </div>
+           </div>
           </div>
         )
 
@@ -215,17 +251,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] Rendering tag view:', parsed.tag)
         return (
           <div style={containerStyle}>
-            <div style={{
-              ...glassStyle,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              padding: '32px 48px',
-              fontSize: '48px',
-              color: 'rgba(255, 255, 255, 0.9)',
-            }}>
-              <FaTag style={{ fontSize: '48px' }} />
-              <span>{parsed.tag || t('tag')}</span>
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <TitleIcon
+                icon={<FaTag />}
+                text={parsed.tag || 'Tag'}
+              />
+              <div style={{ position: 'absolute', bottom: '-150px' }}>
+                <PillBrand iconUrl={iconUrl}/>
+              </div>
             </div>
           </div>
         )
@@ -234,17 +267,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] Rendering all-tags view')
         return (
           <div style={containerStyle}>
-            <div style={{
-              ...glassStyle,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              padding: '32px 48px',
-              fontSize: '48px',
-              color: 'rgba(255, 255, 255, 0.9)',
-            }}>
-              <FaTags style={{ fontSize: '48px' }} />
-              <span>{t('allTags')}</span>
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <TitleIcon
+                icon={<FaTags />}
+                text={t('allTags')}
+              />
+              <div style={{ position: 'absolute', bottom: '-150px' }}>
+                <PillBrand iconUrl={iconUrl}/>
+              </div>
             </div>
           </div>
         )
@@ -253,17 +283,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] Rendering 404 view')
         return (
           <div style={containerStyle}>
-            <div style={{
-              ...glassStyle,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              padding: '32px 48px',
-              fontSize: '48px',
-              color: 'rgba(255, 255, 255, 0.9)',
-            }}>
-              <MdError style={{ fontSize: '48px' }} />
-              <span>{t('error.404.title')}</span>
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <TitleIcon
+                icon={<MdError />}
+                text={t('error.404.title')}
+              />
+              <div style={{ position: 'absolute', bottom: '-150px' }}>
+                <PillBrand iconUrl={iconUrl}/>
+              </div>
             </div>
           </div>
         )
@@ -272,18 +299,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] Rendering default root view')
         return (
           <div style={containerStyle}>
-            <div style={{
-              ...glassStyle,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              padding: '32px 48px',
-              fontSize: '48px',
-              color: 'rgba(255, 255, 255, 0.9)',
-            }}>
-              <img src={iconUrl} alt="Site Icon" width={48} height={48} />
-              <span>{siteConfig.name}</span>
-            </div>
+            <TitleBrand iconUrl={iconUrl} />
           </div>
         )
     }
