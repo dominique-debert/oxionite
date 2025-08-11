@@ -10,8 +10,22 @@ export interface SocialCardProps {
 // Note: This component is not intended for direct use in the browser.
 // It's designed to be rendered to an HTML string and then screenshotted by Puppeteer.
 export const SocialCard: React.FC<SocialCardProps> = ({ title, author, date, imageUrl }) => {
+  // CSS to reset body margin and apply box-sizing globally.
+  // This ensures consistent rendering between live preview and Puppeteer.
+  const globalStyles = `
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+  `
+
   return (
-    <div
+    <>
+      <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
+      <div
       style={{
         width: '1200px',
         height: '630px',
@@ -82,5 +96,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ title, author, date, ima
         )}
       </div>
     </div>
+    </>
   )
 }
