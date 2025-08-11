@@ -49,8 +49,8 @@ const PillText: React.FC<{
       <img
         src={iconUrl}
         alt="Icon"
-        width={isImageCircle ? 32 : 54}
-        height={isImageCircle ? 32 : 54}
+        width={isImageCircle ? 42 : 54}
+        height={isImageCircle ? 42 : 54}
         style={{
           borderRadius: isImageCircle ? '999px' : '0',
           objectFit: 'cover',
@@ -93,7 +93,7 @@ const TitlePost: React.FC<{ title: string }> = ({ title }) => (
     width: '1040px',
     minHeight: '300px',
     padding: '48px',
-    fontSize: '48px',
+    fontSize: '60px',
     fontWeight: 'bold',
     color: 'rgba(255, 255, 255, 0.9)',
     display: 'flex',
@@ -102,7 +102,17 @@ const TitlePost: React.FC<{ title: string }> = ({ title }) => (
     textAlign: 'left',
     borderRadius: '24px',
   }}>
-    <div style={{ width: '100%', wordWrap: 'break-word' }}>
+    <div style={{ 
+      width: '100%', 
+      wordWrap: 'break-word',
+      display: '-webkit-box',
+      WebkitLineClamp: 3,
+      WebkitBoxOrient: 'vertical',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      lineHeight: '1.2',
+      maxHeight: '216px', // 60px * 1.2 * 3 = 216px for 3 full lines
+    }}>
       {title}
     </div>
   </div>
@@ -124,8 +134,8 @@ const COMMON_STYLES = {
   glass: {
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     border: '3px solid rgba(255, 255, 255, 0.2)',
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
     borderRadius: '64px',
     color: 'rgba(255, 255, 255, 0.9)',
   },
@@ -291,9 +301,20 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         const firstAuthor = authors[0] || 'Author';
         const authorDisplayText = authors.length > 1 ? `${firstAuthor} +${authors.length - 1}` : firstAuthor;
         
-        // Find first author's avatar from siteConfig
+        // Find first author's avatar from siteConfig with exact case matching
         const firstAuthorConfig = siteConfig.authors?.find((a: any) => a.name === firstAuthor);
-        const authorAvatar = firstAuthorConfig?.avatar_dir;
+        let authorAvatar = firstAuthorConfig?.avatar_dir;
+        // Ensure avatar URL is absolute for server-side rendering
+        if (authorAvatar && authorAvatar.startsWith('/') && baseUrl) {
+          authorAvatar = `${baseUrl}${authorAvatar}`;
+        }
+
+        console.log('[SocialCard] authors array:', authors)
+        console.log('[SocialCard] authorDisplayText:', authorDisplayText)
+        console.log('[SocialCard] First author:', firstAuthor)
+        console.log('[SocialCard] Available siteConfig authors:', siteConfig.authors?.map(a => a.name))
+        console.log('[SocialCard] First author config:', firstAuthorConfig)
+        console.log('[SocialCard] Author avatar:', authorAvatar)
 
         return (
           <Background imageUrl={postCoverImage} baseUrl={baseUrl}>
@@ -322,13 +343,15 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 <PillText text="breadcrumb" fontSize="24px" padding="12px 24px" />
               
                 {/* Author */}
-                <PillText 
-                  iconUrl={authorAvatar} 
-                  text={authorDisplayText} 
-                  fontSize="24px" 
-                  padding="12px 24px"
-                  isImageCircle={true}
-                />
+                {authors.length > 0 && (
+                  <PillText 
+                    iconUrl={authorAvatar} 
+                    text={authorDisplayText} 
+                    fontSize="24px" 
+                    padding={authorAvatar ? "6px 24px 6px 6px" : "12px 24px"}
+                    isImageCircle={true}
+                  />
+                )}
                 
               </div>
 
