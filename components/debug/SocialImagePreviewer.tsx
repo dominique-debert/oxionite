@@ -141,7 +141,6 @@ export function SocialImagePreviewer() {
           <div style={{ width: '1200px', height: '630px', margin: '0 auto', border: '1px dashed #555' }}>
             <SocialCard
               url={path}
-              imageUrl={'/default_background.png'}
               baseUrl={typeof window !== 'undefined' ? window.location.origin : ''}
             />
           </div>

@@ -1,4 +1,5 @@
 export const getDefaultBackgroundUrl = (): string => {
+  console.log('[getDefaultBackgroundUrl] Returning:', '/default_background.png')
   return '/default_background.png'
 }
 

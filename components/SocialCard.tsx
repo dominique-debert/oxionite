@@ -1,5 +1,5 @@
 import React from 'react'
-import { MdOutlineAccountTree, MdError } from 'react-icons/md'
+import { MdOutlineAccountTree, MdError, MdDescription } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
 import siteConfig from '../site.config'
@@ -8,6 +8,26 @@ import { parseUrlPathname } from '../lib/context/url-parser'
 import type { SiteMap, PageInfo } from '../lib/context/types'
 
 // Common components
+const Background: React.FC<{ imageUrl?: string; children: React.ReactNode; baseUrl?: string }> = ({ imageUrl, children, baseUrl }) => {
+  // Ensure we use absolute URLs for server-side rendering
+  let finalImageUrl = imageUrl || getDefaultBackgroundUrl();
+  
+  // Convert relative URLs to absolute for Puppeteer
+  if (finalImageUrl.startsWith('/') && baseUrl) {
+    finalImageUrl = `${baseUrl}${finalImageUrl}`;
+  }
+  
+  console.log('[Background Component] imageUrl:', imageUrl, 'baseUrl:', baseUrl, 'finalImageUrl:', finalImageUrl);
+  
+  const backgroundStyle = {
+    ...COMMON_STYLES.container,
+    backgroundImage: `url(${finalImageUrl})`,
+  };
+
+  console.log('[Background Component] backgroundStyle:', backgroundStyle);
+  return <div style={backgroundStyle}>{children}</div>;
+};
+
 const PillBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
   <div style={{
     ...COMMON_STYLES.glass,
@@ -201,35 +221,65 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
   const renderContent = () => {
     console.log('[SocialCard] Rendering with props:', { url, imageUrl, baseUrl })
     console.log('[SocialCard] Parsed result:', parsed)
-
-    const containerStyle = {
-      ...COMMON_STYLES.container,
-      backgroundImage: imageUrl ? `url(${imageUrl})` : `url(${getDefaultBackgroundUrl()})`,
-    }
+    console.log('[SocialCard] siteMap available:', !!siteMap, 'pageInfoMap available:', !!siteMap?.pageInfoMap)
 
     const glassStyle = COMMON_STYLES.glass
 
     const iconUrl = baseUrl ? `${baseUrl}/icon.png` : '/icon.png';
 
-    console.log('[SocialCard] Final styles:', { containerStyle, iconUrl })
+    console.log('[SocialCard] iconUrl:', iconUrl)
+    console.log('[SocialCard] Provided imageUrl:', imageUrl)
 
     switch (parsed.type) {
       case 'root':
         console.log('[SocialCard] Rendering root view')
+        console.log('[SocialCard] No cover image available for root view')
         return (
-          <div style={containerStyle}>
+          <Background baseUrl={baseUrl}>
             <TitleBrand iconUrl={iconUrl} />
-          </div>
+          </Background>
         )
 
       case 'post':
-        console.log('[SocialCard] Rendering post view (placeholder)')
+        console.log('[SocialCard] Rendering post view:', parsed.slug)
+        const currentLocale = parsed.locale || localeConfig.defaultLocale
+        let postTitle = 'Post'
+        let postCoverImage: string | undefined
+
+        console.log('[SocialCard] Post case - currentLocale:', currentLocale, 'slug:', parsed.slug)
+        console.log('[SocialCard] Post case - searching for page with type Post or Home')
+
+        if (siteMap && siteMap.pageInfoMap) {
+          const allPages = Object.values(siteMap.pageInfoMap)
+          console.log('[SocialCard] Post case - total pages:', allPages.length)
+          
+          const matchingPages = allPages.filter(
+            (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === parsed.slug && p.language === currentLocale
+          )
+          console.log('[SocialCard] Post case - matching pages:', matchingPages.length, matchingPages.map(p => ({title: p.title, type: p.type, coverImage: p.coverImage})))
+
+          const pageInfo = matchingPages[0]
+          if (pageInfo) {
+            postTitle = pageInfo.title
+            postCoverImage = pageInfo.coverImage || undefined
+            console.log('[SocialCard] Post case - found page:', {title: postTitle, coverImage: postCoverImage})
+          } else {
+            console.log('[SocialCard] Post case - no matching page found')
+          }
+        }
+
         return (
-          <div style={containerStyle}>
-            <div style={{ color: 'white', fontSize: '24px' }}>
-              Post social card - To be implemented
+          <Background imageUrl={postCoverImage} baseUrl={baseUrl}>
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <TitleIcon
+                icon={<MdDescription />}
+                text={postTitle}
+              />
+              <div style={{ position: 'absolute', bottom: '-150px' }}>
+                <PillBrand iconUrl={iconUrl} />
+              </div>
             </div>
-          </div>
+          </Background>
         )
 
       case 'category': {
@@ -238,18 +288,33 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] Parsed result:', parsed)
         console.log('[SocialCard] Current locale:', currentLocale)
         let title = parsed.slug || 'Category'
+        let coverImage: string | undefined
+
+        console.log('[SocialCard] Category case - searching for category with slug:', parsed.slug, 'locale:', currentLocale)
 
         if (siteMap && siteMap.pageInfoMap) {
-          const pageInfo = Object.values(siteMap.pageInfoMap).find(
+          const allPages = Object.values(siteMap.pageInfoMap)
+          console.log('[SocialCard] Category case - total pages:', allPages.length)
+          
+          const categoryPages = allPages.filter(
             (p: PageInfo) => p.type === 'Category' && p.slug === parsed.slug && p.language === currentLocale
           )
+          console.log('[SocialCard] Category case - matching categories:', categoryPages.length, categoryPages.map(p => ({title: p.title, coverImage: p.coverImage})))
+
+          const pageInfo = categoryPages[0]
           if (pageInfo) {
             title = pageInfo.title
+            coverImage = pageInfo.coverImage || undefined
+            console.log('[SocialCard] Category case - found category:', {title, coverImage})
+          } else {
+            console.log('[SocialCard] Category case - no matching category found')
           }
         }
 
+        console.log('[SocialCard] Category final values:', {title, coverImage})
+
         return (
-          <div style={containerStyle}>
+          <Background imageUrl={coverImage} baseUrl={baseUrl}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <TitleIcon
                 icon={<MdOutlineAccountTree />}
@@ -259,64 +324,74 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 <PillBrand iconUrl={iconUrl} />
               </div>
             </div>
-          </div>
+          </Background>
         )
       }
 
       case 'tag':
         console.log('[SocialCard] Rendering tag view:', parsed.tag)
+        let tagCoverImage: string | undefined
+        
+        console.log('[SocialCard] Tag case - searching for pages with tag:', parsed.tag)
+
+        if (siteMap && siteMap.pageInfoMap) {
+          const allPages = Object.values(siteMap.pageInfoMap)
+          console.log('[SocialCard] Tag case - total pages:', allPages.length)
+          
+          // Find a page with this tag to use its cover image
+          const pagesWithTag = allPages.filter(
+            (p: PageInfo) => p.tags && p.tags.includes(parsed.tag || '')
+          )
+          console.log('[SocialCard] Tag case - pages with this tag:', pagesWithTag.length, pagesWithTag.map(p => ({title: p.title, coverImage: p.coverImage})))
+          
+          if (pagesWithTag.length > 0) {
+            tagCoverImage = pagesWithTag[0].coverImage || undefined
+            console.log('[SocialCard] Tag case - using cover image from:', pagesWithTag[0].title, 'coverImage:', tagCoverImage)
+          } else {
+            console.log('[SocialCard] Tag case - no pages found with this tag')
+          }
+        } else {
+          console.log('[SocialCard] Tag case - siteMap not available')
+        }
+        
+        console.log('[SocialCard] Tag case - final tagCoverImage:', tagCoverImage)
+        
         return (
-          <div style={containerStyle}>
+          <Background imageUrl={tagCoverImage} baseUrl={baseUrl}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <TitleIcon
                 icon={<FaTag />}
-                text={parsed.tag || 'Tag'}
+                text={`#${parsed.tag || 'Tag'}`}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillBrand iconUrl={iconUrl}/>
+                <PillBrand iconUrl={iconUrl} />
               </div>
             </div>
-          </div>
+          </Background>
         )
 
       case 'all-tags':
         console.log('[SocialCard] Rendering all-tags view')
         return (
-          <div style={containerStyle}>
+          <Background baseUrl={baseUrl}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <TitleIcon
                 icon={<FaTags />}
                 text={t('allTags')}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillBrand iconUrl={iconUrl}/>
+                <PillBrand iconUrl={iconUrl} />
               </div>
             </div>
-          </div>
-        )
-
-      case '404':
-        console.log('[SocialCard] Rendering 404 view')
-        return (
-          <div style={containerStyle}>
-            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <TitleIcon
-                icon={<MdError />}
-                text={t('error.404.title')}
-              />
-              <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillBrand iconUrl={iconUrl}/>
-              </div>
-            </div>
-          </div>
+          </Background>
         )
 
       default:
         console.log('[SocialCard] Rendering default root view')
         return (
-          <div style={containerStyle}>
+          <Background baseUrl={baseUrl}>
             <TitleBrand iconUrl={iconUrl} />
-          </div>
+          </Background>
         )
     }
   }

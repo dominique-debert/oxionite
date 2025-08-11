@@ -100,18 +100,15 @@ export async function generateSocialImage(
       headless: chromium.headless,
     })
     const baseUrl = `https://${siteConfig.domain}`
-    const absoluteImageUrl = new URL(props.imageUrl || '/default_background.png', baseUrl).toString()
 
     console.log('[SocialImage Generator] Debug Info (Build-time):', {
       originalImageUrl: props.imageUrl,
       baseUrl,
-      finalAbsoluteUrl: absoluteImageUrl
+      usingBackgroundDefaults: !props.imageUrl
     })
-
 
     const imageBuffer = await renderSocialImage(browser, {
       ...props,
-      imageUrl: absoluteImageUrl,
       baseUrl: baseUrl
     })
     await fs.writeFile(imagePath, imageBuffer)
@@ -169,19 +166,25 @@ async function handler(
     // Support all URL types, not just root
     console.log('[SocialImage API] Parsed URL:', parsedUrl)
 
-    const imageUrl = await getDefaultBackgroundUrl(_req)
-
     // Determine base URL for assets
     const protocol = _req.headers['x-forwarded-proto'] || 'http'
     const host = _req.headers['x-forwarded-host'] || _req.headers.host
     const baseUrl = `${protocol}://${host}`
 
-    const absoluteImageUrl = new URL(imageUrl, baseUrl).toString()
+    const urlParam = typeof _req.query.url === 'string' ? _req.query.url : 
+                     typeof _req.query.path === 'string' ? _req.query.path : '/'
+    
+    console.log('[SocialImage API] Final URL parameter:', urlParam)
+    
+    const siteMap = await getCachedSiteMap()
+
+    // Let the SocialCard handle default backgrounds and page-specific cover images
+    // Only provide imageUrl if explicitly requested via query parameter
+    const explicitImageUrl = typeof _req.query.imageUrl === 'string' ? _req.query.imageUrl : undefined
 
     console.log('[SocialImage API] Debug Info (On-demand):', {
-      originalImageUrl: imageUrl,
+      explicitImageUrl,
       baseUrl,
-      finalAbsoluteUrl: absoluteImageUrl,
       requestUrl: _req.url,
       query: _req.query,
       headers: {
@@ -191,16 +194,16 @@ async function handler(
       }
     })
 
-    const urlParam = typeof _req.query.url === 'string' ? _req.query.url : 
-                     typeof _req.query.path === 'string' ? _req.query.path : '/'
+    console.log('[SocialImage API] Rendering with final props:', {
+      url: urlParam,
+      imageUrl: explicitImageUrl,
+      baseUrl,
+      siteMapAvailable: !!siteMap
+    })
     
-    console.log('[SocialImage API] Final URL parameter:', urlParam)
-    
-    const siteMap = await getCachedSiteMap()
-
     const imageBuffer = await renderSocialImage(browser, {
       url: urlParam,
-      imageUrl: absoluteImageUrl,
+      imageUrl: explicitImageUrl, // Let undefined fall through to Background component
       baseUrl: baseUrl,
       siteMap
     })
