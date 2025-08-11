@@ -299,7 +299,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         // Handle authors array from pageInfo
         const authors = pageInfo?.authors || [];
         const firstAuthor = authors[0] || 'Author';
-        const authorDisplayText = authors.length > 1 ? `${firstAuthor} +${authors.length - 1}` : firstAuthor;
+        const additionalAuthorsCount = authors.length > 1 ? authors.length - 1 : 0;
         
         // Find first author's avatar from siteConfig with exact case matching
         const firstAuthorConfig = siteConfig.authors?.find((a: any) => a.name === firstAuthor);
@@ -310,7 +310,8 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         }
 
         console.log('[SocialCard] authors array:', authors)
-        console.log('[SocialCard] authorDisplayText:', authorDisplayText)
+        console.log('[SocialCard] firstAuthor:', firstAuthor)
+        console.log('[SocialCard] additionalAuthorsCount:', additionalAuthorsCount)
         console.log('[SocialCard] First author:', firstAuthor)
         console.log('[SocialCard] Available siteConfig authors:', siteConfig.authors?.map(a => a.name))
         console.log('[SocialCard] First author config:', firstAuthorConfig)
@@ -344,13 +345,22 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
               
                 {/* Author */}
                 {authors.length > 0 && (
-                  <PillText 
-                    iconUrl={authorAvatar} 
-                    text={authorDisplayText} 
-                    fontSize="24px" 
-                    padding={authorAvatar ? "6px 24px 6px 6px" : "12px 24px"}
-                    isImageCircle={true}
-                  />
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <PillText 
+                      iconUrl={authorAvatar} 
+                      text={firstAuthor} 
+                      fontSize="24px" 
+                      padding={authorAvatar ? "6px 24px 6px 6px" : "12px 24px"}
+                      isImageCircle={true}
+                    />
+                    {additionalAuthorsCount > 0 && (
+                      <PillText 
+                        text={`+${additionalAuthorsCount}`} 
+                        fontSize="24px" 
+                        padding="12px 24px"
+                      />
+                    )}
+                  </div>
                 )}
                 
               </div>
@@ -369,8 +379,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 alignItems: 'center',
                 zIndex: 10
               }}>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  {pageInfo?.tags?.map((tag: string, index: number) => (
+
+                {/* Tags */}
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '12px', 
+                  flexWrap: 'wrap',
+                }}>
+                  {pageInfo?.tags?.slice(0, 3).map((tag: string, index: number) => (
                     <PillText 
                       key={index} 
                       text={`#${tag}`} 
@@ -378,7 +394,16 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                       padding="8px 16px" 
                     />
                   ))}
+                  {pageInfo?.tags && pageInfo.tags.length > 3 && (
+                    <PillText 
+                      text={`+${pageInfo.tags.length - 3}`} 
+                      fontSize="20px" 
+                      padding="8px 16px" 
+                    />
+                  )}
                 </div>
+                
+                {/* Date */}
                 {pageInfo?.date && (
                   <PillText 
                     text={new Date(pageInfo.date).toLocaleDateString('en-US', {
