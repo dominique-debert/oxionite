@@ -14,34 +14,11 @@ const defaultConfig = {
   description: 'A modern blog built with Next.js and Notion'
 }
 
+import { getDefaultBackgroundUrl as getDefaultBg } from '@/lib/get-default-background'
+
 // Helper function to get default background URL
 async function getDefaultBackgroundUrl(req?: NextApiRequest): Promise<string> {
-  const publicDir = path.join(process.cwd(), 'public')
-  const imagePath = path.join(publicDir, 'default_background.png')
-  
-  try {
-    await fs.access(imagePath)
-    
-    if (req?.headers?.host) {
-      const protocol = req.headers['x-forwarded-proto'] || 'http'
-      return `${protocol}://${req.headers.host}/default_background.png`
-    } else {
-      return `http://localhost:3000/default_background.png`
-    }
-  } catch {
-    // Fallback to gradient if file doesn't exist
-    return `data:image/svg+xml;base64,${Buffer.from(`
-      <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-          </linearGradient>
-        </defs>
-        <rect width="1200" height="630" fill="url(#grad)" />
-      </svg>
-    `).toString('base64')}`
-  }
+  return getDefaultBg()
 }
 
 // Internal core rendering function
@@ -122,48 +99,21 @@ async function handler(
 
   let browser: Browser | null = null
   try {
-    // Handle Puppeteer executable path with multiple fallbacks
-    let executablePath: string = ''
-    try {
-      if (process.env.NODE_ENV === 'production') {
-        executablePath = await chromium.executablePath()
-      } else {
-        const possiblePaths = [
-          () => puppeteer.executablePath(),
-          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-          '/Applications/Chromium.app/Contents/MacOS/Chromium',
-          '/usr/bin/google-chrome',
-          '/usr/bin/chromium-browser',
-          '/usr/bin/chrome',
-          'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-          'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-        ]
-
-        for (const possiblePath of possiblePaths) {
-          try {
-            if (typeof possiblePath === 'function') {
-              executablePath = possiblePath()
-              break
-            } else {
-              await fs.access(possiblePath)
-              executablePath = possiblePath
-              break
-            }
-          } catch {
-            continue
-          }
-        }
-
-        if (!executablePath) {
-          throw new Error('No suitable browser found for Puppeteer')
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to get Puppeteer executable path:', error)
-      throw error
-    }
-
     const isProduction = process.env.NODE_ENV === 'production'
+    let executablePath: string
+
+    if (isProduction) {
+      executablePath = await chromium.executablePath()
+    } else {
+      try {
+        executablePath = puppeteer.executablePath()
+      } catch (error) {
+        console.error('Could not find a browser for Puppeteer.')
+        throw new Error(
+          'Please install the full `puppeteer` package (`pnpm add puppeteer`) to automatically download a browser, or set the `PUPPETEER_EXECUTABLE_PATH` environment variable.'
+        )
+      }
+    }
 
     browser = await puppeteer.launch({
       args: isProduction ? chromium.args : [],

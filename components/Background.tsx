@@ -76,30 +76,16 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
   // --- Opacity Calculation ---
   useEffect(() => {
     // Find and set default background image
-    const findDefaultBackground = () => {
+    const findDefaultBackground = async () => {
       if (!source) {
-        const supportedFormats = ['webp', 'jpg', 'jpeg', 'png', 'avif']
-        const basePath = '/default_background'
-        
-        // Try loading images in order of preference (webp first for performance)
-        const tryLoadImage = (format: string): Promise<string | null> => {
-          return new Promise((resolve) => {
-            const img = new Image()
-            img.addEventListener('load', () => resolve(`${basePath}.${format}`))
-            img.addEventListener('error', () => resolve(null))
-            img.src = `${basePath}.${format}`
-          })
+        try {
+          const { detectBestBackgroundFormat } = await import('@/lib/get-default-background')
+          const bestFormat = await detectBestBackgroundFormat()
+          setBackgroundImageUrl(bestFormat)
+        } catch {
+          const { getDefaultBackgroundUrl } = await import('@/lib/get-default-background')
+          setBackgroundImageUrl(getDefaultBackgroundUrl())
         }
-
-        // Try all formats and use the first one that loads
-        Promise.all(supportedFormats.map(tryLoadImage))
-          .then((results) => {
-            const foundImage = results.find(url => url !== null)
-            setBackgroundImageUrl(foundImage || '/default_background.webp')
-          })
-          .catch(() => {
-            setBackgroundImageUrl('/default_background.webp')
-          })
       } else {
         setBackgroundImageUrl(null) // Use provided source
       }
