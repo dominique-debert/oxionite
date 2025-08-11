@@ -165,9 +165,8 @@ async function handler(
     const urlPath = _req.query.path as string || '/'
     const parsedUrl = parseUrlPathname(urlPath)
 
-    if (!parsedUrl.isRoot) {
-      return res.status(400).json({ error: 'Only root path / is supported for now.' })
-    }
+    // Support all URL types, not just root
+    console.log('[SocialImage API] Parsed URL:', parsedUrl)
 
     const imageUrl = await getDefaultBackgroundUrl(_req)
 
@@ -181,14 +180,24 @@ async function handler(
     console.log('[SocialImage API] Debug Info (On-demand):', {
       originalImageUrl: imageUrl,
       baseUrl,
-      finalAbsoluteUrl: absoluteImageUrl
+      finalAbsoluteUrl: absoluteImageUrl,
+      requestUrl: _req.url,
+      query: _req.query,
+      headers: {
+        host: _req.headers.host,
+        'x-forwarded-host': _req.headers['x-forwarded-host'],
+        'x-forwarded-proto': _req.headers['x-forwarded-proto']
+      }
     })
 
+    const urlParam = typeof _req.query.url === 'string' ? _req.query.url : 
+                     typeof _req.query.path === 'string' ? _req.query.path : '/'
+    
+    console.log('[SocialImage API] Final URL parameter:', urlParam)
+    
     const imageBuffer = await renderSocialImage(browser, {
-      title: defaultConfig.name,
-      author: defaultConfig.description,
+      url: urlParam,
       imageUrl: absoluteImageUrl,
-      url: '/',
       baseUrl: baseUrl
     })
 

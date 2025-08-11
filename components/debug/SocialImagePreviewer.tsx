@@ -138,9 +138,9 @@ export function SocialImagePreviewer() {
           <h3 style={{ textAlign: 'center', marginBottom: '10px', fontWeight: 'bold' }}>Live HTML Preview (Full Size)</h3>
           <div style={{ width: '1200px', height: '630px', margin: '0 auto', border: '1px dashed #555' }}>
             <SocialCard
-              title="Next Notion Engine"
-              author="A modern blog built with Next.js and Notion"
+              url={path}
               imageUrl={'/default_background.png'}
+              baseUrl={typeof window !== 'undefined' ? window.location.origin : ''}
             />
           </div>
         </div>

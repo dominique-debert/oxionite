@@ -5,6 +5,7 @@ import { getDefaultBackgroundUrl } from '../lib/get-default-background'
 import styles from '../styles/components/SocialCard.module.css'
 import siteConfig from '../site.config'
 import localeConfig from '../site.locale.json'
+import { parseUrlPathname } from '../lib/context/url-parser'
 
 // Common components
 const PillBrand: React.FC = () => (
@@ -69,36 +70,36 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
     }
   `
 
-  // Parse URL to determine the type
+  // Parse URL using the proper utility
   const parseUrl = (url: string) => {
+    console.log('[SocialCard] Parsing URL with parseUrlPathname:', url)
     try {
-      // Handle both absolute URLs and relative paths
-      const path = url.startsWith('http') ? new URL(url).pathname : url
-      const segments = path.split('/').filter(Boolean)
-
-      if (segments.length === 0) {
+      if (!url) {
+        console.log('[SocialCard] URL is undefined/empty, defaulting to root')
         return { type: 'root' }
       }
-
-      if (segments[0] === 'post' && segments.length === 2) {
-        return { type: 'post', slug: segments[1] }
-      }
-
-      if (segments[0] === 'category' && segments.length === 2) {
-        return { type: 'category', slug: segments[1] }
-      }
-
-      if (segments[0] === 'tag' && segments.length === 2) {
-        return { type: 'tag', tag: segments[1] }
-      }
-
-      if (segments[0] === 'all-tags') {
+      
+      const path = url.startsWith('http') ? new URL(url).pathname : url
+      const parsed = parseUrlPathname(path)
+      
+      console.log('[SocialCard] Parsed result from parseUrlPathname:', parsed)
+      
+      // Convert to SocialCard format
+      if (parsed.isRoot) {
+        return { type: 'root' }
+      } else if (parsed.isPost) {
+        return { type: 'post', slug: parsed.slug }
+      } else if (parsed.isCategory) {
+        return { type: 'category', slug: parsed.slug }
+      } else if (parsed.isTag) {
+        return { type: 'tag', tag: parsed.slug }
+      } else if (parsed.isAllTags) {
         return { type: 'all-tags' }
+      } else {
+        return { type: '404' }
       }
-
-      return { type: '404' }
     } catch (error) {
-      // Fallback for invalid URLs
+      console.error('[SocialCard] Error parsing URL:', error)
       return { type: 'root' }
     }
   }
@@ -134,6 +135,9 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
   }
 
   const renderContent = () => {
+    console.log('[SocialCard] Rendering with props:', { url, imageUrl, baseUrl })
+    console.log('[SocialCard] Parsed result:', parsed)
+
     const containerStyle = {
       width: '1200px',
       height: '630px',
@@ -156,8 +160,11 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
 
     const iconUrl = baseUrl ? `${baseUrl}/icon.png` : '/icon.png';
 
+    console.log('[SocialCard] Final styles:', { containerStyle, iconUrl })
+
     switch (parsed.type) {
       case 'root':
+        console.log('[SocialCard] Rendering root view')
         return (
           <div style={containerStyle}>
             <div style={{
@@ -176,7 +183,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       case 'post':
-        // This is intentionally left empty as requested
+        console.log('[SocialCard] Rendering post view (placeholder)')
         return (
           <div style={containerStyle}>
             <div style={{ color: 'white', fontSize: '24px' }}>
@@ -186,6 +193,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       case 'category':
+        console.log('[SocialCard] Rendering category view:', parsed.slug)
         return (
           <div style={containerStyle}>
             <div style={{
@@ -204,6 +212,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       case 'tag':
+        console.log('[SocialCard] Rendering tag view:', parsed.tag)
         return (
           <div style={containerStyle}>
             <div style={{
@@ -222,6 +231,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       case 'all-tags':
+        console.log('[SocialCard] Rendering all-tags view')
         return (
           <div style={containerStyle}>
             <div style={{
@@ -240,6 +250,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       case '404':
+        console.log('[SocialCard] Rendering 404 view')
         return (
           <div style={containerStyle}>
             <div style={{
@@ -258,6 +269,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       default:
+        console.log('[SocialCard] Rendering default root view')
         return (
           <div style={containerStyle}>
             <div style={{
