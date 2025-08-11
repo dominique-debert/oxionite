@@ -5,6 +5,7 @@ import { getDefaultBackgroundUrl } from '../lib/get-default-background'
 import siteConfig from '../site.config'
 import localeConfig from '../site.locale.json'
 import { parseUrlPathname } from '../lib/context/url-parser'
+import type { SiteMap, PageInfo } from '../lib/context/types'
 
 // Common components
 const PillBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
@@ -117,7 +118,7 @@ const COMMON_STYLES = {
 // URL Parser and Social Card Component
 export interface SocialCardProps {
   url: string
-  siteMap?: any // We'll use any for now to avoid type issues
+  siteMap?: SiteMap
   imageUrl?: string
   baseUrl?: string
 }
@@ -153,7 +154,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
       } else if (parsed.isPost) {
         return { type: 'post', slug: parsed.slug }
       } else if (parsed.isCategory) {
-        return { type: 'category', slug: parsed.slug }
+        return { type: 'category', slug: parsed.slug, locale: parsed.locale }
       } else if (parsed.isTag) {
         return { type: 'tag', tag: parsed.slug }
       } else if (parsed.isAllTags) {
@@ -231,21 +232,36 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           </div>
         )
 
-      case 'category':
+      case 'category': {
         console.log('[SocialCard] Rendering category view:', parsed.slug)
+        const currentLocale = parsed.locale || localeConfig.defaultLocale
+        console.log('[SocialCard] Parsed result:', parsed)
+        console.log('[SocialCard] Current locale:', currentLocale)
+        let title = parsed.slug || 'Category'
+
+        if (siteMap && siteMap.pageInfoMap) {
+          const pageInfo = Object.values(siteMap.pageInfoMap).find(
+            (p: PageInfo) => p.type === 'Category' && p.slug === parsed.slug && p.language === currentLocale
+          )
+          if (pageInfo) {
+            title = pageInfo.title
+          }
+        }
+
         return (
           <div style={containerStyle}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <TitleIcon
-              icon={<MdOutlineAccountTree />}
-              text={parsed.slug || 'Category'}
-            />
-            <div style={{ position: 'absolute', bottom: '-150px' }}>
-              <PillBrand iconUrl={iconUrl}/>
+              <TitleIcon
+                icon={<MdOutlineAccountTree />}
+                text={title}
+              />
+              <div style={{ position: 'absolute', bottom: '-150px' }}>
+                <PillBrand iconUrl={iconUrl} />
+              </div>
             </div>
-           </div>
           </div>
         )
+      }
 
       case 'tag':
         console.log('[SocialCard] Rendering tag view:', parsed.tag)

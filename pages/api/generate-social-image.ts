@@ -6,6 +6,7 @@ import ReactDOMServer from 'react-dom/server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parseUrlPathname } from '@/lib/context/url-parser'
+import { getCachedSiteMap } from '@/lib/context/site-cache'
 import { SocialCard, SocialCardProps } from '@/components/SocialCard'
 import siteConfig from 'site.config'
 
@@ -195,11 +196,15 @@ async function handler(
     
     console.log('[SocialImage API] Final URL parameter:', urlParam)
     
+    const siteMap = await getCachedSiteMap()
+
     const imageBuffer = await renderSocialImage(browser, {
       url: urlParam,
       imageUrl: absoluteImageUrl,
-      baseUrl: baseUrl
+      baseUrl: baseUrl,
+      siteMap
     })
+
 
     res.setHeader('Content-Type', 'image/png')
     res.setHeader('Cache-Control', 's-maxage=0, stale-while-revalidate')

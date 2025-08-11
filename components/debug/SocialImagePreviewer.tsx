@@ -81,7 +81,9 @@ export function SocialImagePreviewer() {
   }
 
   return (
-    <div style={{
+    <div 
+      key={router.asPath} 
+      style={{
       position: 'fixed',
       top: 0,
       left: 0,
