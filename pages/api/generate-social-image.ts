@@ -6,89 +6,12 @@ import ReactDOMServer from 'react-dom/server'
 import fs from 'fs/promises'
 import path from 'path'
 import { parseUrlPathname } from '@/lib/context/url-parser'
+import { SocialCard, SocialCardProps } from '@/components/SocialCard'
 
 // Default config since siteConfig might not be available
 const defaultConfig = {
   name: 'Next Notion Engine',
   description: 'A modern blog built with Next.js and Notion'
-}
-
-// SocialCard component - moved here for self-contained file
-interface SocialCardProps {
-  title: string
-  author?: string
-  date?: string
-  imageUrl?: string
-}
-
-const SocialCard: React.FC<SocialCardProps> = ({ title, author, date, imageUrl }) => {
-  return React.createElement('div', {
-    style: {
-      width: 1200,
-      height: 630,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      position: 'relative',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-    }
-  }, [
-    // Glassmorphism overlay
-    React.createElement('div', {
-      key: 'overlay',
-      style: {
-        position: 'absolute',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-      }
-    }),
-    // Content container
-    React.createElement('div', {
-      key: 'content',
-      style: {
-        position: 'relative',
-        zIndex: 1,
-        textAlign: 'center',
-        padding: '60px',
-        maxWidth: '900px',
-      }
-    }, [
-      React.createElement('h1', {
-        key: 'title',
-        style: {
-          fontSize: '64px',
-          fontWeight: 'bold',
-          color: '#ffffff',
-          marginBottom: '20px',
-          lineHeight: 1.2,
-          textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-        }
-      }, title),
-      author && React.createElement('p', {
-        key: 'author',
-        style: {
-          fontSize: '32px',
-          color: '#e5e7eb',
-          marginBottom: date ? '8px' : '0',
-          textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-        }
-      }, author),
-      date && React.createElement('p', {
-        key: 'date',
-        style: {
-          fontSize: '24px',
-          color: '#9ca3af',
-          textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-        }
-      }, date)
-    ].filter(Boolean))
-  ])
 }
 
 // Helper function to get default background URL

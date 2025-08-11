@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { useRouter } from 'next/router'
+import { SocialCard } from '../SocialCard'
 
 // Debounce function to limit API calls
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
@@ -54,91 +55,112 @@ export function SocialImagePreviewer() {
     debouncedGenerate(router.asPath)
   }, [router.asPath, debouncedGenerate])
 
+  const [isOpen, setIsOpen] = React.useState(true)
+
+  if (!isOpen) {
+    return (
+      <button 
+        onClick={() => setIsOpen(true)}
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '20px',
+          zIndex: 9998,
+          padding: '10px 15px',
+          backgroundColor: '#0070f3',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+        }}
+      >
+        🎨 Show Social Preview
+      </button>
+    )
+  }
 
   return (
     <div style={{
       position: 'fixed',
-      bottom: '20px',
-      left: '50%',
-      transform: 'translateX(-50%)',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       zIndex: 9999,
-      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
       color: 'white',
-      padding: '15px',
-      borderRadius: '8px',
-      fontSize: '12px',
-      maxWidth: '350px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+      padding: '40px',
+      overflowY: 'auto',
       backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)'
     }}>
-      <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '14px' }}>
-        🎨 Social Image Debug
-      </div>
-      
-      <div style={{ marginBottom: '10px' }}>
-        <input
-          type="text"
-          value={path}
-          onChange={(e) => setPath(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && generatePreview(path)}
-          placeholder="Enter path (e.g. /)"
-          style={{
-            width: '100%',
-            padding: '8px',
-            backgroundColor: '#333',
-            color: 'white',
-            border: '1px solid #555',
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}
-        />
-      </div>
-      <div style={{ marginBottom: '10px', textAlign: 'center' }}>
-        <button
-          onClick={() => generatePreview(path)}
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '8px 16px',
-            backgroundColor: loading ? '#666' : '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '12px'
-          }}
-        >
-          {loading ? 'Loading...' : 'Refresh Preview'}
-        </button>
-      </div>
+      <button 
+        onClick={() => setIsOpen(false)}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          padding: '8px 12px',
+          background: 'rgba(255,255,255,0.2)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          borderRadius: '50px',
+          color: 'white',
+          cursor: 'pointer'
+        }}
+      >
+        Close
+      </button>
 
-      {error && <div style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>{error}</div>}
-      {imageUrl && (
-        <div>
-          <div style={{ marginBottom: '5px', fontSize: '10px', color: '#ccc', textAlign: 'center' }}>
-            Preview (1200×630):
-          </div>
-          <img
-            src={imageUrl}
-            alt="Social preview"
-            style={{
-              width: '100%',
-              height: 'auto',
-              borderRadius: '4px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              maxHeight: '180px',
-              objectFit: 'contain'
-            }}
-            onError={(e) => {
-              console.error('Social image failed to load:', imageUrl);
-            }}
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', fontSize: '24px', marginBottom: '20px' }}>Social Image Preview</h2>
+        
+        {/* Controls */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', maxWidth: '600px', margin: '0 auto 20px' }}>
+          <input
+            type="text"
+            value={path}
+            onChange={(e) => setPath(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && generatePreview(path)}
+            placeholder="Enter path (e.g. /)"
+            style={{ flexGrow: 1, padding: '10px', backgroundColor: '#333', color: 'white', border: '1px solid #555', borderRadius: '4px' }}
           />
-          <div style={{ marginTop: '5px', fontSize: '9px', color: '#888', wordBreak: 'break-all', textAlign: 'center' }}>
-            {imageUrl}
+          <button
+            onClick={() => generatePreview(path)}
+            disabled={loading}
+            style={{ padding: '10px 20px', backgroundColor: loading ? '#666' : '#0070f3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
+
+        {/* Live HTML Preview */}
+        <div style={{ marginBottom: '30px' }}>
+          <h3 style={{ textAlign: 'center', marginBottom: '10px', fontWeight: 'bold' }}>Live HTML Preview (Full Size)</h3>
+          <div style={{ width: '1200px', height: '630px', margin: '0 auto', border: '1px dashed #555' }}>
+            <SocialCard
+              title="Next Notion Engine"
+              author="A modern blog built with Next.js and Notion"
+              imageUrl={'/default_background.png'}
+            />
           </div>
         </div>
-      )}
+
+        {/* Rendered Image Preview */}
+        <div>
+          <h3 style={{ textAlign: 'center', marginBottom: '10px', fontWeight: 'bold' }}>Rendered PNG Preview (Scaled)</h3>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', aspectRatio: '1200 / 630', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {loading && <p>Loading...</p>}
+            {error && <p style={{ color: 'red', padding: '20px' }}>Error: {error}</p>}
+            {imageUrl && !error && (
+              <img
+                src={imageUrl}
+                alt="Social preview"
+                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+              />
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
