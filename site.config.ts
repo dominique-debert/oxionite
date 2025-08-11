@@ -21,7 +21,7 @@ export default siteConfig({
   description: 'Effortlessly turn your Notion pages into a stunning blog.',
 
   // locale configuration (optional)
-  locale: locale,
+  locale,
 
 
   // hero section (optional)

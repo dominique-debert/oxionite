@@ -1,12 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import puppeteer, { Browser } from 'puppeteer-core'
+import puppeteer, { type Browser } from 'puppeteer'
 import chromium from '@sparticuz/chromium'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
-import fs from 'fs/promises'
-import path from 'path'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { parseUrlPathname } from '@/lib/context/url-parser'
 import { SocialCard, SocialCardProps } from '@/components/SocialCard'
+
+import { getDefaultBackgroundUrl as getDefaultBg } from '@/lib/get-default-background'
 
 // Default config since siteConfig might not be available
 const defaultConfig = {
@@ -14,10 +16,8 @@ const defaultConfig = {
   description: 'A modern blog built with Next.js and Notion'
 }
 
-import { getDefaultBackgroundUrl as getDefaultBg } from '@/lib/get-default-background'
-
 // Helper function to get default background URL
-async function getDefaultBackgroundUrl(req?: NextApiRequest): Promise<string> {
+async function getDefaultBackgroundUrl(_req?: NextApiRequest): Promise<string> {
   return getDefaultBg()
 }
 
@@ -37,7 +37,12 @@ async function renderSocialImage(
   let screenshot: Buffer
 
   try {
-    await page.setContent(html, { waitUntil: 'domcontentloaded' })
+    // Set the viewport to the desired dimensions
+    await page.setViewport({ width: 1200, height: 630 })
+
+    // Wait until all network requests are finished (including images, fonts, etc.)
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+
     const screenshotData = await page.screenshot({ type: 'png' })
     screenshot = Buffer.from(screenshotData)
   } finally {
@@ -78,9 +83,9 @@ export async function generateSocialImage(
     await fs.writeFile(imagePath, imageBuffer)
     console.log(`[SocialImage] Generated image for '${slug}' at ${imagePath}`)
     return publicUrl
-  } catch (error) {
-    console.error(`[SocialImage] Failed to generate image for '${slug}':`, error)
-    throw error
+  } catch (err) {
+    console.error(`[SocialImage] Failed to generate image for '${slug}':`, err)
+    throw err
   } finally {
     if (browser) {
       await browser.close()
@@ -90,27 +95,28 @@ export async function generateSocialImage(
 
 // API handler for on-demand previews
 async function handler(
-  req: NextApiRequest,
+  _req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'GET') {
+  if (_req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   let browser: Browser | null = null
   try {
     const isProduction = process.env.NODE_ENV === 'production'
-    let executablePath: string
+    let executablePath: string = ''
 
     if (isProduction) {
       executablePath = await chromium.executablePath()
     } else {
       try {
+        // Use Puppeteer's built-in executable path detection
         executablePath = puppeteer.executablePath()
       } catch (error) {
-        console.error('Could not find a browser for Puppeteer.')
+        console.error('Could not find a browser for Puppeteer:', error)
         throw new Error(
-          'Please install the full `puppeteer` package (`pnpm add puppeteer`) to automatically download a browser, or set the `PUPPETEER_EXECUTABLE_PATH` environment variable.'
+          'Please install the full puppeteer package or set PUPPETEER_EXECUTABLE_PATH environment variable. Try: npm install puppeteer'
         )
       }
     }
@@ -122,14 +128,14 @@ async function handler(
       headless: (isProduction ? chromium.headless : 'new') as any,
     })
 
-    const urlPath = req.query.path as string || '/'
+    const urlPath = _req.query.path as string || '/'
     const parsedUrl = parseUrlPathname(urlPath)
 
     if (!parsedUrl.isRoot) {
       return res.status(400).json({ error: 'Only root path / is supported for now.' })
     }
 
-    const imageUrl = await getDefaultBackgroundUrl(req)
+    const imageUrl = await getDefaultBackgroundUrl(_req)
 
     const imageBuffer = await renderSocialImage(browser, {
       title: defaultConfig.name,
@@ -141,9 +147,9 @@ async function handler(
     res.setHeader('Cache-Control', 's-maxage=0, stale-while-revalidate')
     res.status(200).end(imageBuffer)
 
-  } catch (error) {
-    console.error('[generate-social-image] Error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+  } catch (err) {
+    console.error('[generate-social-image] Error:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
     res.status(500).json({ 
       error: 'Failed to generate social image.',
       details: errorMessage

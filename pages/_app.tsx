@@ -5,9 +5,6 @@ import 'styles/global.css'
 import 'styles/notion.css'
 import 'styles/prism-theme.css'
 
-const SHOW_DEBUG_CONTROLS = true
-const SHOW_DEBUG_SOCIAL_IMAGE = true
-
 import type { AppProps } from 'next/app'
 import cs from 'classnames'
 import * as Fathom from 'fathom-client'
@@ -38,6 +35,9 @@ import { Noto_Sans_KR } from 'next/font/google'
 import { appWithTranslation } from 'next-i18next'
 import { getBlockTitle } from 'notion-utils'
 import { PageHead } from '@/components/PageHead'
+
+const SHOW_DEBUG_CONTROLS = true
+const SHOW_DEBUG_SOCIAL_IMAGE = true
 
 const notoKR = Noto_Sans_KR({
   subsets: ['latin'],
@@ -181,8 +181,8 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
   }
 
   const appContextValue = {
-    siteMap: siteMap,
-    pageInfo: pageInfo
+    siteMap,
+    pageInfo
   }
 
   // Determine page title based on route
