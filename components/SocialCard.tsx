@@ -1,10 +1,10 @@
 import React from 'react'
 import { MdOutlineAccountTree, MdError } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
-import { useTranslation } from 'next-i18next'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
-import siteConfig from '../site.config'
 import styles from '../styles/components/SocialCard.module.css'
+import siteConfig from '../site.config'
+import localeConfig from '../site.locale.json'
 
 // Common components
 const PillBrand: React.FC = () => (
@@ -54,9 +54,11 @@ const TitlePost: React.FC<{ title: string }> = ({ title }) => (
 export interface SocialCardProps {
   url: string
   siteMap?: any // We'll use any for now to avoid type issues
+  imageUrl?: string
+  baseUrl?: string
 }
 
-export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap }) => {
+export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, baseUrl }) => {
   const globalStyles = `
     * {
       box-sizing: border-box;
@@ -103,34 +105,80 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap }) => {
 
   const parsed = parseUrl(url)
 
-  // Use i18n for translations
-  const { t } = useTranslation('common')
+  // Server-side compatible translations
+  const translations = (() => {
+    try {
+      // Import translations based on default locale
+      const locale = localeConfig.defaultLocale
+      const translations = require(`../public/locales/${locale}/common.json`)
+      return translations
+    } catch (error) {
+      // Fallback to English if file not found
+      return {
+        allTags: 'All Tags',
+        category: 'Category',
+        tag: 'Tag',
+        'error.404.title': 'Page Not Found'
+      }
+    }
+  })()
+
+  const t = (key: string) => {
+    const keys = key.split('.')
+    let result = translations
+    for (const k of keys) {
+      result = result?.[k]
+      if (result === undefined) return key
+    }
+    return result || key
+  }
 
   const renderContent = () => {
-    const defaultBgStyle = {
-      backgroundImage: `url(${getDefaultBackgroundUrl()})`,
+    const containerStyle = {
+      width: '1200px',
+      height: '630px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundImage: `url(${imageUrl || (baseUrl ? `${baseUrl}/default_background.png` : '/default_background.png')})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
     }
+
+    const glassStyle = {
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      borderRadius: '32px',
+    }
+
+    const iconUrl = baseUrl ? `${baseUrl}/icon.png` : '/icon.png';
 
     switch (parsed.type) {
       case 'root':
         return (
-          <div 
-            className={styles.container} 
-            style={defaultBgStyle}
-          >
-            <TitleBrand />
+          <div style={containerStyle}>
+            <div style={{
+              ...glassStyle,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '32px 48px',
+              fontSize: '48px',
+              color: 'rgba(255, 255, 255, 0.9)',
+            }}>
+              <img src={iconUrl} alt="Site Icon" width={48} height={48} />
+              <span>{siteConfig.name}</span>
+            </div>
           </div>
         )
 
       case 'post':
         // This is intentionally left empty as requested
         return (
-          <div 
-            className={styles.container} 
-            style={defaultBgStyle}
-          >
+          <div style={containerStyle}>
             <div style={{ color: 'white', fontSize: '24px' }}>
               Post social card - To be implemented
             </div>
@@ -139,71 +187,91 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap }) => {
 
       case 'category':
         return (
-          <div 
-            className={styles.container} 
-            style={defaultBgStyle}
-          >
-            <TitleIcon
-              icon={
-                <MdOutlineAccountTree className={styles.icon48} />
-              }
-              text={parsed.slug || 'Category'}
-            />
+          <div style={containerStyle}>
+            <div style={{
+              ...glassStyle,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '32px 48px',
+              fontSize: '48px',
+              color: 'rgba(255, 255, 255, 0.9)',
+            }}>
+              <MdOutlineAccountTree style={{ fontSize: '48px' }} />
+              <span>{parsed.slug || t('category')}</span>
+            </div>
           </div>
         )
 
       case 'tag':
         return (
-          <div 
-            className={styles.container} 
-            style={defaultBgStyle}
-          >
-            <TitleIcon
-              icon={
-                <FaTag className={styles.icon48} />
-              }
-              text={parsed.tag || 'Tag'}
-            />
+          <div style={containerStyle}>
+            <div style={{
+              ...glassStyle,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '32px 48px',
+              fontSize: '48px',
+              color: 'rgba(255, 255, 255, 0.9)',
+            }}>
+              <FaTag style={{ fontSize: '48px' }} />
+              <span>{parsed.tag || t('tag')}</span>
+            </div>
           </div>
         )
 
       case 'all-tags':
         return (
-          <div 
-            className={styles.container} 
-            style={defaultBgStyle}
-          >
-            <TitleIcon
-              icon={
-                <FaTags className={styles.icon48} />
-              }
-              text={t('allTags')}
-            />
+          <div style={containerStyle}>
+            <div style={{
+              ...glassStyle,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '32px 48px',
+              fontSize: '48px',
+              color: 'rgba(255, 255, 255, 0.9)',
+            }}>
+              <FaTags style={{ fontSize: '48px' }} />
+              <span>{t('allTags')}</span>
+            </div>
           </div>
         )
 
       case '404':
         return (
-          <div 
-            className={styles.container} 
-            style={defaultBgStyle}
-          >
-            <TitleIcon
-              icon={
-                <MdError className={styles.icon48} />
-              }
-              text={t('error.404.title')}
-            />
+          <div style={containerStyle}>
+            <div style={{
+              ...glassStyle,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '32px 48px',
+              fontSize: '48px',
+              color: 'rgba(255, 255, 255, 0.9)',
+            }}>
+              <MdError style={{ fontSize: '48px' }} />
+              <span>{t('error.404.title')}</span>
+            </div>
           </div>
         )
 
       default:
         return (
-          <div 
-            className={styles.container} 
-            style={defaultBgStyle}
-          >
-            <TitleBrand />
+          <div style={containerStyle}>
+            <div style={{
+              ...glassStyle,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '32px 48px',
+              fontSize: '48px',
+              color: 'rgba(255, 255, 255, 0.9)',
+            }}>
+              <img src={iconUrl} alt="Site Icon" width={48} height={48} />
+              <span>{siteConfig.name}</span>
+            </div>
           </div>
         )
     }

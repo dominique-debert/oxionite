@@ -99,7 +99,7 @@ export async function generateSocialImage(
       headless: chromium.headless,
     })
     const baseUrl = `https://${siteConfig.domain}`
-    const absoluteImageUrl = new URL(props.imageUrl, baseUrl).toString()
+    const absoluteImageUrl = new URL(props.imageUrl || '/default_background.png', baseUrl).toString()
 
     console.log('[SocialImage Generator] Debug Info (Build-time):', {
       originalImageUrl: props.imageUrl,
@@ -110,7 +110,8 @@ export async function generateSocialImage(
 
     const imageBuffer = await renderSocialImage(browser, {
       ...props,
-      imageUrl: absoluteImageUrl
+      imageUrl: absoluteImageUrl,
+      baseUrl: baseUrl
     })
     await fs.writeFile(imagePath, imageBuffer)
     console.log(`[SocialImage] Generated image for '${slug}' at ${imagePath}`)
@@ -186,7 +187,9 @@ async function handler(
     const imageBuffer = await renderSocialImage(browser, {
       title: defaultConfig.name,
       author: defaultConfig.description,
-      imageUrl: absoluteImageUrl
+      imageUrl: absoluteImageUrl,
+      url: '/',
+      baseUrl: baseUrl
     })
 
     res.setHeader('Content-Type', 'image/png')
