@@ -8,7 +8,7 @@ import { parseUrlPathname } from '../lib/context/url-parser'
 import type { SiteMap, PageInfo } from '../lib/context/types'
 
 // Common components
-const Background: React.FC<{ imageUrl?: string; children: React.ReactNode; baseUrl?: string }> = ({ imageUrl, children, baseUrl }) => {
+const Background: React.FC<{ imageUrl?: string; children?: React.ReactNode; baseUrl?: string }> = ({ imageUrl, children, baseUrl }) => {
   // Ensure we use absolute URLs for server-side rendering
   let finalImageUrl = imageUrl || getDefaultBackgroundUrl();
   
@@ -263,6 +263,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             postTitle = pageInfo.title
             postCoverImage = pageInfo.coverImage || undefined
             console.log('[SocialCard] Post case - found page:', {title: postTitle, coverImage: postCoverImage})
+            
+            // Check if we should use original cover image without overlays
+            if (pageInfo.useOriginalCoverImage) {
+              console.log('[SocialCard] Post case - using original cover image only')
+              return (
+                <Background imageUrl={postCoverImage} baseUrl={baseUrl} />
+              )
+            }
           } else {
             console.log('[SocialCard] Post case - no matching page found')
           }
@@ -306,6 +314,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             title = pageInfo.title
             coverImage = pageInfo.coverImage || undefined
             console.log('[SocialCard] Category case - found category:', {title, coverImage})
+            
+            // Check if we should use original cover image without overlays
+            if (pageInfo.useOriginalCoverImage) {
+              console.log('[SocialCard] Category case - using original cover image only')
+              return (
+                <Background imageUrl={coverImage} baseUrl={baseUrl} />
+              )
+            }
           } else {
             console.log('[SocialCard] Category case - no matching category found')
           }
