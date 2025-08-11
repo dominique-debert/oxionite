@@ -1,26 +1,59 @@
 import * as React from 'react'
 import { useRouter } from 'next/router'
 
+// Debounce function to limit API calls
+function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
+  let timeout: NodeJS.Timeout
+
+  return (...args: Parameters<F>): Promise<ReturnType<F>> =>
+    new Promise(resolve => {
+      if (timeout) {
+        clearTimeout(timeout)
+      }
+
+      timeout = setTimeout(() => resolve(func(...args)), waitFor)
+    })
+}
+
 export function SocialImagePreviewer() {
   const router = useRouter()
+  const [path, setPath] = React.useState(router.asPath)
   const [imageUrl, setImageUrl] = React.useState('')
   const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
-  const handleGenerate = () => {
+  const generatePreview = React.useCallback(async (currentPath: string) => {
+    if (!currentPath.trim()) return
+
     setLoading(true)
-    // The social image API route is `/api/social-image`. 
-    // We need to pass the current page's path to it. 
-    // The API handler will read this from the `req.nextUrl.pathname`.
-    // So we construct the URL like `/api/social-image/current/path`
-    const pagePath = router.asPath === '/' ? '' : router.asPath;
-    const finalUrl = `/api/social-image${pagePath}?t=${Date.now()}`;
-    setImageUrl(finalUrl);
-    setTimeout(() => setLoading(false), 1000);
-  };
+    setError('')
 
+    try {
+      const response = await fetch(`/api/generate-social-image?path=${encodeURIComponent(currentPath)}&t=${Date.now()}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const blob = await response.blob()
+      const imageUrl = URL.createObjectURL(blob)
+      setImageUrl(imageUrl)
+    } catch (err) {
+      console.error('Error fetching preview:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load preview')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const debouncedGenerate = React.useMemo(() => debounce(generatePreview, 500), [generatePreview]);
+
+  // Update path when route changes
   React.useEffect(() => {
-    handleGenerate();
-  }, [router.asPath]);
+    setPath(router.asPath)
+    debouncedGenerate(router.asPath)
+  }, [router.asPath, debouncedGenerate])
+
 
   return (
     <div style={{
@@ -43,11 +76,30 @@ export function SocialImagePreviewer() {
         🎨 Social Image Debug
       </div>
       
+      <div style={{ marginBottom: '10px' }}>
+        <input
+          type="text"
+          value={path}
+          onChange={(e) => setPath(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && generatePreview(path)}
+          placeholder="Enter path (e.g. /)"
+          style={{
+            width: '100%',
+            padding: '8px',
+            backgroundColor: '#333',
+            color: 'white',
+            border: '1px solid #555',
+            borderRadius: '4px',
+            fontSize: '12px'
+          }}
+        />
+      </div>
       <div style={{ marginBottom: '10px', textAlign: 'center' }}>
         <button
-          onClick={handleGenerate}
+          onClick={() => generatePreview(path)}
           disabled={loading}
           style={{
+            width: '100%',
             padding: '8px 16px',
             backgroundColor: loading ? '#666' : '#0070f3',
             color: 'white',
@@ -57,10 +109,11 @@ export function SocialImagePreviewer() {
             fontSize: '12px'
           }}
         >
-          {loading ? 'Loading...' : 'Generate Preview'}
+          {loading ? 'Loading...' : 'Refresh Preview'}
         </button>
       </div>
 
+      {error && <div style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>{error}</div>}
       {imageUrl && (
         <div>
           <div style={{ marginBottom: '5px', fontSize: '10px', color: '#ccc', textAlign: 'center' }}>
