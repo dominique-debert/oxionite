@@ -137,8 +137,15 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
   const { siteMap, recordMap, pageId } = pageProps
   const pageBlockForCover = pageId ? recordMap?.block?.[pageId]?.value : undefined
   const pageCover = pageBlockForCover?.format?.page_cover
-  const notionImageUrl = pageBlockForCover ? mapImageUrl(pageCover, pageBlockForCover) : undefined
+  
+  // Check for category page cover image from pageInfo
   const pageInfo = siteMap && pageId ? siteMap.pageInfoMap[pageId] : null
+  const categoryCoverImage = pageInfo?.coverImage
+  
+  // Use category cover image if available, otherwise use recordMap cover
+  const notionImageUrl = categoryCoverImage 
+    ? categoryCoverImage 
+    : (pageBlockForCover ? mapImageUrl(pageCover, pageBlockForCover) : undefined)
 
   const [screenWidth, setScreenWidth] = React.useState(0)
   React.useEffect(() => {
