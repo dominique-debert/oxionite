@@ -55,9 +55,9 @@ export function parseUrlPathname(pathname: string): ParsedUrl {
   }
 
   const relevantSegments = routeSegments.slice(routeTypeIndex);
-  const segment = relevantSegments[0];
-  const slug = relevantSegments[1] || '';
-  const subpage = relevantSegments[relevantSegments.length - 1] || '';
+  const segment = relevantSegments.at(0) || '';
+  const slug = relevantSegments.at(1) || '';
+  const subpage = relevantSegments.at(-1) || '';
   const isSubpage = relevantSegments.length > 2;
 
   return {

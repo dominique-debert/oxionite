@@ -29,7 +29,7 @@ async function renderSocialImage(
   // Capture console logs from the page and forward them to the terminal
   page
     .on('console', (message) =>
-      console.log(`[Puppeteer Console] ${message.type().substring(0, 3).toUpperCase()} ${message.text()}`)
+      console.log(`[Puppeteer Console] ${message.type().slice(0, 3).toUpperCase()} ${message.text()}`)
     )
     .on('pageerror', ({ message }) => console.log(`[Puppeteer Page Error] ${message}`))
     .on('requestfailed', (request) =>
@@ -120,7 +120,7 @@ export async function generateSocialImage(
 
     const imageBuffer = await renderSocialImage(browser, {
       ...props,
-      baseUrl: baseUrl
+      baseUrl
     })
     await fs.writeFile(imagePath, imageBuffer)
     console.log(`[SocialImage] Generated image for '${slug}' at ${imagePath}`)
@@ -173,7 +173,7 @@ async function handler(
       try {
         // Import notion API client and utilities
         const { notion } = await import('@/lib/notion-api')
-        const { getBlockTitle, getPageProperty } = await import('notion-utils')
+        const { getBlockTitle } = await import('notion-utils')
         const { mapImageUrl } = await import('@/lib/map-image-url')
         
         // Fetch the actual page data from Notion
@@ -191,7 +191,7 @@ async function handler(
           // Create enhanced page info for the subpage
           const subpageInfo = {
             title: title || 'Untitled',
-            pageId: pageId,
+            pageId,
             type: 'Post' as const,
             slug: parsedUrl.subpage || pageId,
             parentPageId: null,
@@ -215,15 +215,12 @@ async function handler(
           }
           
           // Also store subpage data for direct access
-          subpageData = {
-            title,
-            coverImage: coverImageUrl
-          }
+          subpageData = { title, coverImage: coverImageUrl }
         }
-      } catch (error) {
-        console.error('[SocialImage API] Error fetching subpage:', error)
+      } catch (err) {
+        console.error('[SocialImage API] Error fetching subpage:', err)
         // Fallback to slug-based title if fetch fails
-        const slugTitle = parsedUrl.subpage?.replace(/-[a-f0-9-]{36}$/i, '').replace(/-/g, ' ') || 'Untitled'
+        const slugTitle = parsedUrl.subpage?.slice(0, -36).replace(/-/g, ' ') || 'Untitled'
         enhancedSiteMap = {
           ...siteMap,
           pageInfoMap: {
@@ -264,7 +261,7 @@ async function handler(
     const imageBuffer = await renderSocialImage(browser, {
       url: urlParam,
       imageUrl: explicitImageUrl,
-      baseUrl: baseUrl,
+      baseUrl,
       siteMap: enhancedSiteMap
     })
 

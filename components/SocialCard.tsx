@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { MdOutlineAccountTree, MdKeyboardArrowRight } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
@@ -46,7 +47,7 @@ const PillText: React.FC<{
     color: 'rgba(255, 255, 255, 0.9)',
   }}>
     {iconUrl && (
-      <img
+      <Image
         src={iconUrl}
         alt="Icon"
         width={isImageCircle ? 42 : 54}
@@ -80,7 +81,7 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
         color: 'rgba(255, 255, 255, 0.9)',
         flexWrap: 'nowrap'
       }}>
-        <img src={`${baseUrl || ''}/icon.png`} alt="Site Icon" style={{ width: 36, height: 36 }} />
+        <Image src={`${baseUrl || ''}/icon.png`} alt="Site Icon" width={36} height={36} />
         <span>{siteConfig.name}</span>
       </div>
     )
@@ -105,7 +106,7 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
       maxWidth: '100%',
       overflow: 'hidden'
     }}>
-      <img src={`${baseUrl || ''}/icon.png`} alt="Site Icon" style={{ width: 36, height: 36 }} />
+      <Image src={`${baseUrl || ''}/icon.png`} alt="Site Icon" width={36} height={36} />
       <span>{siteConfig.name}</span>
       
       {items.map((item, index) => {
@@ -119,7 +120,7 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
         }
         
         const displayText = item.length > maxItemLength 
-          ? item.substring(0, maxItemLength - 3) + '...'
+          ? item.slice(0, maxItemLength - 3) + '...'
           : item
 
         return (
@@ -147,7 +148,7 @@ const TitleBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
     ...COMMON_STYLES.glass,
     ...COMMON_STYLES.title,
   }}>
-    <img
+    <Image
       src={iconUrl}
       alt="Site Icon"
       width={144}
@@ -278,37 +279,23 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
       } else {
         return { type: '404', locale: parsed.locale }
       }
-    } catch (error) {
-      console.error('[SocialCard] Error parsing URL:', error)
+    } catch (err) {
+      console.error('[SocialCard] Error parsing URL:', err)
       return { type: 'root' }
     }
   }
 
   const parsed = parseUrl(url)
 
-  // Server-side compatible translations
-  const translations = (() => {
-    try {
-      // Use parsed locale or fallback to default locale
-      const locale = parsed.locale || localeConfig.defaultLocale
-      const translations = require(`../public/locales/${locale}/common.json`)
-      return translations
-    } catch (error) {
-      // Fallback to English if file not found
-      return {
-        allTags: 'All Tags',
-      }
+  // Simple translation function for static strings
+  const t = (key: string): string => {
+    const translations: Record<string, string> = {
+      'allTags': 'All Tags',
+      'recentPosts': 'Recent Posts',
+      'categories': 'Categories',
+      'tags': 'Tags'
     }
-  })()
-
-  const t = (key: string) => {
-    const keys = key.split('.')
-    let result = translations
-    for (const k of keys) {
-      result = result?.[k]
-      if (result === undefined) return key
-    }
-    return result || key
+    return translations[key] || key
   }
 
   const renderContent = () => {
@@ -332,7 +319,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           </Background>
         )
 
-      case 'post':
+      case 'post': {
         console.log('[SocialCard] Rendering post view:', parsed.slug, 'isSubpage:', parsed.isSubpage)
         const currentLocale = parsed.locale || localeConfig.defaultLocale
         let postTitle = 'Post'
@@ -526,7 +513,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
               }}>
 
                 {/* Tags */}
-                {pageInfo?.tags && pageInfo.tags.filter((tag: string) => tag && tag.trim() !== '').length > 0 && (
+                {pageInfo?.tags && pageInfo.tags.some((tag: string) => tag && tag.trim() !== '') && (
                   <div style={{ 
                     display: 'flex', 
                     gap: '12px', 
@@ -539,7 +526,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                       .map((tag: string, index: number) => {
                         const maxTagLength = 10
                         const displayTag = tag.length > maxTagLength 
-                          ? tag.substring(0, maxTagLength - 3) + '...'
+                          ? tag.slice(0, maxTagLength - 3) + '...'
                           : tag
                         return (
                           <PillText 
@@ -576,7 +563,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             </div>
           </Background>
         )
-
+      }
       case 'category': {
         console.log('[SocialCard] Rendering category view:', parsed.slug)
         const currentLocale = parsed.locale || localeConfig.defaultLocale
@@ -631,7 +618,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
       }
 
-      case 'tag':
+      case 'tag': {
         console.log('[SocialCard] Rendering tag view:', parsed.tag)
         let tagCoverImage: string | undefined
         
@@ -672,8 +659,9 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             </div>
           </Background>
         )
+      }
 
-      case 'all-tags':
+      case 'all-tags': 
         console.log('[SocialCard] Rendering all-tags view')
         return (
           <Background baseUrl={baseUrl}>
@@ -688,6 +676,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             </div>
           </Background>
         )
+      
 
       default:
         console.log('[SocialCard] Rendering default root view')

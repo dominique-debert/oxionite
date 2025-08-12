@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { useRouter } from 'next/router'
+import Image from 'next/image';
 import { SocialCard } from '../SocialCard'
 
 // Debounce function to limit API calls
@@ -19,7 +20,7 @@ function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
 export function SocialImagePreviewer() {
   const router = useRouter()
   const [path, setPath] = React.useState(router.asPath)
-  const [imageUrl, setImageUrl] = React.useState('')
+  const [previewUrl, setPreviewUrl] = React.useState('')
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -30,20 +31,18 @@ export function SocialImagePreviewer() {
     setError('')
 
     try {
-      const response = await fetch(`/api/generate-social-image?path=${encodeURIComponent(currentPath)}&t=${Date.now()}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      const response = await fetch(`/api/generate-social-image?url=${encodeURIComponent(currentPath)}`);
+      const data = await response.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setPreviewUrl(data.url);
       }
-
-      const blob = await response.blob()
-      const imageUrl = URL.createObjectURL(blob)
-      setImageUrl(imageUrl)
     } catch (err) {
-      console.error('Error fetching preview:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load preview')
+      console.error('Error fetching preview:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load preview');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }, [])
 
@@ -52,7 +51,7 @@ export function SocialImagePreviewer() {
   // Update path when route changes
   React.useEffect(() => {
     setPath(router.asPath)
-    debouncedGenerate(router.asPath)
+    void debouncedGenerate(router.asPath)
   }, [router.asPath, debouncedGenerate])
 
   const [isOpen, setIsOpen] = React.useState(true)
@@ -152,11 +151,14 @@ export function SocialImagePreviewer() {
           <div style={{ maxWidth: '1200px', margin: '0 auto', aspectRatio: '1200 / 630', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {loading && <p>Loading...</p>}
             {error && <p style={{ color: 'red', padding: '20px' }}>Error: {error}</p>}
-            {imageUrl && !error && (
-              <img
-                src={imageUrl}
-                alt="Social preview"
-                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+            {previewUrl && !error && (
+              <Image 
+                src={previewUrl} 
+                alt="Social card preview" 
+                width={1200}
+                height={630}
+                style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ccc' }}
+                priority
               />
             )}
           </div>

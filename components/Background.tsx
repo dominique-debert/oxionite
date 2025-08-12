@@ -91,7 +91,7 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
       }
     }
 
-    findDefaultBackground()
+    void findDefaultBackground()
   }, [source])
 
   useEffect(() => {

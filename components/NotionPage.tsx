@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import {
   formatDate,
-  getBlockTitle,
   getPageProperty
 } from 'notion-utils'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'

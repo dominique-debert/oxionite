@@ -282,18 +282,6 @@ function buildNavigationTree(pageInfoMap: Record<string, PageInfo>): PageInfo[] 
     pageInfoArray.map((p) => [p.pageId, createPageCopy(p)])
   )
 
-  // Generate breadcrumbs for each page by traversing parent relationships
-  const generateBreadcrumb = (page: PageInfo): string[] => {
-    const breadcrumb: string[] = []
-    let current: PageInfo | undefined = page
-    
-    while (current) {
-      breadcrumb.unshift(current.title)
-      current = current.parent
-    }
-    
-    return breadcrumb
-  }
 
   for (const page of pageInfoArray) {
     const pageCopy = pageCopyMap.get(page.pageId)

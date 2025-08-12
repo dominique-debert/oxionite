@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { FaTags } from 'react-icons/fa'
 import { MdError } from 'react-icons/md'
 import type * as types from '@/lib/context/types'
@@ -26,10 +27,12 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
     return (
       <Link href="/" className="breadcrumb-item active">
         <span className="breadcrumb-icon">
-          <img 
+          <Image 
             src="/icon.png" 
             alt="Site Icon" 
             className="site-icon"
+            width={16}
+            height={16}
           />
         </span>
         <span className="breadcrumb-text">{siteConfig.name}</span>
@@ -51,10 +54,12 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
                 {isFirstCrumb ? (
                   <>
                     <span className="breadcrumb-icon">
-                      <img 
+                      <Image 
                         src="/icon.png" 
                         alt="Site Icon" 
                         className="site-icon"
+                        width={16}
+                        height={16}
                       />
                     </span>
                     <span className="breadcrumb-text">{crumb.title}</span>
@@ -79,10 +84,12 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
                 {isFirstCrumb ? (
                   <>
                     <span className="breadcrumb-icon">
-                      <img 
+                      <Image 
                         src="/icon.png" 
                         alt="Site Icon" 
                         className="site-icon"
+                        width={16}
+                        height={16}
                       />
                     </span>
                     <span className="breadcrumb-text">{crumb.title}</span>
