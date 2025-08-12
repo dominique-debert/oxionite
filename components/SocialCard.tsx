@@ -1,5 +1,5 @@
 import React from 'react'
-import { MdOutlineAccountTree, MdError, MdDescription, MdKeyboardArrowRight } from 'react-icons/md'
+import { MdOutlineAccountTree, MdKeyboardArrowRight } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
 import siteConfig from '../site.config'
@@ -289,17 +289,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
   // Server-side compatible translations
   const translations = (() => {
     try {
-      // Import translations based on default locale
-      const locale = localeConfig.defaultLocale
+      // Use parsed locale or fallback to default locale
+      const locale = parsed.locale || localeConfig.defaultLocale
       const translations = require(`../public/locales/${locale}/common.json`)
       return translations
     } catch (error) {
       // Fallback to English if file not found
       return {
         allTags: 'All Tags',
-        category: 'Category',
-        tag: 'Tag',
-        'error.404.title': 'Page Not Found'
       }
     }
   })()
@@ -319,8 +316,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
     console.log('[SocialCard] Parsed result:', parsed)
     console.log('[SocialCard] siteMap available:', !!siteMap, 'pageInfoMap available:', !!siteMap?.pageInfoMap)
     
-
-    const glassStyle = COMMON_STYLES.glass
 
     const iconUrl = baseUrl ? `${baseUrl}/icon.png` : '/icon.png';
 
@@ -465,14 +460,20 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                     {pageInfo.tags
                       .filter(tag => tag && tag.trim() !== '')
                       .slice(0, 3)
-                      .map((tag: string, index: number) => (
-                        <PillText 
-                          key={index} 
-                          text={`#${tag}`} 
-                          fontSize="20px" 
-                          padding="8px 16px" 
-                        />
-                      ))}
+                      .map((tag: string, index: number) => {
+                        const maxTagLength = 11
+                        const displayTag = tag.length > maxTagLength 
+                          ? tag.substring(0, maxTagLength - 3) + '...'
+                          : tag
+                        return (
+                          <PillText 
+                            key={index} 
+                            text={`#${displayTag}`} 
+                            fontSize="20px" 
+                            padding="8px 16px" 
+                          />
+                        )
+                      })}
                     {pageInfo.tags.filter(tag => tag && tag.trim() !== '').length > 3 && (
                       <PillText 
                         text={`+${pageInfo.tags.filter(tag => tag && tag.trim() !== '').length - 3}`} 
