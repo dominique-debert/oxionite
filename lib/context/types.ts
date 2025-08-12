@@ -83,13 +83,6 @@ export interface PageInfo {
   parent?: PageInfo
   children: PageInfo[]
   canonicalPageUrl?: string
-
-  // For social images
-  author?: string
-  authorImage?: string
-  image?: string
-  imageObjectPosition?: string
-  detail?: string
 }
 
 export interface LocaleTagGraphData {

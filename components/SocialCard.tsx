@@ -309,14 +309,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           authorAvatar = `${baseUrl}${authorAvatar}`;
         }
 
-        console.log('[SocialCard] authors array:', authors)
-        console.log('[SocialCard] firstAuthor:', firstAuthor)
-        console.log('[SocialCard] additionalAuthorsCount:', additionalAuthorsCount)
-        console.log('[SocialCard] First author:', firstAuthor)
-        console.log('[SocialCard] Available siteConfig authors:', siteConfig.authors?.map(a => a.name))
-        console.log('[SocialCard] First author config:', firstAuthorConfig)
-        console.log('[SocialCard] Author avatar:', authorAvatar)
-
         return (
           <Background imageUrl={postCoverImage} baseUrl={baseUrl}>
             <div style={{ 
@@ -381,27 +373,32 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
               }}>
 
                 {/* Tags */}
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '12px', 
-                  flexWrap: 'wrap',
-                }}>
-                  {pageInfo?.tags?.slice(0, 3).map((tag: string, index: number) => (
-                    <PillText 
-                      key={index} 
-                      text={`#${tag}`} 
-                      fontSize="20px" 
-                      padding="8px 16px" 
-                    />
-                  ))}
-                  {pageInfo?.tags && pageInfo.tags.length > 3 && (
-                    <PillText 
-                      text={`+${pageInfo.tags.length - 3}`} 
-                      fontSize="20px" 
-                      padding="8px 16px" 
-                    />
-                  )}
-                </div>
+                {pageInfo?.tags && pageInfo.tags.filter(tag => tag && tag.trim() !== '').length > 0 && (
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    flexWrap: 'wrap',
+                  }}>
+                    {pageInfo.tags
+                      .filter(tag => tag && tag.trim() !== '')
+                      .slice(0, 3)
+                      .map((tag: string, index: number) => (
+                        <PillText 
+                          key={index} 
+                          text={`#${tag}`} 
+                          fontSize="20px" 
+                          padding="8px 16px" 
+                        />
+                      ))}
+                    {pageInfo.tags.filter(tag => tag && tag.trim() !== '').length > 3 && (
+                      <PillText 
+                        text={`+${pageInfo.tags.filter(tag => tag && tag.trim() !== '').length - 3}`} 
+                        fontSize="20px" 
+                        padding="8px 16px" 
+                      />
+                    )}
+                  </div>
+                )}
                 
                 {/* Date */}
                 {pageInfo?.date && (
