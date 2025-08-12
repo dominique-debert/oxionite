@@ -1,5 +1,5 @@
 import React from 'react'
-import { MdOutlineAccountTree, MdError, MdDescription } from 'react-icons/md'
+import { MdOutlineAccountTree, MdError, MdDescription, MdKeyboardArrowRight } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
 import siteConfig from '../site.config'
@@ -63,22 +63,24 @@ const PillText: React.FC<{
 
 
 
-const SocialBreadcrumb: React.FC<{ breadcrumb: string[] }> = ({ breadcrumb }) => {
-  const maxItemLength = 15
+const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = ({ breadcrumb, baseUrl }) => {
+  const maxItemLength = 20
   const maxVisibleItems = 3
   
   if (!breadcrumb || breadcrumb.length === 0) {
     return (
       <div style={{
+        ...COMMON_STYLES.glass,
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
+        padding: '12px 16px',
         fontSize: '24px',
-        color: '#666',
-        fontFamily: 'Inter, sans-serif',
+        fontWeight: 'bold',
+        color: 'rgba(255, 255, 255, 0.9)',
         flexWrap: 'nowrap'
       }}>
-        <img src="/icon.png" alt="Site Icon" style={{ width: 24, height: 24, borderRadius: '50%' }} />
+        <img src={`${baseUrl || ''}/icon.png`} alt="Site Icon" style={{ width: 36, height: 36 }} />
         <span>{siteConfig.name}</span>
       </div>
     )
@@ -90,25 +92,28 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[] }> = ({ breadcrumb }) =>
 
   return (
     <div style={{
+      ...COMMON_STYLES.glass,
       display: 'flex',
       alignItems: 'center',
       gap: '8px',
+      padding: '12px 24px',
+      paddingLeft: '16px',
       fontSize: '24px',
-      color: '#666',
-      fontFamily: 'Inter, sans-serif',
+      fontWeight: 'bold',
+      color: 'rgba(255, 255, 255, 0.9)',
       flexWrap: 'nowrap',
       maxWidth: '100%',
       overflow: 'hidden'
     }}>
-      <img src="/icon.png" alt="Site Icon" style={{ width: 24, height: 24, borderRadius: '50%' }} />
+      <img src={`${baseUrl || ''}/icon.png`} alt="Site Icon" style={{ width: 36, height: 36 }} />
       <span>{siteConfig.name}</span>
       
       {items.map((item, index) => {
         if (item === '...') {
           return (
             <React.Fragment key={index}>
-              <span style={{ color: '#999' }}>&gt;</span>
-              <span style={{ color: '#666' }}>...</span>
+              <MdKeyboardArrowRight style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '20px' }} />
+              <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>...</span>
             </React.Fragment>
           )
         }
@@ -119,10 +124,10 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[] }> = ({ breadcrumb }) =>
 
         return (
           <React.Fragment key={index}>
-            <span style={{ color: '#999' }}>&gt;</span>
+            <MdKeyboardArrowRight style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '20px' }} />
             <span style={{ 
-              color: index === items.length - 1 ? '#333' : '#666',
-              fontWeight: index === items.length - 1 ? '600' : 'normal',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontWeight: index === items.length - 1 ? '600' : '400',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -411,7 +416,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 zIndex: 10
               }}>
                 {/* Breadcrumb */}
-                <SocialBreadcrumb breadcrumb={pageInfo?.breadcrumb || []} />
+                <SocialBreadcrumb breadcrumb={pageInfo?.breadcrumb || []} baseUrl={baseUrl} />
               
                 {/* Author */}
                 {authors.length > 0 && (
