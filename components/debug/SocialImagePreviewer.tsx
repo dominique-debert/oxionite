@@ -32,12 +32,23 @@ export function SocialImagePreviewer() {
 
     try {
       const response = await fetch(`/api/generate-social-image?url=${encodeURIComponent(currentPath)}`);
-      const data = await response.json();
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setPreviewUrl(data.url);
+      
+      if (!response.ok) {
+        // Handle JSON error responses
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          setError(data.error || 'Failed to generate preview');
+        } else {
+          setError(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return;
       }
+
+      // Convert PNG response to blob URL for image display
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      setPreviewUrl(imageUrl);
     } catch (err) {
       console.error('Error fetching preview:', err);
       setError(err instanceof Error ? err.message : 'Failed to load preview');

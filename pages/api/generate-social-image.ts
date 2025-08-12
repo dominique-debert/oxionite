@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable unicorn/prefer-dom-node-append */
+/* eslint-disable unicorn/numeric-separators-style */
+
 import type { NextApiRequest, NextApiResponse } from 'next'
 import puppeteer, { type Browser } from 'puppeteer'
 import chromium from '@sparticuz/chromium'
@@ -15,16 +19,35 @@ async function renderSocialImage(
   browser: Browser,
   props: SocialCardProps
 ): Promise<Buffer> {
-  console.log('[SocialImage Renderer] Rendering with props:', props)
+  console.log('[SocialImage Renderer] Rendering with props:', {
+    url: props.url,
+    baseUrl: props.baseUrl,
+    imageUrl: props.imageUrl,
+    hasSiteMap: !!props.siteMap,
+    siteMapPageCount: props.siteMap?.pageInfoMap ? Object.keys(props.siteMap.pageInfoMap).length : 0
+  })
 
   const element = React.createElement(SocialCard, props)
   const html = ReactDOMServer.renderToStaticMarkup(element)
+  console.log('[SocialImage Renderer] Generated HTML length:', html.length)
+  console.log('[SocialImage Renderer] HTML preview:', html.slice(0, 500) + '...')
 
   if (!browser.isConnected()) {
     throw new Error('Browser is not connected.')
   }
 
   const page = await browser.newPage()
+
+  // Enable request interception to handle local file loading
+  await page.setRequestInterception(true);
+  
+  page.on('request', (request) => {
+    const url = request.url();
+    console.log(`[Puppeteer Request] ${url}`);
+    
+    // Allow all requests to proceed
+    request.continue();
+  });
 
   // Capture console logs from the page and forward them to the terminal
   page
@@ -35,19 +58,60 @@ async function renderSocialImage(
     .on('requestfailed', (request) =>
       console.log(`[Puppeteer Request Failed] ${request.failure()?.errorText} ${request.url()}`)
     )
+    .on('request', (request) =>
+      console.log(`[Puppeteer Request] ${request.url()}`)
+    )
+    .on('response', (response) =>
+      console.log(`[Puppeteer Response] ${response.status()} ${response.url()}`)
+    )
 
   let screenshot: Buffer
 
   try {
     await page.setViewport({ width: 1200, height: 630 })
-    // Use `page.setContent` to load the HTML. This allows the page to make network requests
-    // for resources like images and fonts from the correct origin.
+    
+    // Ensure consistent base URL - use localhost for dev, configured domain for prod
+    const isLocalDev = process.env.NODE_ENV === 'development' || (props.baseUrl && props.baseUrl.includes('localhost'));
+    const baseUrl = isLocalDev ? 'http://localhost:3000' : `https://${siteConfig.domain}`;
+    console.log('[SocialImage Renderer] Using base URL:', baseUrl);
     await page.setContent(html, {
-      waitUntil: 'networkidle0' // Faster: wait for network to be idle (no pending requests)
+      waitUntil: 'networkidle0',
+      // Set base URL so relative image paths resolve correctly
     })
+
+    // Add the content to the page
+    const body = await page.$('body')
+    if (body) {
+      await body.evaluate((node) => {
+        const container = document.createElement('div')
+        container.innerHTML = html
+        node.appendChild(container)
+      })
+    }
+
+    // Inject base URL for image resources
+    await page.evaluate((base) => {
+      const baseElement = document.createElement('base');
+      baseElement.href = base;
+      document.head.appendChild(baseElement);
+      console.log('[SocialImage Renderer] Injected base URL:', base);
+    }, baseUrl);
+
+    // Wait for images to load with extended timeout
+    await page.waitForSelector('img', { timeout: 10000 }).catch(() => {
+      console.log('[SocialImage Renderer] No images found or timeout');
+    });
+
+    // Wait for network to be idle (images loaded) with longer idle time
+    await page.waitForNetworkIdle({ idleTime: 2000 }).catch(() => {
+      console.log('[SocialImage Renderer] Network idle timeout');
+    });
 
     // Wait for all fonts to be loaded
     await page.evaluateHandle('document.fonts.ready')
+    
+    // Additional wait for any remaining resources
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const screenshotData = await page.screenshot({ type: 'png' })
     screenshot = Buffer.from(screenshotData)
@@ -116,7 +180,9 @@ export async function generateSocialImage(
   console.log(`[SocialImage] Generating image for '${slug}'...`)
   try {
     const browser = await getBrowser()
-    const baseUrl = `https://${siteConfig.domain}`
+    // Use localhost for development, configured domain for production
+    const isDev = process.env.NODE_ENV === 'development'
+    const baseUrl = isDev ? 'http://localhost:3000' : `https://${siteConfig.domain}`
 
     const imageBuffer = await renderSocialImage(browser, {
       ...props,
@@ -147,10 +213,10 @@ async function handler(
     // Support all URL types, not just root
     console.log('[SocialImage API] Parsed URL:', parsedUrl)
 
-    // Determine base URL for assets
-    const protocol = _req.headers['x-forwarded-proto'] || 'http'
-    const host = _req.headers['x-forwarded-host'] || _req.headers.host
-    const baseUrl = `${protocol}://${host}`
+    // Determine base URL based on environment
+    const host = _req.headers.host || 'localhost:3000'
+    const isDev = process.env.NODE_ENV === 'development' || host.includes('localhost')
+    const baseUrl = isDev ? `http://${host}` : `https://${siteConfig.domain}`
 
     const urlParam = typeof _req.query.url === 'string' ? _req.query.url : 
                      typeof _req.query.path === 'string' ? _req.query.path : '/'
@@ -189,7 +255,7 @@ async function handler(
           console.log('[SocialImage API] Fetched subpage data:', { title, coverImage: coverImageUrl })
           
           // Create enhanced page info for the subpage
-          const subpageInfo = {
+          const _subpageInfo = {
             title: title || 'Untitled',
             pageId,
             type: 'Post' as const,
@@ -203,15 +269,6 @@ async function handler(
             date: null,
             coverImage: coverImageUrl || undefined,
             children: []
-          }
-          
-          // Add to enhanced site map
-          enhancedSiteMap = {
-            ...siteMap,
-            pageInfoMap: {
-              ...siteMap.pageInfoMap,
-              [pageId]: subpageInfo
-            }
           }
           
           // Also store subpage data for direct access
@@ -258,6 +315,14 @@ async function handler(
     })
 
     const browser = await getBrowser()
+    console.log('[SocialImage API] Starting render with:', {
+      url: urlParam,
+      baseUrl,
+      explicitImageUrl,
+      hasSiteMap: !!enhancedSiteMap,
+      siteMapKeys: enhancedSiteMap ? Object.keys(enhancedSiteMap) : []
+    })
+    
     const imageBuffer = await renderSocialImage(browser, {
       url: urlParam,
       imageUrl: explicitImageUrl,
@@ -265,6 +330,7 @@ async function handler(
       siteMap: enhancedSiteMap
     })
 
+    console.log('[SocialImage API] Generated image buffer length:', imageBuffer.length)
     res.setHeader('Content-Type', 'image/png')
     res.setHeader('Cache-Control', 's-maxage=0, stale-while-revalidate')
     res.status(200).end(imageBuffer)

@@ -1,5 +1,4 @@
 import React from 'react'
-import Image from 'next/image'
 import { MdOutlineAccountTree, MdKeyboardArrowRight } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
@@ -18,7 +17,14 @@ const Background: React.FC<{ imageUrl?: string; children?: React.ReactNode; base
     finalImageUrl = `${baseUrl}${finalImageUrl}`;
   }
   
-  console.log('[Background Component] imageUrl:', imageUrl, 'baseUrl:', baseUrl, 'finalImageUrl:', finalImageUrl);
+  console.log('[Background Component] image processing:', {
+    originalImageUrl: imageUrl,
+    baseUrl,
+    finalImageUrl,
+    isRelative: imageUrl?.startsWith('/'),
+    hasBaseUrl: !!baseUrl,
+    defaultBackground: !imageUrl
+  });
   
   const backgroundStyle = {
     ...COMMON_STYLES.container,
@@ -35,32 +41,49 @@ const PillText: React.FC<{
   isImageCircle?: boolean;
   fontSize?: string;
   padding?: string;
-}> = ({ iconUrl, text, isImageCircle = false, fontSize = '36px', padding = '16px 24px' }) => (
-  <div style={{
-    ...COMMON_STYLES.glass,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding,
-    fontSize,
-    fontWeight: 'bold',
-    color: 'rgba(255, 255, 255, 0.9)',
-  }}>
-    {iconUrl && (
-      <Image
-        src={iconUrl}
-        alt="Icon"
-        width={isImageCircle ? 42 : 54}
-        height={isImageCircle ? 42 : 54}
-        style={{
-          borderRadius: isImageCircle ? '999px' : '0',
-          objectFit: 'cover',
-        }}
-      />
-    )}
-    <span>{text}</span>
-  </div>
-)
+  baseUrl?: string;
+}> = ({ iconUrl, text, isImageCircle = false, fontSize = '36px', padding = '16px 24px', baseUrl }) => {
+  // Convert relative image URLs to absolute URLs for server-side rendering
+  const finalIconUrl = iconUrl && iconUrl.startsWith('/') && baseUrl 
+    ? `${baseUrl}${iconUrl}` 
+    : iconUrl;
+
+  console.log('[PillText] Image URL processing:', {
+    originalIconUrl: iconUrl,
+    baseUrl,
+    finalIconUrl,
+    isRelative: iconUrl?.startsWith('/'),
+    hasBaseUrl: !!baseUrl
+  });
+
+  return (
+    <div style={{
+      ...COMMON_STYLES.glass,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding,
+      fontSize,
+      fontWeight: 'bold',
+      color: 'rgba(255, 255, 255, 0.9)',
+    }}>
+      {finalIconUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={finalIconUrl}
+          alt="Icon"
+          width={isImageCircle ? 42 : 54}
+          height={isImageCircle ? 42 : 54}
+          style={{
+            borderRadius: isImageCircle ? '999px' : '0',
+            objectFit: 'cover',
+          }}
+        />
+      )}
+      <span>{text}</span>
+    </div>
+  );
+}
 
 
 
@@ -68,7 +91,12 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
   const maxItemLength = 20
   const maxVisibleItems = 3
   
+  console.log('[SocialBreadcrumb] baseUrl:', baseUrl, 'breadcrumb:', breadcrumb);
+  
   if (!breadcrumb || breadcrumb.length === 0) {
+    const iconUrl = `${baseUrl}/icon.png`;
+    console.log('[SocialBreadcrumb] Home icon URL:', iconUrl);
+    
     return (
       <div style={{
         ...COMMON_STYLES.glass,
@@ -81,7 +109,8 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
         color: 'rgba(255, 255, 255, 0.9)',
         flexWrap: 'nowrap'
       }}>
-        <Image src={`${baseUrl || ''}/icon.png`} alt="Site Icon" width={36} height={36} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={iconUrl} alt="Site Icon" width={36} height={36} style={{ objectFit: 'cover' }} />
         <span>{siteConfig.name}</span>
       </div>
     )
@@ -106,7 +135,8 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
       maxWidth: '100%',
       overflow: 'hidden'
     }}>
-      <Image src={`${baseUrl || ''}/icon.png`} alt="Site Icon" width={36} height={36} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`${baseUrl || ''}/icon.png`} alt="Site Icon" width={36} height={36} style={{ objectFit: 'cover' }} />
       <span>{siteConfig.name}</span>
       
       {items.map((item, index) => {
@@ -143,20 +173,42 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
   )
 }
 
-const TitleBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
-  <div style={{
-    ...COMMON_STYLES.glass,
-    ...COMMON_STYLES.title,
-  }}>
-    <Image
-      src={iconUrl}
-      alt="Site Icon"
-      width={144}
-      height={144}
-    />
-    <span>{siteConfig.name}</span>
-  </div>
-)
+const TitleBrand: React.FC<{ iconUrl: string; baseUrl?: string }> = ({ iconUrl, baseUrl }) => {
+  // Ensure we use absolute URLs for server-side rendering
+  let finalIconUrl = iconUrl;
+  // Only convert if it's still a relative URL and we have a baseUrl
+  if (iconUrl.startsWith('/') && baseUrl) {
+    finalIconUrl = `${baseUrl}${iconUrl}`;
+  } else if (iconUrl.startsWith('http')) {
+    // Already absolute, use as-is
+    finalIconUrl = iconUrl;
+  }
+  
+  console.log('[TitleBrand] icon processing:', {
+    originalIconUrl: iconUrl,
+    baseUrl,
+    finalIconUrl,
+    isRelative: iconUrl?.startsWith('/'),
+    hasBaseUrl: !!baseUrl
+  });
+  
+  return (
+    <div style={{
+      ...COMMON_STYLES.glass,
+      ...COMMON_STYLES.title,
+    }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={finalIconUrl}
+        alt="Site Icon"
+        width={144}
+        height={144}
+        style={{ objectFit: 'cover' }}
+      />
+      <span>{siteConfig.name}</span>
+    </div>
+  );
+}
 
 const TitleIcon: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon, text }) => (
   <div style={{
@@ -304,7 +356,8 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
     console.log('[SocialCard] siteMap available:', !!siteMap, 'pageInfoMap available:', !!siteMap?.pageInfoMap)
     
 
-    const iconUrl = baseUrl ? `${baseUrl}/icon.png` : '/icon.png';
+    // Always use absolute URL for icon.png to work with Puppeteer
+  const iconUrl = `${baseUrl}/icon.png`;
 
     console.log('[SocialCard] iconUrl:', iconUrl)
     console.log('[SocialCard] Provided imageUrl:', imageUrl)
@@ -315,7 +368,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] No cover image available for root view')
         return (
           <Background baseUrl={baseUrl}>
-            <TitleBrand iconUrl={iconUrl} />
+            <TitleBrand iconUrl={iconUrl} baseUrl={baseUrl} />
           </Background>
         )
 
@@ -484,12 +537,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                       fontSize="24px" 
                       padding={authorAvatar ? "6px 24px 6px 6px" : "12px 24px"}
                       isImageCircle={true}
+                      baseUrl={baseUrl}
                     />
                     {additionalAuthorsCount > 0 && (
                       <PillText 
                         text={`+${additionalAuthorsCount}`} 
                         fontSize="24px" 
                         padding="12px 24px"
+                        baseUrl={baseUrl}
                       />
                     )}
                   </div>
@@ -534,6 +589,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                             text={`#${displayTag}`} 
                             fontSize="24px" 
                             padding="12px 24px" 
+                            baseUrl={baseUrl}
                           />
                         )
                       })}
@@ -542,6 +598,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                         text={`+${pageInfo.tags.filter((tag: string) => tag && tag.trim() !== '').length - 3}`} 
                         fontSize="24px" 
                         padding="12px 24px" 
+                        baseUrl={baseUrl}
                       />
                     )}
                   </div>
@@ -557,6 +614,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                     })} 
                     fontSize="24px" 
                     padding="12px 24px" 
+                    baseUrl={baseUrl}
                   />
                 )}
               </div>
@@ -682,7 +740,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         console.log('[SocialCard] Rendering default root view')
         return (
           <Background baseUrl={baseUrl}>
-            <TitleBrand iconUrl={iconUrl} />
+            <TitleBrand iconUrl={iconUrl} baseUrl={baseUrl} />
           </Background>
         )
     }

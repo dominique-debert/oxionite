@@ -23,7 +23,8 @@ export default withBundleAnalyzer({
       { protocol: 'https', hostname: 's3.us-west-2.amazonaws.com' },
       { protocol: 'https', hostname: 'github.com' },
       { protocol: 'https', hostname: 'user-images.githubusercontent.com' },
-      { protocol: 'https', hostname: 'avatars.githubusercontent.com' }
+      { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
+      { protocol: 'http', hostname: 'localhost', port: '3000' }
     ],
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
