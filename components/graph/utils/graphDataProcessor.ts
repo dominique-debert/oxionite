@@ -67,7 +67,7 @@ export const createPostGraphData = (
     if (processedPages.has(pageId)) return;
     if (pageInfo.language !== locale) return;
 
-    const imageUrl = pageInfo.coverImage || pageInfo.image || undefined;
+    const imageUrl = pageInfo.coverImage || undefined;
     
     const node: GraphNode = {
       id: pageId,

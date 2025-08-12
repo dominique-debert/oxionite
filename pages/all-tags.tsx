@@ -1,6 +1,5 @@
 import { getSiteMap } from '@/lib/context/get-site-map'
 import type { PageProps } from '@/lib/context/types'
-import { PageHead } from '@/components/PageHead'
 import { TagList } from '@/components/TagList'
 import styles from '@/styles/components/all-tags.module.css'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'

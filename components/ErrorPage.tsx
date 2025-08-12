@@ -1,7 +1,6 @@
 import * as React from 'react'
 import styles from 'styles/components/common.module.css'
 import { useTranslation } from 'next-i18next'
-import Link from 'next/link'
 
 import type { Site } from '@/lib/context/types'
 

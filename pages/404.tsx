@@ -1,6 +1,5 @@
 import { getSiteMap } from '@/lib/context/get-site-map'
 import { ErrorPage } from '@/components/ErrorPage'
-import { PageHead } from 'components/PageHead'
 import * as React from 'react'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import nextI18NextConfig from '../next-i18next.config.cjs'

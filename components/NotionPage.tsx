@@ -24,7 +24,6 @@ import { Loading } from './Loading'
 import { NotionComments } from './NotionComments'
 import { Page404 } from './Page404'
 import { PageActions } from './PageActions'
-import { PageHead } from './PageHead'
 import { PostHeader } from './PostHeader'
 
 // -----------------------------------------------------------------------------
@@ -244,7 +243,6 @@ export function NotionPageContent({
     return <Page404 />
   }
 
-  const title = getBlockTitle(block, recordMap) || site.name
   const pageInfo = siteMap?.pageInfoMap?.[pageId]
 
   const isBlogPost =

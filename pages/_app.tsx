@@ -27,7 +27,6 @@ import {
   fathomId,
   posthogConfig,
   posthogId,
-  rootNotionPageId
 } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { AppContext } from '@/lib/context/app-context'
