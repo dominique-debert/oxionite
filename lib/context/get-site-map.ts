@@ -77,6 +77,24 @@ export const getSiteMap = async (): Promise<SiteMap> => {
     config.rootNotionDatabaseId
   )
 
+  // Generate breadcrumbs for all pages in the pageInfoMap
+  console.log('[getSiteMap] Adding breadcrumbs to pageInfoMap')
+  for (const pageId of Object.keys(pageInfoMap)) {
+    const page = pageInfoMap[pageId]
+    if (page) {
+      const breadcrumb: string[] = []
+      let current: PageInfo | undefined = page
+      
+      while (current) {
+        breadcrumb.unshift(current.title)
+        current = pageInfoMap[current.parentPageId || ''] || undefined
+      }
+      
+      pageInfoMap[pageId].breadcrumb = breadcrumb
+      console.log('[getSiteMap] Added breadcrumb to page:', page.title, 'breadcrumb:', breadcrumb)
+    }
+  }
+  
   const navigationTree = buildNavigationTree(pageInfoMap)
   removeCircularDependencies(navigationTree) // This removes the circular 'parent' property
   const canonicalPageMap = buildCanonicalPageMap(pageInfoMap)
@@ -264,11 +282,24 @@ function buildNavigationTree(pageInfoMap: Record<string, PageInfo>): PageInfo[] 
     pageInfoArray.map((p) => [p.pageId, createPageCopy(p)])
   )
 
+  // Generate breadcrumbs for each page by traversing parent relationships
+  const generateBreadcrumb = (page: PageInfo): string[] => {
+    const breadcrumb: string[] = []
+    let current: PageInfo | undefined = page
+    
+    while (current) {
+      breadcrumb.unshift(current.title)
+      current = current.parent
+    }
+    
+    return breadcrumb
+  }
+
   for (const page of pageInfoArray) {
     const pageCopy = pageCopyMap.get(page.pageId)
     if (!pageCopy) continue
 
-    // Handle parent-child relationships
+    // Handle parent-child relationships first
     if (page.parentPageId) {
       const parentCopy = pageCopyMap.get(page.parentPageId)
       if (parentCopy) {
@@ -277,6 +308,8 @@ function buildNavigationTree(pageInfoMap: Record<string, PageInfo>): PageInfo[] 
       }
     }
   }
+
+  // Breadcrumbs are now generated in getSiteMap directly
 
   const rootPages = Array.from(pageCopyMap.values()).filter((p) => !p.parent)
 

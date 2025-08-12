@@ -62,6 +62,81 @@ const PillText: React.FC<{
 )
 
 
+
+const SocialBreadcrumb: React.FC<{ breadcrumb: string[] }> = ({ breadcrumb }) => {
+  const maxItemLength = 15
+  const maxVisibleItems = 3
+  
+  if (!breadcrumb || breadcrumb.length === 0) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        fontSize: '24px',
+        color: '#666',
+        fontFamily: 'Inter, sans-serif',
+        flexWrap: 'nowrap'
+      }}>
+        <img src="/icon.png" alt="Site Icon" style={{ width: 24, height: 24, borderRadius: '50%' }} />
+        <span>{siteConfig.name}</span>
+      </div>
+    )
+  }
+
+  const items = breadcrumb.length > maxVisibleItems
+    ? [...breadcrumb.slice(0, 1), '...', ...breadcrumb.slice(-2)]
+    : breadcrumb
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      fontSize: '24px',
+      color: '#666',
+      fontFamily: 'Inter, sans-serif',
+      flexWrap: 'nowrap',
+      maxWidth: '100%',
+      overflow: 'hidden'
+    }}>
+      <img src="/icon.png" alt="Site Icon" style={{ width: 24, height: 24, borderRadius: '50%' }} />
+      <span>{siteConfig.name}</span>
+      
+      {items.map((item, index) => {
+        if (item === '...') {
+          return (
+            <React.Fragment key={index}>
+              <span style={{ color: '#999' }}>&gt;</span>
+              <span style={{ color: '#666' }}>...</span>
+            </React.Fragment>
+          )
+        }
+        
+        const displayText = item.length > maxItemLength 
+          ? item.substring(0, maxItemLength - 3) + '...'
+          : item
+
+        return (
+          <React.Fragment key={index}>
+            <span style={{ color: '#999' }}>&gt;</span>
+            <span style={{ 
+              color: index === items.length - 1 ? '#333' : '#666',
+              fontWeight: index === items.length - 1 ? '600' : 'normal',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '120px'
+            }}>
+              {displayText}
+            </span>
+          </React.Fragment>
+        )
+      })}
+    </div>
+  )
+}
+
 const TitleBrand: React.FC<{ iconUrl: string }> = ({ iconUrl }) => (
   <div style={{
     ...COMMON_STYLES.glass,
@@ -238,6 +313,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
     console.log('[SocialCard] Rendering with props:', { url, imageUrl, baseUrl })
     console.log('[SocialCard] Parsed result:', parsed)
     console.log('[SocialCard] siteMap available:', !!siteMap, 'pageInfoMap available:', !!siteMap?.pageInfoMap)
+    
 
     const glassStyle = COMMON_STYLES.glass
 
@@ -279,6 +355,8 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             postTitle = pageInfo.title
             postCoverImage = pageInfo.coverImage || undefined
             console.log('[SocialCard] Post case - found page:', {title: postTitle, coverImage: postCoverImage})
+            console.log('[SocialCard] Post case - pageInfo:', pageInfo)
+            console.log('[SocialCard] Post case - Breadcrumb:', pageInfo.breadcrumb)
             
             // Check if we should use original cover image without overlays
             if (pageInfo.useOriginalCoverImage) {
@@ -333,7 +411,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 zIndex: 10
               }}>
                 {/* Breadcrumb */}
-                <PillText text="breadcrumb" fontSize="24px" padding="12px 24px" />
+                <SocialBreadcrumb breadcrumb={pageInfo?.breadcrumb || []} />
               
                 {/* Author */}
                 {authors.length > 0 && (
