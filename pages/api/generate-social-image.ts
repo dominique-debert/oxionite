@@ -10,20 +10,6 @@ import { getCachedSiteMap } from '@/lib/context/site-cache'
 import { SocialCard, SocialCardProps } from '@/components/SocialCard'
 import siteConfig from 'site.config'
 
-import { detectBestBackgroundFormatOnServer } from '@/lib/get-default-background.server'
-
-// Default config since siteConfig might not be available
-const defaultConfig = {
-  name: 'Next Notion Engine',
-  description: 'A modern blog built with Next.js and Notion'
-}
-
-// Helper function to get default background URL
-async function getDefaultBackgroundUrl(_req?: NextApiRequest): Promise<string> {
-  // We use the server-side detection method here as this API route runs in a Node.js environment
-  return detectBestBackgroundFormatOnServer()
-}
-
 // Internal core rendering function
 async function renderSocialImage(
   browser: Browser,
@@ -57,7 +43,7 @@ async function renderSocialImage(
     // Use `page.setContent` to load the HTML. This allows the page to make network requests
     // for resources like images and fonts from the correct origin.
     await page.setContent(html, {
-      waitUntil: 'load' // Wait for the main document and its resources to load
+      waitUntil: 'networkidle0' // Faster: wait for network to be idle (no pending requests)
     })
 
     // Wait for all fonts to be loaded
@@ -70,6 +56,43 @@ async function renderSocialImage(
   }
 
   return screenshot
+}
+
+// Browser instance cache for reuse
+let cachedBrowser: Browser | null = null
+let browserPromise: Promise<Browser> | null = null
+
+// Get or create browser instance
+async function getBrowser(): Promise<Browser> {
+  if (cachedBrowser && cachedBrowser.isConnected()) {
+    return cachedBrowser
+  }
+  
+  if (browserPromise) {
+    return browserPromise
+  }
+
+  const isProduction = process.env.NODE_ENV === 'production'
+  const launchOptions = {
+    args: isProduction ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox'],
+    defaultViewport: { width: 1200, height: 630 },
+    executablePath: isProduction 
+      ? await chromium.executablePath() 
+      : undefined, // Let puppeteer auto-detect in dev
+    headless: true, // Always headless for speed
+    slowMo: 0, // Disable slow mode
+  }
+
+  browserPromise = puppeteer.launch(launchOptions)
+  cachedBrowser = await browserPromise
+  browserPromise = null
+  
+  // Handle browser disconnection
+  cachedBrowser.on('disconnected', () => {
+    cachedBrowser = null
+  })
+  
+  return cachedBrowser
 }
 
 // Exported function for file system generation (ISR/build-time)
@@ -91,21 +114,9 @@ export async function generateSocialImage(
   }
 
   console.log(`[SocialImage] Generating image for '${slug}'...`)
-  let browser: Browser | null = null
   try {
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: { width: 1200, height: 630 },
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    })
+    const browser = await getBrowser()
     const baseUrl = `https://${siteConfig.domain}`
-
-    console.log('[SocialImage Generator] Debug Info (Build-time):', {
-      originalImageUrl: props.imageUrl,
-      baseUrl,
-      usingBackgroundDefaults: !props.imageUrl
-    })
 
     const imageBuffer = await renderSocialImage(browser, {
       ...props,
@@ -117,10 +128,6 @@ export async function generateSocialImage(
   } catch (err) {
     console.error(`[SocialImage] Failed to generate image for '${slug}':`, err)
     throw err
-  } finally {
-    if (browser) {
-      await browser.close()
-    }
   }
 }
 
@@ -133,33 +140,7 @@ async function handler(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  let browser: Browser | null = null
   try {
-    const isProduction = process.env.NODE_ENV === 'production'
-    let executablePath: string = ''
-
-    if (isProduction) {
-      executablePath = await chromium.executablePath()
-    } else {
-      try {
-        // Use Puppeteer's built-in executable path detection
-        executablePath = puppeteer.executablePath()
-      } catch (error) {
-        console.error('Could not find a browser for Puppeteer:', error)
-        throw new Error(
-          'Please install the full puppeteer package or set PUPPETEER_EXECUTABLE_PATH environment variable. Try: npm install puppeteer'
-        )
-      }
-    }
-
-    browser = await puppeteer.launch({
-      args: isProduction ? chromium.args : [],
-      defaultViewport: { width: 1200, height: 630 },
-      executablePath,
-      headless: isProduction ? chromium.headless : false,
-      slowMo: isProduction ? 0 : 100, // Slow down in dev for easier debugging
-    })
-
     const urlPath = _req.query.path as string || '/'
     const parsedUrl = parseUrlPathname(urlPath)
 
@@ -178,6 +159,95 @@ async function handler(
     
     const siteMap = await getCachedSiteMap()
 
+    // Handle subpages by fetching actual Notion page data
+    let enhancedSiteMap = siteMap;
+    let subpageData = null;
+    
+    // Check if this is a subpage and extract page ID
+    const pageIdMatch = urlParam.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i);
+    
+    if (pageIdMatch && parsedUrl.isSubpage) {
+      const pageId = pageIdMatch[1];
+      console.log('[SocialImage API] Subpage detected, fetching page:', pageId)
+      
+      try {
+        // Import notion API client and utilities
+        const { notion } = await import('@/lib/notion-api')
+        const { getBlockTitle, getPageProperty } = await import('notion-utils')
+        const { mapImageUrl } = await import('@/lib/map-image-url')
+        
+        // Fetch the actual page data from Notion
+        const recordMap = await notion.getPage(pageId)
+        
+        // Extract data from the fetched page
+        const block = recordMap.block[pageId]?.value
+        if (block) {
+          const title = getBlockTitle(block, recordMap)
+          const pageCover = block.format?.page_cover
+          const coverImageUrl = pageCover ? mapImageUrl(pageCover, block) : null
+          
+          console.log('[SocialImage API] Fetched subpage data:', { title, coverImage: coverImageUrl })
+          
+          // Create enhanced page info for the subpage
+          const subpageInfo = {
+            title: title || 'Untitled',
+            pageId: pageId,
+            type: 'Post' as const,
+            slug: parsedUrl.subpage || pageId,
+            parentPageId: null,
+            childrenPageIds: [],
+            language: null,
+            public: true,
+            useOriginalCoverImage: null,
+            description: null,
+            date: null,
+            coverImage: coverImageUrl || undefined,
+            children: []
+          }
+          
+          // Add to enhanced site map
+          enhancedSiteMap = {
+            ...siteMap,
+            pageInfoMap: {
+              ...siteMap.pageInfoMap,
+              [pageId]: subpageInfo
+            }
+          }
+          
+          // Also store subpage data for direct access
+          subpageData = {
+            title,
+            coverImage: coverImageUrl
+          }
+        }
+      } catch (error) {
+        console.error('[SocialImage API] Error fetching subpage:', error)
+        // Fallback to slug-based title if fetch fails
+        const slugTitle = parsedUrl.subpage?.replace(/-[a-f0-9-]{36}$/i, '').replace(/-/g, ' ') || 'Untitled'
+        enhancedSiteMap = {
+          ...siteMap,
+          pageInfoMap: {
+            ...siteMap.pageInfoMap,
+            [pageIdMatch[1]]: {
+              title: slugTitle,
+              pageId: pageIdMatch[1],
+              type: 'Post' as const,
+              slug: parsedUrl.subpage || pageIdMatch[1],
+              parentPageId: null,
+              childrenPageIds: [],
+              language: null,
+              public: true,
+              useOriginalCoverImage: null,
+              description: null,
+              date: null,
+              coverImage: undefined,
+              children: []
+            }
+          }
+        }
+      }
+    }
+
     // Let the SocialCard handle default backgrounds and page-specific cover images
     // Only provide imageUrl if explicitly requested via query parameter
     const explicitImageUrl = typeof _req.query.imageUrl === 'string' ? _req.query.imageUrl : undefined
@@ -187,27 +257,16 @@ async function handler(
       baseUrl,
       requestUrl: _req.url,
       query: _req.query,
-      headers: {
-        host: _req.headers.host,
-        'x-forwarded-host': _req.headers['x-forwarded-host'],
-        'x-forwarded-proto': _req.headers['x-forwarded-proto']
-      }
+      hasSubpageData: !!subpageData
     })
 
-    console.log('[SocialImage API] Rendering with final props:', {
-      url: urlParam,
-      imageUrl: explicitImageUrl,
-      baseUrl,
-      siteMapAvailable: !!siteMap
-    })
-    
+    const browser = await getBrowser()
     const imageBuffer = await renderSocialImage(browser, {
       url: urlParam,
-      imageUrl: explicitImageUrl, // Let undefined fall through to Background component
+      imageUrl: explicitImageUrl,
       baseUrl: baseUrl,
-      siteMap
+      siteMap: enhancedSiteMap
     })
-
 
     res.setHeader('Content-Type', 'image/png')
     res.setHeader('Cache-Control', 's-maxage=0, stale-while-revalidate')
@@ -220,10 +279,6 @@ async function handler(
       error: 'Failed to generate social image.',
       details: errorMessage
     })
-  } finally {
-    if (browser) {
-      await browser.close()
-    }
   }
 }
 

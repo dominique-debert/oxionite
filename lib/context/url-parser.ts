@@ -8,6 +8,8 @@ import siteLocale from '../../site.locale.json';
 export interface ParsedUrl {
   segment: string;
   slug: string;
+  subpage: string;
+  isSubpage: boolean;
   segments: string[];
   fullPath: string;
   isRoot: boolean;
@@ -55,10 +57,14 @@ export function parseUrlPathname(pathname: string): ParsedUrl {
   const relevantSegments = routeSegments.slice(routeTypeIndex);
   const segment = relevantSegments[0];
   const slug = relevantSegments[1] || '';
+  const subpage = relevantSegments[relevantSegments.length - 1] || '';
+  const isSubpage = relevantSegments.length > 2;
 
   return {
     segment,
     slug,
+    subpage,
+    isSubpage,
     segments: relevantSegments,
     fullPath: pathname,
     isRoot: false,
@@ -74,6 +80,8 @@ function createRootResult(): ParsedUrl {
   return {
     segment: '',
     slug: '',
+    subpage: '',
+    isSubpage: false,
     segments: [],
     fullPath: '/',
     isRoot: true,

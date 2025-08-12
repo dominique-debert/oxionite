@@ -268,9 +268,9 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
       if (parsed.isRoot) {
         return { type: 'root' }
       } else if (parsed.isPost) {
-        return { type: 'post', slug: parsed.slug, locale: parsed.locale }
+        return { type: 'post', slug: parsed.slug, subpage: parsed.subpage, isSubpage: parsed.isSubpage, locale: parsed.locale }
       } else if (parsed.isCategory) {
-        return { type: 'category', slug: parsed.slug, locale: parsed.locale }
+        return { type: 'category', slug: parsed.slug, subpage: parsed.subpage, isSubpage: parsed.isSubpage, locale: parsed.locale }
       } else if (parsed.isTag) {
         return { type: 'tag', tag: parsed.slug, locale: parsed.locale }
       } else if (parsed.isAllTags) {
@@ -333,7 +333,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       case 'post':
-        console.log('[SocialCard] Rendering post view:', parsed.slug)
+        console.log('[SocialCard] Rendering post view:', parsed.slug, 'isSubpage:', parsed.isSubpage)
         const currentLocale = parsed.locale || localeConfig.defaultLocale
         let postTitle = 'Post'
         let postCoverImage: string | undefined
@@ -345,8 +345,11 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           const allPages = Object.values(siteMap.pageInfoMap)
           console.log('[SocialCard] Post case - total pages:', allPages.length)
           
+          // For subpages, use the subpage segment to find the actual page
+          const targetSlug = parsed.isSubpage ? parsed.subpage : parsed.slug;
+          
           const matchingPages = allPages.filter(
-            (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === parsed.slug && p.language === currentLocale
+            (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === targetSlug && p.language === currentLocale
           )
           console.log('[SocialCard] Post case - matching pages:', matchingPages.length, matchingPages.map(p => ({title: p.title, type: p.type, coverImage: p.coverImage})))
 
@@ -355,8 +358,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             postTitle = pageInfo.title
             postCoverImage = pageInfo.coverImage || undefined
             console.log('[SocialCard] Post case - found page:', {title: postTitle, coverImage: postCoverImage})
-            console.log('[SocialCard] Post case - pageInfo:', pageInfo)
-            console.log('[SocialCard] Post case - Breadcrumb:', pageInfo.breadcrumb)
             
             // Check if we should use original cover image without overlays
             if (pageInfo.useOriginalCoverImage) {
@@ -370,11 +371,82 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           }
         }
 
+        // Handle subpages by using the page ID directly
+        if (parsed.isSubpage) {
+          console.log('[SocialCard] Subpage case - processing subpage:', parsed.subpage)
+          
+          // Extract Notion page ID from the slug (format: lower-case-title-notion-page-id)
+          const pageIdMatch = parsed.subpage.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i);
+          
+          if (pageIdMatch) {
+            const pageId = pageIdMatch[1];
+            console.log('[SocialCard] Subpage case - extracted page ID:', pageId)
+            
+            // For subpages, look up the page info using the page ID
+            // The API now provides actual page data for subpages
+            const subpageInfo = siteMap?.pageInfoMap?.[pageId];
+            
+            if (subpageInfo) {
+              postTitle = subpageInfo.title || 'Untitled';
+              postCoverImage = subpageInfo.coverImage || undefined;
+              console.log('[SocialCard] Subpage case - found actual page data:', {title: postTitle, coverImage: postCoverImage})
+            } else {
+              // Fallback: use the slug as title
+              const slugTitle = parsed.subpage.replace(/-[a-f0-9-]{36}$/i, '').replace(/-/g, ' ');
+              postTitle = slugTitle || 'Untitled';
+              console.log('[SocialCard] Subpage case - using slug title as fallback:', postTitle)
+            }
+          } else {
+            // Fallback: use the slug as title
+            const slugTitle = parsed.subpage.replace(/-[a-f0-9-]{36}$/i, '').replace(/-/g, ' ');
+            postTitle = slugTitle || 'Untitled';
+            console.log('[SocialCard] Subpage case - using slug title:', postTitle)
+          }
+          
+          console.log('[SocialCard] Subpage case - final title:', postTitle, 'coverImage:', postCoverImage)
+          
+          // For subpages, create a simple breadcrumb structure
+          const breadcrumb = ['...', postTitle];
+          
+          return (
+            <Background imageUrl={postCoverImage} baseUrl={baseUrl}>
+              <div style={{ 
+                position: 'relative', 
+                width: '100%', 
+                height: '100%', 
+                padding: '80px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                {/* Top row with breadcrumb */}
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '60px', 
+                  left: '80px', 
+                  right: '80px', 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center',
+                  zIndex: 10
+                }}>
+                  <SocialBreadcrumb breadcrumb={breadcrumb} baseUrl={baseUrl} />
+                </div>
+
+                {/* Main title */}
+                <TitlePost title={postTitle} />
+              </div>
+            </Background>
+          );
+        }
+
+        // Handle regular posts (non-subpages)
         const pageInfo = siteMap?.pageInfoMap ? Object.values(siteMap.pageInfoMap).find(
           (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === parsed.slug && p.language === currentLocale
         ) : null;
-        
-        // Handle authors array from pageInfo
+
+        // Handle authors array from pageInfo for regular posts
         const authors = pageInfo?.authors || [];
         const firstAuthor = authors[0] || 'Author';
         const additionalAuthorsCount = authors.length > 1 ? authors.length - 1 : 0;
@@ -451,14 +523,18 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
               }}>
 
                 {/* Tags */}
-                {pageInfo?.tags && pageInfo.tags.filter(tag => tag && tag.trim() !== '').length > 0 && (
+                {pageInfo?.tags && pageInfo.tags.filter((tag: string) => tag && tag.trim() !== '').length > 0 && (
                   <div style={{ 
+                    position: 'absolute', 
+                    top: '120px', 
+                    left: '80px', 
                     display: 'flex', 
                     gap: '12px', 
                     flexWrap: 'wrap',
+                    maxWidth: 'calc(100% - 160px)'
                   }}>
                     {pageInfo.tags
-                      .filter(tag => tag && tag.trim() !== '')
+                      .filter((tag: string) => tag && tag.trim() !== '')
                       .slice(0, 3)
                       .map((tag: string, index: number) => {
                         const maxTagLength = 11
@@ -474,9 +550,9 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                           />
                         )
                       })}
-                    {pageInfo.tags.filter(tag => tag && tag.trim() !== '').length > 3 && (
+                    {pageInfo.tags.filter((tag: string) => tag && tag.trim() !== '').length > 3 && (
                       <PillText 
-                        text={`+${pageInfo.tags.filter(tag => tag && tag.trim() !== '').length - 3}`} 
+                        text={`+${pageInfo.tags.filter((tag: string) => tag && tag.trim() !== '').length - 3}`} 
                         fontSize="20px" 
                         padding="8px 16px" 
                       />
