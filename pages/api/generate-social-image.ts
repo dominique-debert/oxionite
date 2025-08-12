@@ -79,15 +79,8 @@ async function renderSocialImage(
       // Set base URL so relative image paths resolve correctly
     })
 
-    // Add the content to the page
-    const body = await page.$('body')
-    if (body) {
-      await body.evaluate((node) => {
-        const container = document.createElement('div')
-        container.innerHTML = html
-        node.appendChild(container)
-      })
-    }
+    // The HTML is already set via setContent, no need to manually inject it
+    // This prevents the ReferenceError: html is not defined in page.evaluate context
 
     // Inject base URL for image resources
     await page.evaluate((base) => {
@@ -129,34 +122,116 @@ let browserPromise: Promise<Browser> | null = null
 // Get or create browser instance
 async function getBrowser(): Promise<Browser> {
   if (cachedBrowser && cachedBrowser.isConnected()) {
+    console.log('[getBrowser] Reusing cached browser')
     return cachedBrowser
   }
-  
+
   if (browserPromise) {
+    console.log('[getBrowser] Awaiting existing browser promise')
     return browserPromise
   }
 
-  const isProduction = process.env.NODE_ENV === 'production'
-  const launchOptions = {
-    args: isProduction ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox'],
-    defaultViewport: { width: 1200, height: 630 },
-    executablePath: isProduction 
-      ? await chromium.executablePath() 
-      : undefined, // Let puppeteer auto-detect in dev
-    headless: true, // Always headless for speed
-    slowMo: 0, // Disable slow mode
+  console.log('[getBrowser] Creating new browser instance')
+  
+  const _launchOptions = {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-web-security',
+      '--disable-features=VizDisplayCompositor',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-dev-shm-usage',
+      '--disable-extensions',
+      '--disable-plugins',
+    ]
   }
 
-  browserPromise = puppeteer.launch(launchOptions)
-  cachedBrowser = await browserPromise
-  browserPromise = null
-  
-  // Handle browser disconnection
-  cachedBrowser.on('disconnected', () => {
-    cachedBrowser = null
-  })
-  
-  return cachedBrowser
+  try {
+    // Check environment - skip Chromium for local development
+    const isProductionServerless = (process.env.VERCEL === '1' || process.env.NETLIFY === 'true') && 
+                                  process.env.NODE_ENV === 'production';
+    
+    if (isProductionServerless && chromium) {
+      console.log('[getBrowser] Using Chromium for serverless production')
+      const executablePath = await chromium.executablePath()
+      browserPromise = puppeteer.launch({
+        headless: true,
+        args: chromium.args || [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-gpu',
+          '--no-first-run',
+          '--no-default-browser-check',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-dev-shm-usage',
+          '--disable-extensions',
+          '--disable-plugins',
+        ],
+        executablePath,
+      })
+    } else {
+      console.log('[getBrowser] Using local Puppeteer - auto-detecting browser')
+      // For local development and npm run start, use system Chrome/Chromium
+      browserPromise = puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-gpu',
+          '--no-first-run',
+          '--no-default-browser-check',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-dev-shm-usage',
+          '--disable-extensions',
+          '--disable-plugins',
+        ],
+        // Let puppeteer auto-detect the browser - this will use local Chrome/Chromium
+        executablePath: undefined,
+      })
+    }
+
+    const browser = await browserPromise
+    if (!browser) {
+      throw new Error('Failed to launch browser')
+    }
+    cachedBrowser = browser
+    console.log('[getBrowser] Browser launched successfully')
+    return browser
+  } catch (err) {
+    console.error('[getBrowser] Failed to launch browser:', err)
+    console.error('[getBrowser] Error details:', {
+      code: (err as NodeJS.ErrnoException).code,
+      errno: (err as NodeJS.ErrnoException).errno,
+      syscall: (err as NodeJS.ErrnoException).syscall,
+      message: (err as Error).message
+    })
+    
+    // Provide helpful error message for ENOEXEC
+    if ((err as NodeJS.ErrnoException).code === 'ENOEXEC') {
+      console.error('[getBrowser] ENOEXEC: This usually means the browser executable is not compatible with your system')
+      console.error('[getBrowser] For local development, ensure Chrome/Chromium is installed and accessible')
+      console.error('[getBrowser] Try: npm install puppeteer --save-dev')
+    }
+    
+    browserPromise = null
+    throw err
+  } finally {
+    browserPromise = null
+  }
 }
 
 // Exported function for file system generation (ISR/build-time)
