@@ -96,7 +96,7 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
       display: 'flex',
       alignItems: 'center',
       gap: '8px',
-      padding: '12px 24px',
+      padding: '8px 24px',
       paddingLeft: '16px',
       fontSize: '24px',
       fontWeight: 'bold',
@@ -446,6 +446,9 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === parsed.slug && p.language === currentLocale
         ) : null;
 
+        console.log('[SocialCard] pageInfo:', pageInfo);
+        console.log('[SocialCard] pageInfo tags:', pageInfo?.tags);
+
         // Handle authors array from pageInfo for regular posts
         const authors = pageInfo?.authors || [];
         const firstAuthor = authors[0] || 'Author';
@@ -525,9 +528,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 {/* Tags */}
                 {pageInfo?.tags && pageInfo.tags.filter((tag: string) => tag && tag.trim() !== '').length > 0 && (
                   <div style={{ 
-                    position: 'absolute', 
-                    top: '120px', 
-                    left: '80px', 
                     display: 'flex', 
                     gap: '12px', 
                     flexWrap: 'wrap',
@@ -537,7 +537,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                       .filter((tag: string) => tag && tag.trim() !== '')
                       .slice(0, 3)
                       .map((tag: string, index: number) => {
-                        const maxTagLength = 11
+                        const maxTagLength = 10
                         const displayTag = tag.length > maxTagLength 
                           ? tag.substring(0, maxTagLength - 3) + '...'
                           : tag
@@ -545,16 +545,16 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                           <PillText 
                             key={index} 
                             text={`#${displayTag}`} 
-                            fontSize="20px" 
-                            padding="8px 16px" 
+                            fontSize="24px" 
+                            padding="12px 24px" 
                           />
                         )
                       })}
                     {pageInfo.tags.filter((tag: string) => tag && tag.trim() !== '').length > 3 && (
                       <PillText 
                         text={`+${pageInfo.tags.filter((tag: string) => tag && tag.trim() !== '').length - 3}`} 
-                        fontSize="20px" 
-                        padding="8px 16px" 
+                        fontSize="24px" 
+                        padding="12px 24px" 
                       />
                     )}
                   </div>
