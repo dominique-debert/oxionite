@@ -146,12 +146,18 @@ export async function renderSocialImage(
     const resourceType = request.resourceType();
     const url = request.url();
     
-    // Allow only essential resources
-    if (resourceType === 'document' || 
-        (resourceType === 'image' && (url.includes('.png') || url.includes('.jpg') || url.includes('.jpeg') || url.includes('.webp')))) {
+    // Allow documents and images (including external domains)
+    if (resourceType === 'document' || resourceType === 'image') {
       request.continue();
     } else {
-      request.abort();
+      // Allow fonts and stylesheets for better rendering
+      const allowedExtensions = ['.css', '.woff', '.woff2', '.ttf', '.otf'];
+      const hasAllowedExtension = allowedExtensions.some(ext => url.toLowerCase().includes(ext));
+      if (hasAllowedExtension) {
+        request.continue();
+      } else {
+        request.abort();
+      }
     }
   });
 
@@ -182,9 +188,23 @@ export async function renderSocialImage(
     `;
 
     await page.setContent(fullHtml, {
-      waitUntil: 'domcontentloaded', // Faster than networkidle0
-      timeout: 5000 // Reduced timeout
+      waitUntil: 'networkidle0', // Wait for network to be idle for external images
+      timeout: 10000 // Increased timeout for external image loading
     })
+
+    // Wait for all images to load
+    await page.evaluate(() => {
+      return Promise.all(
+        Array.from(document.images).map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve, reject) => {
+            img.addEventListener('load', resolve);
+            img.addEventListener('error', resolve); // Resolve on error to prevent hanging
+            setTimeout(resolve, 3000); // Timeout after 3 seconds
+          });
+        })
+      );
+    });
 
     // Minimal wait for fonts only if needed
     try {
@@ -193,8 +213,8 @@ export async function renderSocialImage(
       // Continue if fonts fail to load
     }
     
-    // Reduced wait time for stability
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Brief wait for any remaining rendering
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     const screenshotData = await page.screenshot({ 
       type: 'png',
