@@ -11,7 +11,8 @@ export const getStaticProps = async ({ locale }: { locale: string }) => {
   return {
     props: {
       ...(await serverSideTranslations(locale, ['common', 'languages'], nextI18NextConfig)),
-      siteMap
+      siteMap,
+      pageId: 'all-tags'
     },
     revalidate: 10
   }

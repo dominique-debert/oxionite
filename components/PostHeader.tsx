@@ -2,11 +2,11 @@ import cs from 'classnames'
 import Image from 'next/image'
 import { type PageBlock } from 'notion-types'
 import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import styles from 'styles/components/PostHeader.module.css'
 
+import { getSocialImageUrl } from '@/lib/get-social-image-url'
 import { mapImageUrl } from '@/lib/map-image-url'
-
 import { AuthorButton } from './AuthorButton'
 import { TagButton } from './TagButton'
 
@@ -17,6 +17,7 @@ interface PostHeaderProps {
   isBlogPost: boolean // Kept for logic, but rendering is controlled by variant
   isMobile?: boolean
   variant?: 'full' | 'simple'
+  useOriginalCoverImage?: boolean
 }
 
 export function PostHeader({ 
@@ -24,9 +25,43 @@ export function PostHeader({
   recordMap, 
   isBlogPost,
   isMobile = false,
-  variant = 'full' // Default to 'full'
+  variant = 'full', // Default to 'full'
+  useOriginalCoverImage = true // Default to true for backward compatibility
 }: PostHeaderProps) {
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
+  const [socialImageUrl, setSocialImageUrl] = useState<string | null>(null)
+  const [isLoadingSocialImage, setIsLoadingSocialImage] = useState(false)
+
+  // Fetch social image when useOriginalCoverImage is false
+  useEffect(() => {
+    console.log('[PostHeader] useEffect triggered:', {
+      useOriginalCoverImage,
+      blockId: block?.id,
+      hasBlock: !!block
+    })
+    
+    if (!useOriginalCoverImage && block?.id) {
+      console.log('[PostHeader] Fetching social image for block:', block.id)
+      setIsLoadingSocialImage(true)
+      getSocialImageUrl(block.id)
+        .then(url => {
+          console.log('[PostHeader] Social image URL received:', url)
+          setSocialImageUrl(url)
+        })
+        .catch(err => {
+          console.error('[PostHeader] Failed to fetch social image:', err)
+          setSocialImageUrl(null)
+        })
+        .finally(() => {
+          setIsLoadingSocialImage(false)
+        })
+    } else {
+      console.log('[PostHeader] Skipping social image fetch:', {
+        useOriginalCoverImage,
+        blockId: block?.id
+      })
+    }
+  }, [useOriginalCoverImage, block?.id])
 
   // For 'full' variant, we require it to be a blog post from a collection
   if (variant === 'full' && (!isBlogPost || !block || block.parent_table !== 'collection')) {
@@ -73,6 +108,19 @@ export function PostHeader({
   const coverImageUrl = pageCover ? mapImageUrl(pageCover, block) : null
   const coverPosition = pageBlock.format?.page_cover_position || 0.5
 
+  // Determine which image to use
+  const effectiveCoverImageUrl = useOriginalCoverImage 
+    ? coverImageUrl 
+    : socialImageUrl || coverImageUrl
+    
+  console.log('[PostHeader] Image selection:', {
+    useOriginalCoverImage,
+    coverImageUrl,
+    socialImageUrl,
+    effectiveCoverImageUrl,
+    isLoadingSocialImage
+  })
+
   return (
     <div className={cs(styles.header, isMobile && styles.mobile)}>
       {/* Title */}
@@ -115,7 +163,7 @@ export function PostHeader({
       )}
 
       {/* Cover Image */}
-      {coverImageUrl && (
+      {effectiveCoverImageUrl && (
         <div 
           className={styles.coverImageContainer}
           style={{
@@ -128,12 +176,12 @@ export function PostHeader({
           }}
         >
           <Image
-            src={coverImageUrl}
+            src={effectiveCoverImageUrl}
             alt={title || 'Cover image'}
             fill
             className={styles.coverImage}
             style={{
-              objectPosition: `center ${(1 - coverPosition) * 100}%`
+              objectPosition: useOriginalCoverImage ? `center ${(1 - coverPosition) * 100}%` : 'center'
             }}
             onLoadingComplete={({ naturalWidth, naturalHeight }) => {
               if (naturalHeight > 0) {
@@ -145,6 +193,15 @@ export function PostHeader({
           />
         </div>
       )}
+      
+      {/* Loading state for social image */}
+      {!useOriginalCoverImage && isLoadingSocialImage && (
+        <div className={styles.coverImageContainer} style={{ height: '400px', opacity: 0.5 }}>
+          <div className={styles.loadingPlaceholder}>
+            Loading social image...
+          </div>
+        </div>
+      )}
     </div>
   )
-} 
+}

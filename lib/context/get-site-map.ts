@@ -78,7 +78,6 @@ export const getSiteMap = async (): Promise<SiteMap> => {
   )
 
   // Generate breadcrumbs for all pages in the pageInfoMap
-  console.log('[getSiteMap] Adding breadcrumbs to pageInfoMap')
   for (const pageId of Object.keys(pageInfoMap)) {
     const page = pageInfoMap[pageId]
     if (page) {
@@ -91,7 +90,6 @@ export const getSiteMap = async (): Promise<SiteMap> => {
       }
       
       pageInfoMap[pageId].breadcrumb = breadcrumb
-      console.log('[getSiteMap] Added breadcrumb to page:', page.title, 'breadcrumb:', breadcrumb)
     }
   }
   

@@ -49,13 +49,6 @@ const PillText: React.FC<{
     ? `${baseUrl}${iconUrl}` 
     : iconUrl;
 
-  console.log('[PillText] Image URL processing:', {
-    originalIconUrl: iconUrl,
-    baseUrl,
-    finalIconUrl,
-    isRelative: iconUrl?.startsWith('/'),
-    hasBaseUrl: !!baseUrl
-  });
 
   return (
     <div style={{
@@ -321,7 +314,7 @@ export interface SocialCardProps {
   baseUrl?: string
 }
 
-export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, baseUrl }) => {
+export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl }) => {
   const globalStyles = `
     * {
       box-sizing: border-box;
@@ -334,17 +327,14 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
 
   // Parse URL using the proper utility
   const parseUrl = (url: string) => {
-    console.log('[SocialCard] Parsing URL with parseUrlPathname:', url)
     try {
       if (!url) {
-        console.log('[SocialCard] URL is undefined/empty, defaulting to root')
         return { type: 'root' }
       }
       
       const path = url.startsWith('http') ? new URL(url).pathname : url
       const parsed = parseUrlPathname(path)
-      
-      console.log('[SocialCard] Parsed result from parseUrlPathname:', parsed)
+    
       
       // Convert to SocialCard format
       if (parsed.isRoot) {
@@ -396,21 +386,13 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
   }
 
   const renderContent = () => {
-    console.log('[SocialCard] Rendering with props:', { url, imageUrl, baseUrl })
-    console.log('[SocialCard] Parsed result:', parsed)
-    console.log('[SocialCard] siteMap available:', !!siteMap, 'pageInfoMap available:', !!siteMap?.pageInfoMap)
-    
 
     // Always use absolute URL for icon.png to work with Puppeteer
   const iconUrl = `${baseUrl}/icon.png`;
 
-    console.log('[SocialCard] iconUrl:', iconUrl)
-    console.log('[SocialCard] Provided imageUrl:', imageUrl)
 
     switch (parsed.type) {
       case 'root':
-        console.log('[SocialCard] Rendering root view')
-        console.log('[SocialCard] No cover image available for root view')
         return (
           <Background baseUrl={baseUrl}>
             <TitleBrand iconUrl={iconUrl} baseUrl={baseUrl} />
@@ -418,27 +400,19 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       case 'post': {
-        console.log('[SocialCard] Rendering post view:', parsed.slug, 'isSubpage:', parsed.isSubpage)
         const currentLocale = parsed.locale || localeConfig.defaultLocale
         let postTitle = 'Post'
         let postCoverImage: string | undefined
 
-        console.log('[SocialCard] Post case - currentLocale:', currentLocale, 'slug:', parsed.slug)
-        console.log('[SocialCard] Post case - searching for page with type Post or Home')
-
         if (siteMap && siteMap.pageInfoMap) {
           const allPages = Object.values(siteMap.pageInfoMap)
-          console.log('[SocialCard] Post case - total pages:', allPages.length)
           
           // For subpages, use the subpage segment to find the actual page
           const targetSlug = parsed.isSubpage ? parsed.subpage : parsed.slug;
           
-          const matchingPages = allPages.filter(
+          const pageInfo = allPages.find(
             (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === targetSlug && p.language === currentLocale
           )
-          console.log('[SocialCard] Post case - matching pages:', matchingPages.length, matchingPages.map(p => ({title: p.title, type: p.type, coverImage: p.coverImage})))
-
-          const pageInfo = matchingPages[0]
           if (pageInfo) {
             postTitle = pageInfo.title
             postCoverImage = pageInfo.coverImage || undefined
@@ -446,7 +420,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             
             // Check if we should use original cover image without overlays
             if (pageInfo.useOriginalCoverImage) {
-              console.log('[SocialCard] Post case - using original cover image only')
               return (
                 <Background imageUrl={postCoverImage} baseUrl={baseUrl} />
               )
@@ -458,7 +431,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
 
         // Handle subpages by using the page ID directly
         if (parsed.isSubpage) {
-          console.log('[SocialCard] Subpage case - processing subpage:', parsed.subpage)
           
           // Extract Notion page ID from the slug (format: lower-case-title-notion-page-id)
           const pageIdMatch = parsed.subpage.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i);
@@ -474,22 +446,21 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             if (subpageInfo) {
               postTitle = subpageInfo.title || 'Untitled';
               postCoverImage = subpageInfo.coverImage || undefined;
-              console.log('[SocialCard] Subpage case - found actual page data:', {title: postTitle, coverImage: postCoverImage})
+         
             } else {
               // Fallback: use the slug as title
               const slugTitle = parsed.subpage.replace(/-[a-f0-9-]{36}$/i, '').replace(/-/g, ' ');
               postTitle = slugTitle || 'Untitled';
-              console.log('[SocialCard] Subpage case - using slug title as fallback:', postTitle)
+         
             }
           } else {
             // Fallback: use the slug as title
             const slugTitle = parsed.subpage.replace(/-[a-f0-9-]{36}$/i, '').replace(/-/g, ' ');
             postTitle = slugTitle || 'Untitled';
-            console.log('[SocialCard] Subpage case - using slug title:', postTitle)
+         
           }
           
-          console.log('[SocialCard] Subpage case - final title:', postTitle, 'coverImage:', postCoverImage)
-          
+                   
           // For subpages, create a simple breadcrumb structure
           const breadcrumb = ['...', postTitle];
           
@@ -531,8 +502,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === parsed.slug && p.language === currentLocale
         ) : null;
 
-        console.log('[SocialCard] pageInfo:', pageInfo);
-        console.log('[SocialCard] pageInfo tags:', pageInfo?.tags);
 
         // Handle authors array from pageInfo for regular posts
         const authors = pageInfo?.authors || [];
@@ -668,33 +637,23 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
       }
       case 'category': {
-        console.log('[SocialCard] Rendering category view:', parsed.slug)
         const currentLocale = parsed.locale || localeConfig.defaultLocale
-        console.log('[SocialCard] Parsed result:', parsed)
-        console.log('[SocialCard] Current locale:', currentLocale)
         let title = parsed.slug || 'Category'
         let coverImage: string | undefined
 
-        console.log('[SocialCard] Category case - searching for category with slug:', parsed.slug, 'locale:', currentLocale)
 
         if (siteMap && siteMap.pageInfoMap) {
           const allPages = Object.values(siteMap.pageInfoMap)
-          console.log('[SocialCard] Category case - total pages:', allPages.length)
           
-          const categoryPages = allPages.filter(
+          const pageInfo = allPages.find(
             (p: PageInfo) => p.type === 'Category' && p.slug === parsed.slug && p.language === currentLocale
           )
-          console.log('[SocialCard] Category case - matching categories:', categoryPages.length, categoryPages.map(p => ({title: p.title, coverImage: p.coverImage})))
-
-          const pageInfo = categoryPages[0]
           if (pageInfo) {
             title = pageInfo.title
             coverImage = pageInfo.coverImage || undefined
-            console.log('[SocialCard] Category case - found category:', {title, coverImage})
             
             // Check if we should use original cover image without overlays
             if (pageInfo.useOriginalCoverImage) {
-              console.log('[SocialCard] Category case - using original cover image only')
               return (
                 <Background imageUrl={coverImage} baseUrl={baseUrl} />
               )
@@ -704,7 +663,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
           }
         }
 
-        console.log('[SocialCard] Category final values:', {title, coverImage})
 
         return (
           <Background imageUrl={coverImage} baseUrl={baseUrl}>
@@ -722,10 +680,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
       }
 
       case 'tag': {
-        console.log('[SocialCard] Rendering tag view:', parsed.tag)
-        
-        // For tag pages, always use default background
-        console.log('[SocialCard] Tag case - using default background')
         
         // Decode URL-encoded tag
         const decodedTag = parsed.tag ? decodeURIComponent(parsed.tag) : 'Tag';
@@ -746,7 +700,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
       }
 
       case 'all-tags': 
-        console.log('[SocialCard] Rendering all-tags view')
         return (
           <Background baseUrl={baseUrl}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -762,7 +715,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
 
       default:
-        console.log('[SocialCard] Rendering default root view')
         return (
           <Background baseUrl={baseUrl}>
             <TitleBrand iconUrl={iconUrl} baseUrl={baseUrl} />
