@@ -4,8 +4,8 @@ import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { SocialCard, SocialCardProps } from '@/components/SocialCard'
-import siteConfig from 'site.config'
+import { SocialCard, SocialCardProps } from '../components/SocialCard'
+import siteConfig from '../site.config.ts'
 
 // Browser instance cache for reuse
 let cachedBrowser: Browser | null = null

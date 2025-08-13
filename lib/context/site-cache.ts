@@ -1,5 +1,5 @@
-import type { SiteMap } from './types'
-import { getSiteMap } from './get-site-map'
+import type { SiteMap } from './types.ts'
+import { getSiteMap } from './get-site-map.ts'
 
 let siteMapCache: SiteMap | null = null
 let lastUpdated = 0

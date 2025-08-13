@@ -1,5 +1,5 @@
-import { getCachedSiteMap } from '../lib/context/site-cache.js';
-import { generateSocialImage } from '../lib/og-images-manager.js';
+import { getCachedSiteMap } from '../lib/context/site-cache.ts';
+import { generateSocialImage } from '../lib/og-images-manager.ts';
 
 async function main() {
   console.log('[Gen Social Images] Starting build-time social image generation...');
