@@ -446,6 +446,88 @@ export class SocialImageManager {
     }
   }
 
+  private async cleanupOrphanedFiles(siteMap: SiteMap, tagGraph: any): Promise<void> {
+    console.log('[SocialImageManager] Starting proactive cleanup of orphaned files...');
+    
+    const { localeList } = localeConfig;
+    const baseDir = path.join(process.cwd(), 'public', 'social-images');
+    
+    for (const locale of localeList) {
+      await this.cleanupOrphanedFilesForLocale(siteMap, tagGraph, locale, baseDir);
+    }
+    
+    console.log('[SocialImageManager] Proactive cleanup completed');
+  }
+
+  private async cleanupOrphanedFilesForLocale(siteMap: SiteMap, tagGraph: any, locale: string, baseDir: string): Promise<void> {
+    const localeDir = path.join(baseDir, locale);
+    
+    try {
+      // Get current valid pages and tags for this locale
+      const validPages = this.getValidPagesForLocale(siteMap, locale);
+      const validTags = this.getValidTagsForLocale(tagGraph, locale);
+      
+      // Cleanup post/category files
+      await this.cleanupDirectory(path.join(localeDir, 'post'), validPages.posts);
+      await this.cleanupDirectory(path.join(localeDir, 'category'), validPages.categories);
+      
+      // Cleanup tag files
+      await this.cleanupDirectory(path.join(localeDir, 'tag'), validTags);
+      
+    } catch (err: any) {
+      if (err.code !== 'ENOENT') {
+        console.error(`[SocialImageManager] Error during cleanup for locale ${locale}:`, err);
+      }
+    }
+  }
+
+  private getValidPagesForLocale(siteMap: SiteMap, locale: string): { posts: Set<string>, categories: Set<string> } {
+    const posts = new Set<string>();
+    const categories = new Set<string>();
+    
+    for (const [_pageId, page] of Object.entries(siteMap.pageInfoMap || {})) {
+      if (page.language === locale && page.slug) {
+        const filename = `${page.slug}.jpg`;
+        if (page.type === 'Post' || page.type === 'Home') {
+          posts.add(filename);
+        } else if (page.type === 'Category') {
+          categories.add(filename);
+        }
+      }
+    }
+    
+    return { posts, categories };
+  }
+
+  private getValidTagsForLocale(tagGraph: any, locale: string): Set<string> {
+    const validTags = new Set<string>();
+    const localeTags = tagGraph?.locales?.[locale]?.tagCounts || {};
+    
+    for (const tag of Object.keys(localeTags)) {
+      validTags.add(`${encodeURIComponent(tag)}.jpg`);
+    }
+    
+    return validTags;
+  }
+
+  private async cleanupDirectory(dirPath: string, validFiles: Set<string>): Promise<void> {
+    try {
+      const files = await fs.readdir(dirPath);
+      
+      for (const file of files) {
+        if (file.endsWith('.jpg') && !validFiles.has(file)) {
+          const filePath = path.join(dirPath, file);
+          console.log(`[SocialImageManager] Deleting orphaned file: ${filePath}`);
+          await this.deleteImage(filePath);
+        }
+      }
+    } catch (err: any) {
+      if (err.code !== 'ENOENT') {
+        console.error(`[SocialImageManager] Error reading directory ${dirPath}:`, err);
+      }
+    }
+  }
+
   private async deleteTagImages(removedTags: string[], locale: string) {
     const socialImagesDir = path.join(process.cwd(), 'public', 'social-images', locale, 'tag');
     
@@ -513,7 +595,12 @@ export class SocialImageManager {
     const pagesToUpdate: PageInfo[] = [];
     const pagesToDelete: PageInfo[] = [];
     const tagsToAdd: string[] = [];
-    const tagsToDelete: string[] = [];
+    const tagsToDelete: Record<string, string[]> = {};
+
+    // Initialize tagsToDelete for each locale
+    for (const locale of localeList) {
+      tagsToDelete[locale] = [];
+    }
 
     // Compare pages
     const oldPages = this.previousSiteMap?.pageInfoMap || {};
@@ -570,7 +657,7 @@ export class SocialImageManager {
       for (const tag of Object.keys(oldTags)) {
         if (!newTags[tag]) {
           console.log(`[SocialImageManager] Tag removed: ${tag} from ${locale}`);
-          tagsToDelete.push(tag);
+          tagsToDelete[locale].push(tag);
         }
       }
     }
@@ -712,9 +799,8 @@ export class SocialImageManager {
       console.error('[SocialImageManager] Failed to delete page images:', err);
     });
     for (const locale of localeList) {
-      await this.deleteTagImages(tagsToDelete.filter(tag => 
-        tagGraph?.locales?.[locale]?.tagCounts?.[tag] !== undefined
-      ), locale).catch(err => {
+      console.log(`[SocialImageManager] Deleting ${tagsToDelete[locale].length} removed tags for locale ${locale}`);
+      await this.deleteTagImages(tagsToDelete[locale], locale).catch(err => {
         console.error(`[SocialImageManager] Failed to delete tag images for locale ${locale}:`, err);
       });
     }
