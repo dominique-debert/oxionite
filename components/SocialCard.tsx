@@ -706,34 +706,12 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
 
       case 'tag': {
         console.log('[SocialCard] Rendering tag view:', parsed.tag)
-        let tagCoverImage: string | undefined
         
-        console.log('[SocialCard] Tag case - searching for pages with tag:', parsed.tag)
-
-        if (siteMap && siteMap.pageInfoMap) {
-          const allPages = Object.values(siteMap.pageInfoMap)
-          console.log('[SocialCard] Tag case - total pages:', allPages.length)
-          
-          // Find a page with this tag to use its cover image
-          const pagesWithTag = allPages.filter(
-            (p: PageInfo) => p.tags && p.tags.includes(parsed.tag || '')
-          )
-          console.log('[SocialCard] Tag case - pages with this tag:', pagesWithTag.length, pagesWithTag.map(p => ({title: p.title, coverImage: p.coverImage})))
-          
-          if (pagesWithTag.length > 0) {
-            tagCoverImage = pagesWithTag[0].coverImage || undefined
-            console.log('[SocialCard] Tag case - using cover image from:', pagesWithTag[0].title, 'coverImage:', tagCoverImage)
-          } else {
-            console.log('[SocialCard] Tag case - no pages found with this tag')
-          }
-        } else {
-          console.log('[SocialCard] Tag case - siteMap not available')
-        }
-        
-        console.log('[SocialCard] Tag case - final tagCoverImage:', tagCoverImage)
+        // For tag pages, always use default background
+        console.log('[SocialCard] Tag case - using default background')
         
         return (
-          <Background imageUrl={tagCoverImage} baseUrl={baseUrl}>
+          <Background baseUrl={baseUrl}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <TitleIcon
                 icon={<FaTag />}
