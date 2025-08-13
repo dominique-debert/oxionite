@@ -31,13 +31,51 @@ export default withBundleAnalyzer({
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;"
   },
 
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     const dirname = path.dirname(fileURLToPath(import.meta.url))
     config.resolve.alias.react = path.resolve(dirname, 'node_modules/react')
     config.resolve.alias['react-dom'] = path.resolve(
       dirname,
       'node_modules/react-dom'
     )
+    
+    // Exclude Node.js modules from client bundle
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        path: false,
+        os: false,
+        crypto: false,
+        stream: false,
+        util: false,
+        zlib: false,
+        http: false,
+        https: false,
+        url: false,
+        querystring: false,
+        punycode: false,
+        string_decoder: false,
+        buffer: false,
+        'node:fs': false,
+        'node:path': false,
+        'node:os': false,
+        'node:crypto': false,
+        'node:stream': false,
+        'node:util': false,
+        'node:zlib': false,
+        'node:http': false,
+        'node:https': false,
+        'node:url': false,
+        'node:querystring': false,
+        'node:punycode': false,
+        'node:string_decoder': false,
+        'node:buffer': false,
+      }
+    }
+    
     return config
   },
 

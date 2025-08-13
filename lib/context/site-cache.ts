@@ -1,6 +1,7 @@
 import type { SiteMap } from './types.ts'
 import { getSiteMap } from './get-site-map.ts'
 
+
 let siteMapCache: SiteMap | null = null
 let lastUpdated = 0
 let cacheUpdatePromise: Promise<SiteMap> | null = null
@@ -13,6 +14,19 @@ async function fetchAndCacheSiteMap(): Promise<SiteMap> {
   siteMapCache = newSiteMap
   lastUpdated = Date.now()
   console.log('DEBUG: Cache updated successfully.')
+  
+  // Trigger social image sync after site map update (server-side only)
+  if (typeof window === 'undefined') {
+    void (async () => {
+      try {
+        const { syncSocialImagesWithSiteMap } = await import('../og-images-manager')
+        await syncSocialImagesWithSiteMap(newSiteMap)
+      } catch (err) {
+        console.error('Failed to sync social images:', err)
+      }
+    })()
+  }
+  
   return newSiteMap
 }
 
