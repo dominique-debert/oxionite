@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import { useState, useEffect } from 'react'
 
 import type * as types from '@/lib/context/types'
 import * as config from '@/lib/config'
@@ -17,12 +18,23 @@ export function PageHead({
   image?: string
   url?: string
 }) {
+  const [socialImageUrl, setSocialImageUrl] = useState(image)
+
+  useEffect(() => {
+    async function fetchSocialImageUrl() {
+      if (pageId) {
+        const url = await getSocialImageUrl(pageId)
+        setSocialImageUrl(url || image)
+      }
+    }
+
+    void fetchSocialImageUrl()
+  }, [pageId, image])
+
   const rssFeedUrl = `${config.host}/feed`
 
   title = title ?? site?.name
   description = description ?? site?.description
-
-  const socialImageUrl = getSocialImageUrl(pageId) || image
 
   return (
     <Head>

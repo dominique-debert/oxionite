@@ -1,16 +1,12 @@
-import { api, host } from './config'
+import { getCachedSiteMap } from './context/site-cache';
 
-export function getSocialImageUrl(pageId: string | undefined) {
-  try {
-    const url = new URL(api.getSocialImage, host)
+export async function getSocialImageUrl(pageId: string): Promise<string | null> {
+  const siteMap = await getCachedSiteMap();
+  const page = Object.values(siteMap.pageInfoMap).find(p => p.pageId === pageId);
 
-    if (pageId) {
-      url.searchParams.set('id', pageId)
-      return url.toString()
-    }
-  } catch (err: any) {
-    console.warn('error invalid social image url', pageId, err.message)
+  if (page && page.slug) {
+    return `/social-images/${page.slug}.png`;
   }
 
-  return null
+  return null;
 }
