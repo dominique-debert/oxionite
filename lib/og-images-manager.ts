@@ -1,4 +1,4 @@
-import puppeteer, { type Browser } from 'puppeteer-core'
+import puppeteer, { type Browser } from 'puppeteer'
 import chromium from '@sparticuz/chromium'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
@@ -72,8 +72,8 @@ export async function getBrowser(): Promise<Browser> {
         executablePath,
       })
     } else {
-      console.log('[getBrowser] Using local Puppeteer - auto-detecting browser')
-      // For local development and npm run start, use system Chrome/Chromium
+      console.log('[getBrowser] Using local Puppeteer - bundled browser')
+      // For local development, use the browser bundled with the puppeteer package.
       browserPromise = puppeteer.launch({
         headless: true,
         args: [
@@ -91,8 +91,7 @@ export async function getBrowser(): Promise<Browser> {
           '--disable-extensions',
           '--disable-plugins',
         ],
-        // Let puppeteer auto-detect the browser - this will use local Chrome/Chromium
-        executablePath: undefined,
+        executablePath: puppeteer.executablePath(),
       })
     }
 
