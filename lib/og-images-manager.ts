@@ -109,7 +109,7 @@ export async function getBrowser(): Promise<Browser> {
       errno: (err as NodeJS.ErrnoException).errno,
       syscall: (err as NodeJS.ErrnoException).syscall,
       message: (err as Error).message
-    })
+    });
     
     // Provide helpful error message for ENOEXEC
     if ((err as NodeJS.ErrnoException).code === 'ENOEXEC') {
@@ -130,112 +130,77 @@ export async function renderSocialImage(
   browser: Browser,
   props: SocialCardProps
 ): Promise<Buffer> {
-  console.log('[SocialImage Renderer] Rendering with props:', {
-    url: props.url,
-    baseUrl: props.baseUrl,
-    imageUrl: props.imageUrl,
-    hasSiteMap: !!props.siteMap,
-    siteMapPageCount: props.siteMap?.pageInfoMap ? Object.keys(props.siteMap.pageInfoMap).length : 0
-  })
-
-  const element = React.createElement(SocialCard, props)
-  const html = ReactDOMServer.renderToStaticMarkup(element)
-  console.log('[SocialImage Renderer] Generated HTML length:', html.length)
-  console.log('[SocialImage Renderer] HTML preview:', html.slice(0, 500) + '...')
-
   if (!browser.isConnected()) {
     throw new Error('Browser is not connected.')
   }
 
   const page = await browser.newPage()
 
-  // Enable request interception to handle local file loading
+  // Optimize: Disable unnecessary features for faster rendering
   await page.setRequestInterception(true);
   
-  page.on('request', async (request) => {
-    const url = new URL(request.url());
-
-    // For local development, serve files from the public directory
-    if (props.baseUrl?.includes('localhost') && url.origin === props.baseUrl) {
-      const filePath = path.join(process.cwd(), 'public', url.pathname);
-      try {
-        const fileContent = await fs.readFile(filePath);
-        const ext = path.extname(filePath).toLowerCase();
-        let contentType = 'application/octet-stream';
-        if (ext === '.png') contentType = 'image/png';
-        else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
-        else if (ext === '.webp') contentType = 'image/webp';
-        
-        await request.respond({
-          status: 200,
-          contentType,
-          body: fileContent
-        });
-        return;
-      } catch {
-        // File not found, abort the request
-        console.log(`[Puppeteer Request] Local file not found, aborting: ${filePath}`);
-        await request.abort();
-        return;
-      }
-    }
+  // Block unnecessary resource types for faster loading
+  const blockedResourceTypes = ['stylesheet', 'font', 'script', 'image'];
+  
+  page.on('request', (request) => {
+    const resourceType = request.resourceType();
+    const url = request.url();
     
-    console.log(`[Puppeteer Request] ${request.url()}`);
-    // Allow all other requests to proceed
-    await request.continue();
+    // Allow only essential resources
+    if (resourceType === 'document' || 
+        (resourceType === 'image' && (url.includes('.png') || url.includes('.jpg') || url.includes('.jpeg') || url.includes('.webp')))) {
+      request.continue();
+    } else {
+      request.abort();
+    }
   });
-
-  // Capture console logs from the page and forward them to the terminal
-  page
-    .on('console', (message) =>
-      console.log(`[Puppeteer Console] ${message.type().slice(0, 3).toUpperCase()} ${message.text()}`)
-    )
-    .on('pageerror', ({ message }) => console.log(`[Puppeteer Page Error] ${message}`))
-    .on('requestfailed', (request) =>
-      console.log(`[Puppeteer Request Failed] ${request.failure()?.errorText} ${request.url()}`)
-    )
-    .on('response', (response) =>
-      console.log(`[Puppeteer Response] ${response.status()} ${response.url()}`)
-    )
 
   try {
     await page.setViewport({ width: 1200, height: 630 })
     
     const baseUrl = props.baseUrl || `https://${siteConfig.domain}`;
-    console.log('[SocialImage Renderer] Using base URL:', baseUrl);
-    await page.setContent(html, {
-      waitUntil: 'networkidle0',
-      // Set base URL so relative image paths resolve correctly
+    
+    // Generate HTML once and reuse
+    const element = React.createElement(SocialCard, props)
+    const html = ReactDOMServer.renderToStaticMarkup(element)
+    
+    // Optimized HTML with base URL injected directly
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <base href="${baseUrl}">
+          <meta charset="utf-8">
+          <style>
+            body { margin: 0; padding: 0; }
+          </style>
+        </head>
+        <body>
+          ${html}
+        </body>
+      </html>
+    `;
+
+    await page.setContent(fullHtml, {
+      waitUntil: 'domcontentloaded', // Faster than networkidle0
+      timeout: 5000 // Reduced timeout
     })
 
-    // The HTML is already set via setContent, no need to manually inject it
-    // This prevents the ReferenceError: html is not defined in page.evaluate context
-
-    // Inject base URL for image resources
-    await page.evaluate((base) => {
-      const baseElement = document.createElement('base');
-      baseElement.href = base;
-      document.head.append(baseElement);
-      console.log('[SocialImage Renderer] Injected base URL:', base);
-    }, baseUrl);
-
-    // Wait for images to load with extended timeout
-    await page.waitForSelector('img', { timeout: 10_000 }).catch(() => {
-      console.log('[SocialImage Renderer] No images found or timeout');
-    });
-
-    // Wait for network to be idle (images loaded) with longer idle time
-    await page.waitForNetworkIdle({ idleTime: 2000 }).catch(() => {
-      console.log('[SocialImage Renderer] Network idle timeout');
-    });
-
-    // Wait for all fonts to be loaded
-    await page.evaluateHandle('document.fonts.ready')
+    // Minimal wait for fonts only if needed
+    try {
+      await page.evaluateHandle('document.fonts.ready')
+    } catch {
+      // Continue if fonts fail to load
+    }
     
-    // Additional wait for any remaining resources
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Reduced wait time for stability
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    const screenshotData = await page.screenshot({ type: 'png' })
+    const screenshotData = await page.screenshot({ 
+      type: 'png',
+      omitBackground: false
+    })
+    
     if (!screenshotData) {
       throw new Error('Failed to create screenshot')
     }
@@ -259,13 +224,11 @@ export async function generateSocialImage(
     await fs.mkdir(socialImagesDir, { recursive: true });
     // Check if file exists
     await fs.access(imagePath);
-    console.log(`[SocialImage] Image at '${imagePath}' already exists. Skipping generation.`);
     return publicUrl;
   } catch {
     // File doesn't exist, so we'll generate it.
   }
 
-  console.log(`[SocialImage] Generating image for URL '${props.url}'...`);
   try {
     const browser = await getBrowser();
     // Base URL for resolving assets inside Puppeteer
@@ -277,7 +240,6 @@ export async function generateSocialImage(
     });
     
     await fs.writeFile(imagePath, imageBuffer);
-    console.log(`[SocialImage] Successfully generated image at ${imagePath}`);
     return publicUrl;
   } catch (err) {
     console.error(`[SocialImage] Failed to generate image for URL '${props.url}':`, err);
