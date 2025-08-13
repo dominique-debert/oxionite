@@ -264,7 +264,7 @@ export function NotionPageContent({
                 isBlogPost={isBlogPost} // Still needed for internal logic in PostHeader
                 isMobile={isMobile}
                 variant={isBlogPost ? 'full' : 'simple'}
-                useOriginalCoverImage={pageInfo?.useOriginalCoverImage ?? true}
+                useOriginalCoverImage={pageInfo?.useOriginalCoverImage ?? false}
               />
             )}
             

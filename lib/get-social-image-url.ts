@@ -1,15 +1,24 @@
 import { getCachedSiteMap } from './context/site-cache';
+import type { SiteMap, PageInfo } from './context/types';
 
 export async function getSocialImageUrl(
-  pageId: string
+  pageId: string,
+  siteMap?: SiteMap
 ): Promise<string | null> {
   try {
     console.log('[getSocialImageUrl] Starting with pageId:', pageId)
-    const siteMap = await getCachedSiteMap();
-    const page = Object.values(siteMap.pageInfoMap).find(p => p.pageId === pageId);
+    const currentSiteMap = siteMap || await getCachedSiteMap();
+    
+    // Normalize pageId by removing dashes for comparison
+    const normalizedPageId = pageId.replace(/-/g, '');
+    
+    const page = Object.values(currentSiteMap.pageInfoMap).find((p: PageInfo) => {
+      const normalizedMapPageId = p.pageId.replace(/-/g, '');
+      return normalizedMapPageId === normalizedPageId;
+    });
 
     if (!page || !page.slug) {
-      console.log('[getSocialImageUrl] Page not found or no slug:', { pageId, hasPage: !!page, hasSlug: !!page?.slug })
+      console.log('[getSocialImageUrl] Page not found or no slug:', { pageId, normalizedPageId, hasPage: !!page, hasSlug: !!page?.slug })
       return null;
     }
 

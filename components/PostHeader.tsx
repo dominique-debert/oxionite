@@ -23,10 +23,11 @@ interface PostHeaderProps {
 export function PostHeader({ 
   block, 
   recordMap, 
+  siteMap,
   isBlogPost,
   isMobile = false,
   variant = 'full', // Default to 'full'
-  useOriginalCoverImage = true // Default to true for backward compatibility
+  useOriginalCoverImage = false // Default to true for backward compatibility
 }: PostHeaderProps) {
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
   const [socialImageUrl, setSocialImageUrl] = useState<string | null>(null)
@@ -43,7 +44,9 @@ export function PostHeader({
     if (!useOriginalCoverImage && block?.id) {
       console.log('[PostHeader] Fetching social image for block:', block.id)
       setIsLoadingSocialImage(true)
-      getSocialImageUrl(block.id)
+      
+      const fetchPromise = siteMap ? getSocialImageUrl(block.id, siteMap) : getSocialImageUrl(block.id)
+      fetchPromise
         .then(url => {
           console.log('[PostHeader] Social image URL received:', url)
           setSocialImageUrl(url)
@@ -61,7 +64,7 @@ export function PostHeader({
         blockId: block?.id
       })
     }
-  }, [useOriginalCoverImage, block?.id])
+  }, [useOriginalCoverImage, block?.id, siteMap, block])
 
   // For 'full' variant, we require it to be a blog post from a collection
   if (variant === 'full' && (!isBlogPost || !block || block.parent_table !== 'collection')) {

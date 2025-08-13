@@ -56,7 +56,6 @@ export const getStaticPaths: GetStaticPaths = async () => {
       
       // Skip pages without required properties
       if (!pageId || !pageInfo.title || !pageInfo.type) {
-        console.log(`[BUILD] Skipping page - missing required properties: pageId=${pageId}, title=${pageInfo.title}, type=${pageInfo.type}`)
         return
       }
 
@@ -68,7 +67,6 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
       // Skip subpages - they are not in sitemap and handled dynamically
       if (pageInfo.parentPageId) {
-        console.log(`[BUILD] Skipping subpage (not in sitemap): ${pageInfo.title}`)
         return
       }
 
