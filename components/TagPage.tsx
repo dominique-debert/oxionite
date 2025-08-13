@@ -9,9 +9,10 @@ import siteConfig from '../site.config'
 export interface TagPageProps {
   pageProps: types.PageProps
   tag: string
+  isMobile?: boolean
 }
 
-export function TagPage({ pageProps, tag }: TagPageProps) {
+export function TagPage({ pageProps, tag, isMobile }: TagPageProps) {
   const { siteMap } = pageProps
   const router = useRouter()
   const locale = router.locale
@@ -60,6 +61,7 @@ export function TagPage({ pageProps, tag }: TagPageProps) {
       description={t('postsTaggedWithCount', { count: postsWithTag.length })}
       emptyMessage={t('noPostsFound')}
       emptyDescription={`${t('noPostsWithTag')} "${tag}"`}
+      isMobile={isMobile}
     />
   )
 }

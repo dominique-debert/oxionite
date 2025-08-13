@@ -9,6 +9,7 @@ import { useDarkMode } from '@/lib/use-dark-mode'
 
 interface CategoryPageProps {
   pageProps: types.PageProps
+  isMobile?: boolean
 }
 
 interface PostItem {
@@ -59,7 +60,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
 
 
 
-export function CategoryPage({ pageProps }: CategoryPageProps) {
+export function CategoryPage({ pageProps, isMobile }: CategoryPageProps) {
   const { siteMap, pageId } = pageProps
   const router = useRouter()
   const { isDarkMode: _isDarkMode } = useDarkMode()
@@ -138,6 +139,7 @@ export function CategoryPage({ pageProps }: CategoryPageProps) {
       description={t('totalPostsCount', { count: formattedPosts.length })}
       emptyMessage={t('noPosts')}
       emptyDescription={t('noPostsDescription')}
+      isMobile={isMobile}
     />
   )
 }

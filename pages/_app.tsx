@@ -35,8 +35,8 @@ import { appWithTranslation } from 'next-i18next'
 import { getBlockTitle } from 'notion-utils'
 import { PageHead } from '@/components/PageHead'
 
-const SHOW_DEBUG_CONTROLS = true
-const SHOW_DEBUG_SOCIAL_IMAGE = true
+const SHOW_DEBUG_CONTROLS = false
+const SHOW_DEBUG_SOCIAL_IMAGE = false
 
 const notoKR = Noto_Sans_KR({
   subsets: ['latin'],

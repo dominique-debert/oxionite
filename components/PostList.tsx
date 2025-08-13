@@ -21,6 +21,7 @@ export interface PostListProps {
   description?: string
   emptyMessage?: string
   emptyDescription?: string
+  isMobile?: boolean
 }
 
 // Format date
@@ -88,7 +89,8 @@ export function PostList({
   title, 
   description, 
   emptyMessage = "No posts found.",
-  emptyDescription = "Try checking back later or explore other categories."
+  emptyDescription = "Try checking back later or explore other categories.",
+  isMobile = false
 }: PostListProps) {
   const [currentPage, setCurrentPage] = React.useState(1)
 
@@ -100,7 +102,8 @@ export function PostList({
 
   const getPageNumbers = () => {
     const pageNumbers = []
-    const maxVisiblePages = 5
+    const maxVisiblePages = isMobile ? 5 : 10
+    const middlePages = isMobile ? 3 : 8
     
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
@@ -109,19 +112,46 @@ export function PostList({
     } else {
       pageNumbers.push(1)
       
-      if (currentPage > 3) {
-        pageNumbers.push('...')
+      // Calculate how many pages to show in the middle section
+      let start, end
+      
+      if (currentPage <= Math.floor(middlePages / 2) + 1) {
+        // Near the beginning: show pages 2 to middlePages + 1
+        start = 2
+        end = Math.min(middlePages + 1, totalPages - 1)
+      } else if (currentPage >= totalPages - Math.floor(middlePages / 2)) {
+        // Near the end: show pages from totalPages - middlePages to totalPages - 1
+        start = Math.max(totalPages - middlePages, 2)
+        end = totalPages - 1
+      } else {
+        // Middle section: center around currentPage
+        start = Math.max(currentPage - Math.floor(middlePages / 2), 2)
+        end = Math.min(currentPage + Math.floor(middlePages / 2), totalPages - 1)
       }
       
-      const start = Math.max(2, currentPage - 1)
-      const end = Math.min(totalPages - 1, currentPage + 1)
+      // Adjust if we don't have enough pages
+      if (end - start + 1 < middlePages) {
+        if (start === 2) {
+          end = Math.min(start + middlePages - 1, totalPages - 1)
+        } else {
+          start = Math.max(end - middlePages + 1, 2)
+        }
+      }
+      
+      if (start > 2) {
+        pageNumbers.push('...')
+      } else if (start === 2 && totalPages > maxVisiblePages) {
+        // No ellipsis needed if we're showing from page 2
+      }
       
       for (let i = start; i <= end; i++) {
         pageNumbers.push(i)
       }
       
-      if (currentPage < totalPages - 2) {
+      if (end < totalPages - 1) {
         pageNumbers.push('...')
+      } else if (end === totalPages - 1 && totalPages > maxVisiblePages) {
+        // No ellipsis needed if we're showing up to totalPages - 1
       }
       
       pageNumbers.push(totalPages)

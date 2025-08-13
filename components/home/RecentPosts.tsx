@@ -7,7 +7,7 @@ interface RecentPostsProps {
   siteMap?: SiteMap
 }
 
-export default function RecentPosts({ siteMap }: RecentPostsProps) {
+export default function RecentPosts({ siteMap, isMobile }: RecentPostsProps & { isMobile?: boolean }) {
   const recentPosts = React.useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap)
@@ -30,6 +30,7 @@ export default function RecentPosts({ siteMap }: RecentPostsProps) {
       postsPerPage={6}
       emptyMessage="No recent posts found."
       emptyDescription="Check back later for new content."
+      isMobile={isMobile}
     />
   )
-} 
+}

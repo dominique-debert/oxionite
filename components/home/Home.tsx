@@ -64,7 +64,7 @@ export function Home({
   const renderTabs = () => {
     switch (activeTab) {
       case 'recentPosts':
-        return <RecentPosts siteMap={siteMap} />
+        return <RecentPosts siteMap={siteMap} isMobile={isMobile} />
       case 'graphView':
         return <UnifiedGraphView siteMap={siteMap} viewType="home" />
       case 'allTags':
@@ -117,4 +117,4 @@ export function Home({
       )}
     </>
   )
-} 
+}

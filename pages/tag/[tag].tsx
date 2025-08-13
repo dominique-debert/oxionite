@@ -15,14 +15,14 @@ export interface TagPageProps {
   tag: string
 }
 
-export default function TagSlugPage({ site, siteMap, tag }: TagPageProps) {
+export default function TagSlugPage({ site, siteMap, tag, isMobile }: TagPageProps & { isMobile?: boolean }) {
   const pageProps: types.PageProps = {
     site,
     siteMap,
     pageId: `tag-${tag}`,
   }
 
-  return <TagPage pageProps={pageProps} tag={tag} />
+  return <TagPage pageProps={pageProps} tag={tag} isMobile={isMobile} />
 }
 
 export const getStaticPaths: GetStaticPaths = async (): Promise<any> => {

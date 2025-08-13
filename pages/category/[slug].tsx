@@ -17,7 +17,7 @@ export interface CategoryPageProps {
   isPrivate?: boolean
 }
 
-export default function CategorySlugPage({ site, siteMap, pageId, isPrivate }: CategoryPageProps) {
+export default function CategorySlugPage({ site, siteMap, pageId, isPrivate, isMobile }: CategoryPageProps & { isMobile?: boolean }) {
   if (isPrivate) {
     return (
       <div style={{ 
@@ -39,7 +39,7 @@ export default function CategorySlugPage({ site, siteMap, pageId, isPrivate }: C
     pageId,
   }
 
-  return <CategoryPage pageProps={pageProps} />
+  return <CategoryPage pageProps={pageProps} isMobile={isMobile} />
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
