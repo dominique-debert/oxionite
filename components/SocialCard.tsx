@@ -721,18 +721,21 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
       }
 
-      case 'tag':
+      case 'tag': {
         console.log('[SocialCard] Rendering tag view:', parsed.tag)
         
         // For tag pages, always use default background
         console.log('[SocialCard] Tag case - using default background')
+        
+        // Decode URL-encoded tag
+        const decodedTag = parsed.tag ? decodeURIComponent(parsed.tag) : 'Tag';
         
         return (
           <Background baseUrl={baseUrl}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <TitleIcon
                 icon={<FaTag />}
-                text={`#${parsed.tag || 'Tag'}`}
+                text={`#${decodedTag}`}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
                 <PillText iconUrl={iconUrl} text={siteConfig.name} baseUrl={baseUrl} />
@@ -740,6 +743,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             </div>
           </Background>
         )
+      }
 
       case 'all-tags': 
         console.log('[SocialCard] Rendering all-tags view')
