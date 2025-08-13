@@ -714,7 +714,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 text={title}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillText iconUrl={iconUrl} text={siteConfig.name} />
+                <PillText iconUrl={iconUrl} text={siteConfig.name} baseUrl={baseUrl} />
               </div>
             </div>
           </Background>
@@ -735,7 +735,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 text={`#${parsed.tag || 'Tag'}`}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillText iconUrl={iconUrl} text={siteConfig.name} />
+                <PillText iconUrl={iconUrl} text={siteConfig.name} baseUrl={baseUrl} />
               </div>
             </div>
           </Background>
@@ -751,7 +751,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
                 text={t('allTags')}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
-                <PillText iconUrl={iconUrl} text={siteConfig.name} />
+                <PillText iconUrl={iconUrl} text={siteConfig.name} baseUrl={baseUrl} />
               </div>
             </div>
           </Background>

@@ -4,6 +4,8 @@ import { buildTagGraphData } from '../lib/context/tag-graph.ts';
 import localeConfig from '../site.locale.json' with { type: 'json' };
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import http from 'node:http';
+import handler from 'serve-handler';
 
 async function main() {
   console.log('[Gen Social Images] Starting optimized build-time social image generation...');
@@ -35,8 +37,8 @@ async function main() {
 
     // 1. Root page
     const rootUrl = locale === defaultLocale ? '/' : `/${locale}`;
-    const rootPath = path.join(socialImagesDir, 'root.png');
-    const rootPublicUrl = `/social-images/${locale}/root.png`;
+    const rootPath = path.join(socialImagesDir, 'root.jpg');
+    const rootPublicUrl = `/social-images/${locale}/root.jpg`;
     
     if (!await fileExists(rootPath)) {
       imageTasks.push({
@@ -49,8 +51,8 @@ async function main() {
 
     // 2. All-tags page
     const allTagsUrl = `/${locale}/all-tags`;
-    const allTagsPath = path.join(socialImagesDir, 'all-tags.png');
-    const allTagsPublicUrl = `/social-images/${locale}/all-tags.png`;
+    const allTagsPath = path.join(socialImagesDir, 'all-tags.jpg');
+    const allTagsPublicUrl = `/social-images/${locale}/all-tags.jpg`;
     
     if (!await fileExists(allTagsPath)) {
       imageTasks.push({
@@ -68,8 +70,8 @@ async function main() {
     for (const page of posts) {
       if (page.slug) {
         const postUrl = `/${locale}/post/${page.slug}`;
-        const postPath = path.join(socialImagesDir, 'post', `${page.slug}.png`);
-        const postPublicUrl = `/social-images/${locale}/post/${page.slug}.png`;
+        const postPath = path.join(socialImagesDir, 'post', `${page.slug}.jpg`);
+        const postPublicUrl = `/social-images/${locale}/post/${page.slug}.jpg`;
         
         if (!await fileExists(postPath)) {
           imageTasks.push({
@@ -89,8 +91,8 @@ async function main() {
     for (const page of categories) {
       if (page.slug) {
         const categoryUrl = `/${locale}/category/${page.slug}`;
-        const categoryPath = path.join(socialImagesDir, 'category', `${page.slug}.png`);
-        const categoryPublicUrl = `/social-images/${locale}/category/${page.slug}.png`;
+        const categoryPath = path.join(socialImagesDir, 'category', `${page.slug}.jpg`);
+        const categoryPublicUrl = `/social-images/${locale}/category/${page.slug}.jpg`;
         
         if (!await fileExists(categoryPath)) {
           imageTasks.push({
@@ -110,8 +112,8 @@ async function main() {
       for (const tag of tags) {
         const encodedTag = encodeURIComponent(tag);
         const tagUrl = `/${locale}/tag/${encodedTag}`;
-        const tagPath = path.join(socialImagesDir, 'tag', `${encodedTag}.png`);
-        const tagPublicUrl = `/social-images/${locale}/tag/${encodedTag}.png`;
+        const tagPath = path.join(socialImagesDir, 'tag', `${encodedTag}.jpg`);
+        const tagPublicUrl = `/social-images/${locale}/tag/${encodedTag}.jpg`;
         
         if (!await fileExists(tagPath)) {
           imageTasks.push({
@@ -141,13 +143,34 @@ async function main() {
 
   console.log(`[Gen Social Images] Processing ${batchTasks.length} images with optimized batch processing`);
   
-  await generateSocialImagesOptimized(batchTasks, {
-    batchSize: 8, // Increased batch size for better throughput
-    baseUrl: process.env.VERCEL ? `https://${siteConfig.domain}` : 'http://localhost:3000'
-  });
+  // Start local server for serving public assets during build
+  let baseUrl;
+  let server;
+  
+  if (process.env.VERCEL) {
+    // For Vercel deployment, use the actual domain
+    baseUrl = 'https://noxionite.vercel.app';
+  } else {
+    const buildServer = await createBuildServer();
+    server = buildServer.server;
+    baseUrl = buildServer.baseUrl;
+  }
 
-  const totalTime = Date.now() - startTime;
-  console.log(`[Gen Social Images] Finished generating all social images in ${totalTime}ms`);
+  try {
+    await generateSocialImagesOptimized(batchTasks, {
+      batchSize: 8, // Increased batch size for better throughput
+      baseUrl: baseUrl
+    });
+
+    const totalTime = Date.now() - startTime;
+    console.log(`[Gen Social Images] Finished generating all social images in ${totalTime}ms`);
+  } finally {
+    // Clean up server
+    if (server) {
+      server.close();
+      console.log('[Build Server] Stopped');
+    }
+  }
 }
 
 // Helper function to check if file exists
@@ -158,6 +181,25 @@ async function fileExists(filePath) {
   } catch {
     return false;
   }
+}
+
+// Create a simple HTTP server to serve public folder during build
+async function createBuildServer() {
+  const server = http.createServer((request, response) => {
+    return handler(request, response, {
+      public: path.join(process.cwd(), 'public'),
+      cleanUrls: false,
+    });
+  });
+
+  return new Promise((resolve) => {
+    server.listen(0, () => {
+      const port = server.address().port;
+      const baseUrl = `http://localhost:${port}`;
+      console.log(`[Build Server] Started on ${baseUrl}`);
+      resolve({ server, baseUrl });
+    });
+  });
 }
 
 main().catch(console.error);

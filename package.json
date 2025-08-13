@@ -90,6 +90,7 @@
     "npm-run-all2": "^8.0.4",
     "prettier": "^3.5.3",
     "puppeteer": "^24.16.0",
+    "serve-handler": "^6.1.6",
     "tsx": "^4.16.2",
     "typescript": "^5.8.3"
   },

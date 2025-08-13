@@ -5,7 +5,7 @@ export async function getSocialImageUrl(pageId: string): Promise<string | null> 
   const page = Object.values(siteMap.pageInfoMap).find(p => p.pageId === pageId);
 
   if (page && page.slug) {
-    return `/social-images/${page.slug}.png`;
+    return `/social-images/${page.slug}.jpg`;
   }
 
   return null;
