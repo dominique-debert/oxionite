@@ -130,7 +130,7 @@ async function handler(
     })
 
     console.log('[SocialImage API] Generated image buffer length:', imageBuffer.length)
-    res.setHeader('Content-Type', 'image/png')
+    res.setHeader('Content-Type', 'image/jpeg')
     res.setHeader('Cache-Control', 's-maxage=0, stale-while-revalidate')
     res.status(200).end(imageBuffer)
 

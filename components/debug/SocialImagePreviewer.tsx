@@ -45,7 +45,7 @@ export function SocialImagePreviewer() {
         return;
       }
 
-      // Convert PNG response to blob URL for image display
+      // Convert JPEG response to blob URL for image display
       const blob = await response.blob();
       const imageUrl = URL.createObjectURL(blob);
       setPreviewUrl(imageUrl);
@@ -158,7 +158,7 @@ export function SocialImagePreviewer() {
 
         {/* Rendered Image Preview */}
         <div>
-          <h3 style={{ textAlign: 'center', marginBottom: '10px', fontWeight: 'bold' }}>Rendered PNG Preview (Scaled)</h3>
+          <h3 style={{ textAlign: 'center', marginBottom: '10px', fontWeight: 'bold' }}>Rendered JPEG Preview (Scaled)</h3>
           <div style={{ maxWidth: '1200px', margin: '0 auto', aspectRatio: '1200 / 630', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {loading && <p>Loading...</p>}
             {error && <p style={{ color: 'red', padding: '20px' }}>Error: {error}</p>}

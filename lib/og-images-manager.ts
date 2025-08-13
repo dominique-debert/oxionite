@@ -217,7 +217,8 @@ export async function renderSocialImage(
     await new Promise(resolve => setTimeout(resolve, 500));
 
     const screenshotData = await page.screenshot({ 
-      type: 'png',
+      type: 'jpeg',
+      quality: 70,
       omitBackground: false
     })
     
