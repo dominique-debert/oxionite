@@ -153,10 +153,35 @@ export async function renderSocialImage(
   await page.setRequestInterception(true);
   
   page.on('request', async (request) => {
-    const url = request.url();
-    console.log(`[Puppeteer Request] ${url}`);
+    const url = new URL(request.url());
+
+    // For local development, serve files from the public directory
+    if (props.baseUrl?.includes('localhost') && url.origin === props.baseUrl) {
+      const filePath = path.join(process.cwd(), 'public', url.pathname);
+      try {
+        const fileContent = await fs.readFile(filePath);
+        const ext = path.extname(filePath).toLowerCase();
+        let contentType = 'application/octet-stream';
+        if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+        else if (ext === '.webp') contentType = 'image/webp';
+        
+        await request.respond({
+          status: 200,
+          contentType,
+          body: fileContent
+        });
+        return;
+      } catch {
+        // File not found, abort the request
+        console.log(`[Puppeteer Request] Local file not found, aborting: ${filePath}`);
+        await request.abort();
+        return;
+      }
+    }
     
-    // Allow all requests to proceed
+    console.log(`[Puppeteer Request] ${request.url()}`);
+    // Allow all other requests to proceed
     await request.continue();
   });
 
@@ -176,9 +201,7 @@ export async function renderSocialImage(
   try {
     await page.setViewport({ width: 1200, height: 630 })
     
-    // Ensure consistent base URL - use localhost for dev, configured domain for prod
-    const isLocalDev = process.env.NODE_ENV === 'development' || (props.baseUrl && props.baseUrl.includes('localhost'));
-    const baseUrl = isLocalDev ? 'http://localhost:3000' : `https://${siteConfig.domain}`;
+    const baseUrl = props.baseUrl || `https://${siteConfig.domain}`;
     console.log('[SocialImage Renderer] Using base URL:', baseUrl);
     await page.setContent(html, {
       waitUntil: 'networkidle0',
@@ -244,9 +267,7 @@ export async function generateSocialImage(
   console.log(`[SocialImage] Generating image for '${slug}'...`)
   try {
     const browser = await getBrowser()
-    // Use localhost for development, configured domain for production
-    const isDev = process.env.NODE_ENV === 'development'
-    const baseUrl = isDev ? 'http://localhost:3000' : `https://${siteConfig.domain}`
+    const baseUrl = process.env.VERCEL ? `https://${siteConfig.domain}` : 'http://localhost:3000'
 
     const imageBuffer = await renderSocialImage(browser, {
       ...props,
