@@ -7,6 +7,7 @@ import localeConfig from '../site.locale.json'
 import { parseUrlPathname } from '../lib/context/url-parser'
 import type { SiteMap, PageInfo } from '../lib/context/types'
 
+
 // Common components
 const Background: React.FC<{ imageUrl?: string; children?: React.ReactNode; baseUrl?: string }> = ({ imageUrl, children, baseUrl }) => {
   // Ensure we use absolute URLs for server-side rendering
@@ -367,15 +368,31 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
 
   const parsed = parseUrl(url)
 
-  // Simple translation function for static strings
-  const t = (key: string): string => {
-    const translations: Record<string, string> = {
-      'allTags': 'All Tags',
-      'recentPosts': 'Recent Posts',
-      'categories': 'Categories',
-      'tags': 'Tags'
-    }
-    return translations[key] || key
+  // Translation function with hardcoded values to avoid Node.js dependencies
+  const t = (key: string, locale?: string): string => {
+    const targetLocale = locale || parsed.locale || localeConfig.defaultLocale;
+    
+    // Check if locale exists in localeList
+    const isValidLocale = localeConfig.localeList.includes(targetLocale);
+    const finalLocale = isValidLocale ? targetLocale : localeConfig.defaultLocale;
+    
+    // Hardcoded translations to avoid Node.js dependencies
+    const translations: Record<string, Record<string, string>> = {
+      'en': {
+        'allTags': 'All Tags',
+        'recentPosts': 'Recent Posts',
+        'categories': 'Categories',
+        'tags': 'Tags'
+      },
+      'ko': {
+        'allTags': '모든 태그',
+        'recentPosts': '최근 게시물',
+        'categories': '카테고리',
+        'tags': '태그'
+      }
+    };
+    
+    return translations[finalLocale]?.[key] || translations.en?.[key] || key;
   }
 
   const renderContent = () => {
@@ -704,7 +721,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
         )
       }
 
-      case 'tag': {
+      case 'tag':
         console.log('[SocialCard] Rendering tag view:', parsed.tag)
         
         // For tag pages, always use default background
@@ -723,7 +740,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             </div>
           </Background>
         )
-      }
 
       case 'all-tags': 
         console.log('[SocialCard] Rendering all-tags view')
@@ -740,7 +756,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, imageUrl, 
             </div>
           </Background>
         )
-      
 
       default:
         console.log('[SocialCard] Rendering default root view')
