@@ -248,36 +248,39 @@ export async function renderSocialImage(
 
 // Exported function for file system generation (ISR/build-time)
 export async function generateSocialImage(
-  slug: string,
-  props: SocialCardProps
+  props: SocialCardProps,
+  imagePath: string,
+  publicUrl: string
 ): Promise<string> {
-  const socialImagesDir = path.join(process.cwd(), 'public', 'social-images')
-  const imagePath = path.join(socialImagesDir, `${slug}.png`)
-  const publicUrl = `/social-images/${slug}.png`
+  const socialImagesDir = path.dirname(imagePath);
 
   try {
-    await fs.mkdir(socialImagesDir, { recursive: true })
-    await fs.access(imagePath)
-    console.log(`[SocialImage] Image for '${slug}' already exists. Skipping generation.`)
-    return publicUrl
+    // Use fs.mkdir to create parent directories
+    await fs.mkdir(socialImagesDir, { recursive: true });
+    // Check if file exists
+    await fs.access(imagePath);
+    console.log(`[SocialImage] Image at '${imagePath}' already exists. Skipping generation.`);
+    return publicUrl;
   } catch {
-    // File doesn't exist, proceed to generate it
+    // File doesn't exist, so we'll generate it.
   }
 
-  console.log(`[SocialImage] Generating image for '${slug}'...`)
+  console.log(`[SocialImage] Generating image for URL '${props.url}'...`);
   try {
-    const browser = await getBrowser()
-    const baseUrl = process.env.VERCEL ? `https://${siteConfig.domain}` : 'http://localhost:3000'
+    const browser = await getBrowser();
+    // Base URL for resolving assets inside Puppeteer
+    const baseUrl = process.env.VERCEL ? `https://${siteConfig.domain}` : 'http://localhost:3000';
 
     const imageBuffer = await renderSocialImage(browser, {
       ...props,
       baseUrl
-    })
-    await fs.writeFile(imagePath, imageBuffer)
-    console.log(`[SocialImage] Generated image for '${slug}' at ${imagePath}`)
-    return publicUrl
+    });
+    
+    await fs.writeFile(imagePath, imageBuffer);
+    console.log(`[SocialImage] Successfully generated image at ${imagePath}`);
+    return publicUrl;
   } catch (err) {
-    console.error(`[SocialImage] Failed to generate image for '${slug}':`, err)
-    throw err
+    console.error(`[SocialImage] Failed to generate image for URL '${props.url}':`, err);
+    throw err;
   }
 }
