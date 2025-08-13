@@ -137,10 +137,10 @@ export async function renderSocialImage(
   const page = await browser.newPage()
 
   // Optimize: Disable unnecessary features for faster rendering
-  await page.setRequestInterception(true);
+  await page.setRequestInterception(true).catch(() => {
+    // Ignore if interception fails
+  });
   
-  // Block unnecessary resource types for faster loading
-  const blockedResourceTypes = ['stylesheet', 'font', 'script', 'image'];
   
   page.on('request', (request) => {
     const resourceType = request.resourceType();
@@ -148,15 +148,21 @@ export async function renderSocialImage(
     
     // Allow documents and images (including external domains)
     if (resourceType === 'document' || resourceType === 'image') {
-      request.continue();
+      request.continue().catch(() => {
+        // Ignore continue errors
+      });
     } else {
       // Allow fonts and stylesheets for better rendering
       const allowedExtensions = ['.css', '.woff', '.woff2', '.ttf', '.otf'];
       const hasAllowedExtension = allowedExtensions.some(ext => url.toLowerCase().includes(ext));
       if (hasAllowedExtension) {
-        request.continue();
+        request.continue().catch(() => {
+          // Ignore continue errors
+        });
       } else {
-        request.abort();
+        request.abort().catch(() => {
+          // Ignore abort errors
+        });
       }
     }
   });
@@ -189,7 +195,7 @@ export async function renderSocialImage(
 
     await page.setContent(fullHtml, {
       waitUntil: 'networkidle0', // Wait for network to be idle for external images
-      timeout: 10000 // Increased timeout for external image loading
+      timeout: 10_000 // Increased timeout for external image loading
     })
 
     // Wait for all images to load
@@ -197,7 +203,7 @@ export async function renderSocialImage(
       return Promise.all(
         Array.from(document.images).map(img => {
           if (img.complete) return Promise.resolve();
-          return new Promise((resolve, reject) => {
+          return new Promise((resolve, _reject) => {
             img.addEventListener('load', resolve);
             img.addEventListener('error', resolve); // Resolve on error to prevent hanging
             setTimeout(resolve, 3000); // Timeout after 3 seconds
@@ -208,7 +214,9 @@ export async function renderSocialImage(
 
     // Minimal wait for fonts only if needed
     try {
-      await page.evaluateHandle('document.fonts.ready')
+      await page.evaluateHandle('document.fonts.ready').catch(() => {
+        // Continue if fonts fail to load
+      });
     } catch {
       // Continue if fonts fail to load
     }

@@ -210,15 +210,43 @@ const TitleBrand: React.FC<{ iconUrl: string; baseUrl?: string }> = ({ iconUrl, 
   );
 }
 
-const TitleIcon: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon, text }) => (
-  <div style={{
-    ...COMMON_STYLES.glass,
-    ...COMMON_STYLES.title,
-  }}>
-    <span style={{ display: 'flex', alignItems: 'center', fontSize: '72px', color: 'rgba(255, 255, 255, 0.9)' }}>{icon}</span>
-    <span>{text}</span>
-  </div>
-)
+const TitleIcon: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon, text }) => {
+  const getFontSize = (textLength: number) => {
+    if (textLength <= 10) return '96px';
+    if (textLength <= 15) return '80px';
+    if (textLength <= 20) return '72px';
+    if (textLength <= 25) return '64px';
+    if (textLength <= 30) return '56px';
+    if (textLength <= 35) return '48px';
+    return '42px';
+  };
+
+  const getDisplayText = (text: string) => {
+    const maxLength = 40;
+    return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+  };
+
+  const fontSize = getFontSize(text.length);
+  const displayText = getDisplayText(text);
+
+  return (
+    <div style={{
+      ...COMMON_STYLES.glass,
+      ...COMMON_STYLES.title,
+    }}>
+      <span style={{ display: 'flex', alignItems: 'center', fontSize: '72px', color: 'rgba(255, 255, 255, 0.9)' }}>{icon}</span>
+      <span style={{
+        fontSize,
+        maxWidth: '800px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}>
+        {displayText}
+      </span>
+    </div>
+  );
+};
 
 const TitlePost: React.FC<{ title: string }> = ({ title }) => (
   <div style={{

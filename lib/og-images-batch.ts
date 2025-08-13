@@ -62,30 +62,35 @@ export async function generateSocialImagesBatch(
         
         await fs.writeFile(task.imagePath, imageBuffer);
         return { success: true, url: task.props.url };
-      } catch (error) {
+      } catch (err) {
         return { 
           success: false, 
           url: task.props.url, 
-          error: error instanceof Error ? error.message : String(error) 
+          error: err instanceof Error ? err.message : String(err) 
         };
       }
     });
 
     const results = await Promise.allSettled(batchPromises);
     
-    results.forEach((result) => {
+    const batchResults = results.reduce((acc, result) => {
       if (result.status === 'fulfilled') {
         if (result.value.success) {
-          success++;
+          acc.success++;
         } else {
-          failed++;
-          errors.push({ url: result.value.url, error: result.value.error || 'Unknown error' });
+          acc.failed++;
+          acc.errors.push({ url: result.value.url, error: result.value.error || 'Unknown error' });
         }
       } else {
-        failed++;
-        errors.push({ url: 'unknown', error: result.reason?.toString() || 'Promise rejected' });
+        acc.failed++;
+        acc.errors.push({ url: 'unknown', error: result.reason?.toString() || 'Promise rejected' });
       }
-    });
+      return acc;
+    }, { success: 0, failed: 0, errors: [] as Array<{ url: string; error: string }> });
+
+    success += batchResults.success;
+    failed += batchResults.failed;
+    errors.push(...batchResults.errors);
 
     if (onProgress) {
       onProgress(success + failed, tasks.length);
