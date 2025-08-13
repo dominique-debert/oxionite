@@ -504,8 +504,8 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
 
 
         // Handle authors array from pageInfo for regular posts
-        const authors = pageInfo?.authors || [];
-        const firstAuthor = authors[0] || 'Author';
+        const authors = (pageInfo?.authors || []).filter((author: string) => author && author.trim() !== '');
+        const firstAuthor = authors[0] || '';
         const additionalAuthorsCount = authors.length > 1 ? authors.length - 1 : 0;
         
         // Find first author's avatar from siteConfig with exact case matching
