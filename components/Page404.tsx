@@ -12,7 +12,7 @@ export function Page404({ site, pageId, error }: Partial<types.PageProps>) {
 
   return (
     <>
-      <PageHead site={site} title={title} url={router.asPath} />
+      <PageHead site={site} title={title} url={`/${router.locale}${router.asPath === '/' ? '' : router.asPath}`} />
 
       <div className={styles.container}>
         <main className={styles.main}>

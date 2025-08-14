@@ -7,7 +7,7 @@ export function PagePrivate() {
   const router = useRouter()
   return (
     <>
-      <PageHead title='Private Page' url={router.asPath} />
+      <PageHead title='Private Page' url={`/${router.locale}${router.asPath === '/' ? '' : router.asPath}`} />
       <div
         style={{
           display: 'flex',

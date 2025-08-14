@@ -232,7 +232,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
         site={pageProps.site}
         title={pageTitle}
         pageId={pageProps.pageId}
-        url={router.asPath}
+        url={`/${router.locale}${router.asPath === '/' ? '' : router.asPath}`}
       />
       {SHOW_DEBUG_CONTROLS && <GraphController />}
       {SHOW_DEBUG_SOCIAL_IMAGE && <SocialImagePreviewer />}

@@ -20,7 +20,7 @@ export function ErrorPage({ statusCode, site }: ErrorPageProps) {
 
   return (
     <>
-      <PageHead site={site} title={title} url={router.asPath} />
+      <PageHead site={site} title={title} url={`/${router.locale}${router.asPath === '/' ? '' : router.asPath}`} />
       <div className={styles.errorContainer}>
         <div className={styles.errorContent}>
           <h1 className={styles.errorTitle}>{title}</h1>
