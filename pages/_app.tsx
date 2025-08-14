@@ -191,46 +191,99 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     pageInfo
   }
 
-  // Determine page title based on route
-  const getPageTitle = () => {
-    const { pathname, query } = router;
-    
-    if (pathname === '/') {
-      return pageProps.site?.name || '';
-    }
-    
-    if (pathname === '/post/[...slug]') {
-      const block = pageProps.pageId && pageProps.recordMap?.block?.[pageProps.pageId]?.value;
-      return (block && pageProps.recordMap) ? getBlockTitle(block, pageProps.recordMap) : pageProps.site?.name || '';
-    }
-    
-    if (pathname === '/category/[slug]') {
-      const block = pageProps.pageId && pageProps.recordMap?.block?.[pageProps.pageId]?.value;
-      return (block && pageProps.recordMap) ? getBlockTitle(block, pageProps.recordMap) : pageProps.site?.name || '';
-    }
-    
-    if (pathname === '/tag/[tag]') {
-      return `${query.tag}`;
-    }
-    
-    if (pathname === '/all-tags') {
-      return '모든 태그';
-    }
-    
-    if (pathname === '/404') {
-      return `404 - ${pageProps.site?.name || ''}`;
-    }
-    
-    return pageProps.site?.name || '';
-  };
+  // Debug: log all pageProps
+  console.log('=== PAGE PROPS DEBUG ===', {
+    pathname: router.pathname,
+    pageId: pageProps.pageId,
+    hasSite: !!pageProps.site,
+    siteName: pageProps.site?.name,
+    siteDescription: pageProps.site?.description,
+    hasRecordMap: !!pageProps.recordMap,
+    recordMapKeys: pageProps.recordMap ? Object.keys(pageProps.recordMap) : null,
+    blockKeys: pageProps.recordMap?.block ? Object.keys(pageProps.recordMap.block) : null
+  });
 
-  const pageTitle = getPageTitle();
+  // Determine page title and description based on route
+  const { pathname, query } = router;
+  let pageTitle = pageProps.site?.name || '';
+  let pageDescription = pageProps.site?.description || '';
+  
+  if (pathname === '/') {
+    pageTitle = pageProps.site?.name || '';
+    pageDescription = pageProps.site?.description || '';
+    console.log('Home page - description:', pageDescription);
+  } else if (pathname === '/post/[...slug]') {
+    const block = pageProps.pageId && pageProps.recordMap?.block?.[pageProps.pageId]?.value;
+    if (block && pageProps.recordMap) {
+      pageTitle = getBlockTitle(block, pageProps.recordMap);
+      
+      // Try to get description from siteMap's pageInfoMap first
+      if (pageProps.siteMap?.pageInfoMap && pageProps.pageId) {
+        const pageInfo = pageProps.siteMap.pageInfoMap[pageProps.pageId];
+        if (pageInfo?.description) {
+          pageDescription = pageInfo.description;
+          console.log('Found description from siteMap.pageInfoMap:', pageDescription);
+        } else {
+          // Fallback to block properties if description not in siteMap
+          const description = block.properties?.description?.[0]?.[0];
+          pageDescription = description || '';
+          console.log('Fallback description from block properties:', pageDescription);
+        }
+      } else {
+        // Fallback to block properties if siteMap not available
+        const description = block.properties?.description?.[0]?.[0];
+        pageDescription = description || '';
+        console.log('Fallback description from block properties (no siteMap):', pageDescription);
+      }
+    } else {
+      pageTitle = pageProps.site?.name || '';
+      pageDescription = '';
+      console.log('No block found for', pathname, 'pageId:', pageProps.pageId);
+    }
+  } else if (pathname === '/category/[slug]') {
+    // For category pages, get title from siteMap using locale and slug
+    const slug = query.slug as string;
+    const locale = router.locale || 'ko';
+    
+    if (pageProps.siteMap?.pageInfoMap) {
+      // Find page by slug and language
+      const pageInfo = Object.values(pageProps.siteMap.pageInfoMap).find(
+        (page) => page.slug === slug && page.language === locale
+      );
+      
+      if (pageInfo) {
+        pageTitle = pageInfo.title;
+        console.log('Found category title from siteMap:', pageTitle);
+      } else {
+        // Fallback to slug if not found
+        pageTitle = slug;
+        console.log('Category title fallback to slug:', slug);
+      }
+    } else {
+      // Fallback to slug if siteMap not available
+      pageTitle = slug;
+      console.log('Category title fallback to slug (no siteMap):', slug);
+    }
+    
+    // Use site.name for category description
+    pageDescription = pageProps.site?.name || '';
+    console.log('Category page description from site.name:', pageDescription);
+  } else if (pathname === '/tag/[tag]') {
+    pageTitle = `${query.tag}`;
+    pageDescription = pageProps.site?.name || '';
+    console.log('Tag page - description:', pageDescription);
+  } else if (pathname === '/all-tags') {
+    pageTitle = '모든 태그';
+    pageDescription = pageProps.site?.name || '';
+    console.log('All tags page - description:', pageDescription);
+  }
 
   return (
     <AppContext.Provider value={appContextValue}>
       <PageHead
         site={pageProps.site}
         title={pageTitle}
+        description={pageDescription}
         pageId={pageProps.pageId}
         url={`/${router.locale}${router.asPath === '/' ? '' : router.asPath}`}
       />

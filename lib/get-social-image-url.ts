@@ -50,7 +50,10 @@ export async function getSocialImageUrl(
     }
 
     // For regular pages, check if static image exists
-    const specificImagePath = `/social-images/${locale}/${folder}/${targetSlug}.jpg`;
+    // Special handling for all-tags to use direct filename instead of subdirectory
+    const specificImagePath = folder === 'all-tags' 
+      ? `/social-images/${locale}/${targetSlug}.jpg`
+      : `/social-images/${locale}/${folder}/${targetSlug}.jpg`;
     
     // For root pages, use the locale-independent path
     if (folder === 'root') {

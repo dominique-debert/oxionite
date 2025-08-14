@@ -5,12 +5,14 @@ import styles from '@/styles/components/all-tags.module.css'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import nextI18NextConfig from '../next-i18next.config.cjs'
 import { useTranslation } from 'next-i18next'
+import { site } from '@/lib/config'
 
 export const getStaticProps = async ({ locale }: { locale: string }) => {
   const siteMap = await getSiteMap()
   return {
     props: {
       ...(await serverSideTranslations(locale, ['common', 'languages'], nextI18NextConfig)),
+      site,
       siteMap,
       pageId: 'all-tags'
     },
