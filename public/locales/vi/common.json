@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "Tổng số {{count}} bài viết",
   "noPostsFound": "Không tìm thấy bài viết nào",
   "noPostsWithTag": "Không có bài viết nào có thẻ này",
+  "seeCategoryList": "Xem danh sách danh mục {{category}}",
+  "seeTagList": "Xem danh sách thẻ {{tag}}",
+  "seeAllTagsList": "Danh sách tất cả các thẻ",
   "error.404.title": "Không tìm thấy trang",
   "error.404.description": "Chúng tôi không thể tìm thấy trang bạn đang tìm kiếm.",
   "error.default.title": "Lỗi"

@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "总共 {{count}} 篇帖子",
   "noPostsFound": "未找到帖子",
   "noPostsWithTag": "没有带有此标签的帖子",
+  "seeCategoryList": "查看{{category}}分类列表",
+  "seeTagList": "查看{{tag}}标签列表",
+  "seeAllTagsList": "所有标签列表",
   "error.404.title": "未找到页面",
   "error.404.description": "我们似乎找不到您要查找的页面。",
   "error.default.title": "错误"

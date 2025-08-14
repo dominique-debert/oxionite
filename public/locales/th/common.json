@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "ทั้งหมด {{count}} โพสต์",
   "noPostsFound": "ไม่พบโพสต์",
   "noPostsWithTag": "ไม่มีโพสต์ที่มีแท็กนี้",
+  "seeCategoryList": "ดูรายการหมวดหมู่ {{category}}",
+  "seeTagList": "ดูรายการแท็ก {{tag}}",
+  "seeAllTagsList": "รายการแท็กทั้งหมด",
   "error.404.title": "ไม่พบหน้า",
   "error.404.description": "เราไม่พบหน้าที่คุณกำลังมองหา",
   "error.default.title": "ข้อผิดพลาด"

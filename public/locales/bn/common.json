@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "মোট {{count}}টি পোস্ট",
   "noPostsFound": "কোনো পোস্ট পাওয়া যায়নি",
   "noPostsWithTag": "এই ট্যাগ সহ কোনো পোস্ট নেই",
+  "seeCategoryList": "{{category}} বিভাগের তালিকা দেখুন",
+  "seeTagList": "{{tag}} ট্যাগের তালিকা দেখুন",
+  "seeAllTagsList": "সমস্ত ট্যাগের তালিকা",
   "error.404.title": "পৃষ্ঠা পাওয়া যায়নি",
   "error.404.description": "আপনি যে পৃষ্ঠাটি খুঁজছেন তা আমরা খুঁজে পাচ্ছি না।",
   "error.default.title": "ত্রুটি"

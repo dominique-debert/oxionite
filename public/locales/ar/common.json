@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "إجمالي {{count}} منشورات",
   "noPostsFound": "لم يتم العثور على مشاركات",
   "noPostsWithTag": "لا توجد مشاركات بهذه العلامة",
+  "seeCategoryList": "عرض قائمة فئة {{category}}",
+  "seeTagList": "عرض قائمة علامة {{tag}}",
+  "seeAllTagsList": "قائمة جميع العلامات",
   "error.404.title": "الصفحة غير موجودة",
   "error.404.description": "لا يمكننا العثور على الصفحة التي تبحث عنها.",
   "error.default.title": "خطأ"

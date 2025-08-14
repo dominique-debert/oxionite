@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "Totalt {{count}} inlägg",
   "noPostsFound": "Inga inlägg hittades",
   "noPostsWithTag": "Det finns inga inlägg med den här taggen",
+  "seeCategoryList": "Visa {{category}} kategorilista",
+  "seeTagList": "Visa {{tag}} tagglista",
+  "seeAllTagsList": "Lista över alla taggar",
   "error.404.title": "Sidan hittades inte",
   "error.404.description": "Vi kan inte hitta sidan du letar efter.",
   "error.default.title": "Fel"

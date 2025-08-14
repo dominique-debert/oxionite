@@ -32,7 +32,7 @@ import {
 import { mapImageUrl } from '@/lib/map-image-url'
 import { AppContext } from '@/lib/context/app-context'
 import { Noto_Sans_KR } from 'next/font/google'
-import { appWithTranslation } from 'next-i18next'
+import { appWithTranslation, useTranslation } from 'next-i18next'
 import { getBlockTitle } from 'notion-utils'
 import { PageHead } from '@/components/PageHead'
 
@@ -52,6 +52,7 @@ if (typeof window !== 'undefined') {
 
 function App({ Component, pageProps }: AppProps<types.PageProps>) {
   const router = useRouter()
+  const { t } = useTranslation('common')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isMobile, setIsMobile] = React.useState(false)
   const [showDesktopSideNav, setShowDesktopSideNav] = React.useState(false)
@@ -191,17 +192,6 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     pageInfo
   }
 
-  // Debug: log all pageProps
-  console.log('=== PAGE PROPS DEBUG ===', {
-    pathname: router.pathname,
-    pageId: pageProps.pageId,
-    hasSite: !!pageProps.site,
-    siteName: pageProps.site?.name,
-    siteDescription: pageProps.site?.description,
-    hasRecordMap: !!pageProps.recordMap,
-    recordMapKeys: pageProps.recordMap ? Object.keys(pageProps.recordMap) : null,
-    blockKeys: pageProps.recordMap?.block ? Object.keys(pageProps.recordMap.block) : null
-  });
 
   // Determine page title and description based on route
   const { pathname, query } = router;
@@ -211,7 +201,6 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
   if (pathname === '/') {
     pageTitle = pageProps.site?.name || '';
     pageDescription = pageProps.site?.description || '';
-    console.log('Home page - description:', pageDescription);
   } else if (pathname === '/post/[...slug]') {
     const block = pageProps.pageId && pageProps.recordMap?.block?.[pageProps.pageId]?.value;
     if (block && pageProps.recordMap) {
@@ -222,60 +211,48 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
         const pageInfo = pageProps.siteMap.pageInfoMap[pageProps.pageId];
         if (pageInfo?.description) {
           pageDescription = pageInfo.description;
-          console.log('Found description from siteMap.pageInfoMap:', pageDescription);
         } else {
           // Fallback to block properties if description not in siteMap
           const description = block.properties?.description?.[0]?.[0];
           pageDescription = description || '';
-          console.log('Fallback description from block properties:', pageDescription);
         }
       } else {
         // Fallback to block properties if siteMap not available
         const description = block.properties?.description?.[0]?.[0];
         pageDescription = description || '';
-        console.log('Fallback description from block properties (no siteMap):', pageDescription);
       }
     } else {
       pageTitle = pageProps.site?.name || '';
       pageDescription = '';
-      console.log('No block found for', pathname, 'pageId:', pageProps.pageId);
     }
   } else if (pathname === '/category/[slug]') {
-    // For category pages, get title from siteMap using locale and slug
     const slug = query.slug as string;
     const locale = router.locale || 'ko';
     
+    // Find the category page info by slug and locale
+    let categoryTitle = slug;
     if (pageProps.siteMap?.pageInfoMap) {
-      // Find page by slug and language
-      const pageInfo = Object.values(pageProps.siteMap.pageInfoMap).find(
-        (page) => page.slug === slug && page.language === locale
-      );
-      
-      if (pageInfo) {
-        pageTitle = pageInfo.title;
-        console.log('Found category title from siteMap:', pageTitle);
-      } else {
-        // Fallback to slug if not found
-        pageTitle = slug;
-        console.log('Category title fallback to slug:', slug);
+      for (const [pageId, pageInfo] of Object.entries(pageProps.siteMap.pageInfoMap)) {
+        const page = pageInfo as any;
+        if (page.language === locale && page.slug === slug && page.type === 'Category') {
+          categoryTitle = page.title || slug;
+          break;
+        }
       }
-    } else {
-      // Fallback to slug if siteMap not available
-      pageTitle = slug;
-      console.log('Category title fallback to slug (no siteMap):', slug);
     }
     
-    // Use site.name for category description
+    // Use translation with actual category title
+    pageTitle = t('seeCategoryList', { category: categoryTitle });
     pageDescription = pageProps.site?.name || '';
-    console.log('Category page description from site.name:', pageDescription);
   } else if (pathname === '/tag/[tag]') {
-    pageTitle = `${query.tag}`;
+    const tag = query.tag as string;
+    
+    // Use translation for tag title
+    pageTitle = t('seeTagList', { tag: '#' + tag });
     pageDescription = pageProps.site?.name || '';
-    console.log('Tag page - description:', pageDescription);
   } else if (pathname === '/all-tags') {
-    pageTitle = '모든 태그';
+    pageTitle = t('seeAllTagsList');
     pageDescription = pageProps.site?.name || '';
-    console.log('All tags page - description:', pageDescription);
   }
 
   return (

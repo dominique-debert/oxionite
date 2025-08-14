@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "مجموع {{count}} پست",
   "noPostsFound": "هیچ پستی یافت نشد",
   "noPostsWithTag": "هیچ پستی با این برچسب وجود ندارد",
+  "seeCategoryList": "مشاهده فهرست دسته {{category}}",
+  "seeTagList": "مشاهده فهرست برچسب {{tag}}",
+  "seeAllTagsList": "فهرست همه برچسب‌ها",
   "error.404.title": "صفحه یافت نشد",
   "error.404.description": "ما نمی توانیم صفحه ای را که به دنبال آن هستید پیدا کنیم.",
   "error.default.title": "خطا"

@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "סה\"כ {{count}} פוסטים",
   "noPostsFound": "לא נמצאו פוסטים",
   "noPostsWithTag": "אין פוסטים עם תג זה",
+  "seeCategoryList": "הצג רשימת קטגוריה {{category}}",
+  "seeTagList": "הצג רשימת תג {{tag}}",
+  "seeAllTagsList": "רשימת כל התגים",
   "error.404.title": "הדף לא נמצא",
   "error.404.description": "לא הצלחנו למצוא את הדף שאתה מחפש.",
   "error.default.title": "שגיאה"

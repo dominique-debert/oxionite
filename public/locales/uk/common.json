@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "Всього {{count}} записів",
   "noPostsFound": "Дописів не знайдено",
   "noPostsWithTag": "Немає дописів із цим тегом",
+  "seeCategoryList": "Переглянути список категорії {{category}}",
+  "seeTagList": "Переглянути список тегу {{tag}}",
+  "seeAllTagsList": "Список усіх тегів",
   "error.404.title": "Сторінку не знайдено",
   "error.404.description": "Ми не можемо знайти сторінку, яку ви шукаєте.",
   "error.default.title": "Помилка"

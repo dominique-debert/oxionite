@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "Insgesamt {{count}} Beiträge",
   "noPostsFound": "Keine Beiträge gefunden",
   "noPostsWithTag": "Es gibt keine Beiträge mit diesem Tag",
+  "seeCategoryList": "{{category}} Kategorienliste anzeigen",
+  "seeTagList": "{{tag}} Tag-Liste anzeigen",
+  "seeAllTagsList": "Alle Tags-Liste",
   "error.404.title": "Seite nicht gefunden",
   "error.404.description": "Wir können die gesuchte Seite nicht finden.",
   "error.default.title": "Fehler"

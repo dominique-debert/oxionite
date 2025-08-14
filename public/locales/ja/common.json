@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "合計{{count}}件",
   "noPostsFound": "投稿が見つかりません",
   "noPostsWithTag": "このタグの付いた投稿はありません",
+  "seeCategoryList": "{{category}}カテゴリー一覧を表示",
+  "seeTagList": "{{tag}}タグ一覧を表示",
+  "seeAllTagsList": "すべてのタグ一覧",
   "error.404.title": "ページが見つかりません",
   "error.404.description": "お探しのページが見つかりませんでした。",
   "error.default.title": "エラー"

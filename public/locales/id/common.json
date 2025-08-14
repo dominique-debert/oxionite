@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "Total {{count}} postingan",
   "noPostsFound": "Tidak ada postingan yang ditemukan",
   "noPostsWithTag": "Tidak ada postingan dengan tag ini",
+  "seeCategoryList": "Lihat daftar kategori {{category}}",
+  "seeTagList": "Lihat daftar tag {{tag}}",
+  "seeAllTagsList": "Daftar semua tag",
   "error.404.title": "Halaman tidak ditemukan",
   "error.404.description": "Kami tidak dapat menemukan halaman yang Anda cari.",
   "error.default.title": "Kesalahan"

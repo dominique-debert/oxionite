@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "Всего {{count}} постов",
   "noPostsFound": "Посты не найдены",
   "noPostsWithTag": "Нет постов с этим тегом",
+  "seeCategoryList": "Просмотр списка категории {{category}}",
+  "seeTagList": "Просмотр списка тега {{tag}}",
+  "seeAllTagsList": "Список всех тегов",
   "error.404.title": "Страница не найдена",
   "error.404.description": "Мы не можем найти страницу, которую вы ищете.",
   "error.default.title": "Ошибка"

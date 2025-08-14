@@ -26,6 +26,9 @@
   "postsTaggedWithCount_plural": "Łącznie {{count}} postów",
   "noPostsFound": "Nie znaleziono postów",
   "noPostsWithTag": "Brak postów z tym tagiem",
+  "seeCategoryList": "Zobacz listę kategorii {{category}}",
+  "seeTagList": "Zobacz listę tagów {{tag}}",
+  "seeAllTagsList": "Lista wszystkich tagów",
   "error.404.title": "Strona nie znaleziona",
   "error.404.description": "Nie możemy znaleźć strony, której szukasz.",
   "error.default.title": "Błąd"
