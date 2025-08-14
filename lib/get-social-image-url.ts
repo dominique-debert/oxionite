@@ -45,9 +45,9 @@ export async function getSocialImageUrl(
     // Construct the specific image path
     const specificImagePath = `/social-images/${locale}/${folder}/${targetSlug}.jpg`;
     
-    // For root pages, use the correct path format
+    // For root pages, use the locale-independent path
     if (folder === 'root') {
-      const rootImagePath = `/social-images/${locale}/root.jpg`;
+      const rootImagePath = `/social-images/root.jpg`;
       console.log('[getSocialImageUrl] Using root image path:', rootImagePath);
       return rootImagePath;
     }
@@ -57,8 +57,8 @@ export async function getSocialImageUrl(
     return specificImagePath;
   } catch (err) {
     console.error('[getSocialImageUrl] Error:', err);
-    // Return root as fallback using configured default locale
-    return `/social-images/${siteLocale.defaultLocale}/root.jpg`;
+    // Return root as fallback using locale-independent path
+    return `/social-images/root.jpg`;
   }
 }
 

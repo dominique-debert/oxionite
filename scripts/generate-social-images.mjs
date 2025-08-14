@@ -22,6 +22,9 @@ async function main() {
 
   // Create all necessary directories upfront
   console.log('[Gen Social Images] Pre-creating directories...');
+  const socialImagesRootDir = path.join(process.cwd(), 'public', 'social-images');
+  await fs.mkdir(socialImagesRootDir, { recursive: true });
+  
   for (const locale of localeList) {
     const socialImagesDir = path.join(process.cwd(), 'public', 'social-images', locale);
     await fs.mkdir(path.join(socialImagesDir, 'post'), { recursive: true });
@@ -35,18 +38,20 @@ async function main() {
   for (const locale of localeList) {
     const socialImagesDir = path.join(process.cwd(), 'public', 'social-images', locale);
 
-    // 1. Root page
-    const rootUrl = locale === defaultLocale ? '/' : `/${locale}`;
-    const rootPath = path.join(socialImagesDir, 'root.jpg');
-    const rootPublicUrl = `/social-images/${locale}/root.jpg`;
-    
-    if (!await fileExists(rootPath)) {
-      imageTasks.push({
-        url: rootUrl,
-        imagePath: rootPath,
-        publicUrl: rootPublicUrl,
-        props: { url: rootUrl, siteMap }
-      });
+    // 1. Root page - only generate once for the default locale
+    if (locale === defaultLocale) {
+      const rootUrl = '/';
+      const rootPath = path.join(process.cwd(), 'public', 'social-images', 'root.jpg');
+      const rootPublicUrl = '/social-images/root.jpg';
+      
+      if (!await fileExists(rootPath)) {
+        imageTasks.push({
+          url: rootUrl,
+          imagePath: rootPath,
+          publicUrl: rootPublicUrl,
+          props: { url: rootUrl, siteMap }
+        });
+      }
     }
 
     // 2. All-tags page
