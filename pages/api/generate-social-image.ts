@@ -62,14 +62,14 @@ async function handler(
           console.log('[SocialImage API] Fetched subpage data:', { title, coverImage: coverImageUrl })
           
           // Create enhanced page info for the subpage
-          const _subpageInfo = {
+          const subpageInfo = {
             title: title || 'Untitled',
             pageId,
             type: 'Post' as const,
             slug: parsedUrl.subpage || pageId,
             parentPageId: null,
             childrenPageIds: [],
-            language: null,
+            language: parsedUrl.locale || null,
             public: true,
             useOriginalCoverImage: null,
             description: null,
@@ -80,6 +80,15 @@ async function handler(
           
           // Also store subpage data for direct access
           subpageData = { title, coverImage: coverImageUrl }
+          
+          // Update enhanced siteMap with the actual subpage data
+          enhancedSiteMap = {
+            ...siteMap,
+            pageInfoMap: {
+              ...siteMap.pageInfoMap,
+              [pageId]: subpageInfo
+            }
+          }
         }
       } catch (err) {
         console.error('[SocialImage API] Error fetching subpage:', err)

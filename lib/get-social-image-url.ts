@@ -42,7 +42,14 @@ export async function getSocialImageUrl(
       targetSlug = 'root';
     }
 
-    // Construct the specific image path
+    // For subpages, always use on-demand generation via API
+    if (parsedUrl.isSubpage) {
+      const apiUrl = `/api/generate-social-image?path=${encodeURIComponent(url)}`;
+      console.log('[getSocialImageUrl] Subpage detected, using on-demand generation:', apiUrl);
+      return apiUrl;
+    }
+
+    // For regular pages, check if static image exists
     const specificImagePath = `/social-images/${locale}/${folder}/${targetSlug}.jpg`;
     
     // For root pages, use the locale-independent path
@@ -52,7 +59,7 @@ export async function getSocialImageUrl(
       return rootImagePath;
     }
     
-    // Return the specific image path - Next.js will handle 404s gracefully
+    // Return the specific image path for regular pages
     console.log('[getSocialImageUrl] Returning specific image path:', specificImagePath);
     return specificImagePath;
   } catch (err) {
