@@ -19,6 +19,7 @@ import { Footer } from '@/components/Footer'
 
 import { GraphController } from '@/components/debug/GraphController'
 import { SocialImagePreviewer } from '@/components/debug/SocialImagePreviewer'
+import { PageHeadPreviewer } from '@/components/debug/PageHeadPreviewer'
 import { SideNav } from '@/components/SideNav'
 import { TopNav } from '@/components/TopNav'
 import { bootstrap } from '@/lib/bootstrap-client'
@@ -37,6 +38,7 @@ import { PageHead } from '@/components/PageHead'
 
 const SHOW_DEBUG_CONTROLS = false
 const SHOW_DEBUG_SOCIAL_IMAGE = false
+const SHOW_DEBUG_HEAD = true
 
 const notoKR = Noto_Sans_KR({
   subsets: ['latin'],
@@ -234,6 +236,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
       />
       {SHOW_DEBUG_CONTROLS && <GraphController />}
       {SHOW_DEBUG_SOCIAL_IMAGE && <SocialImagePreviewer />}
+      {SHOW_DEBUG_HEAD && <PageHeadPreviewer />}
       <style jsx global>{`
         :root {
           --font-noto-sans-kr: ${notoKR.style.fontFamily};
