@@ -18,6 +18,7 @@ interface PostHeaderProps {
   isMobile?: boolean
   variant?: 'full' | 'simple'
   useOriginalCoverImage?: boolean
+  url?: string
 }
 
 export function PostHeader({ 
@@ -27,7 +28,8 @@ export function PostHeader({
   isBlogPost,
   isMobile = false,
   variant = 'full', // Default to 'full'
-  useOriginalCoverImage = false // Default to true for backward compatibility
+  useOriginalCoverImage = false, // Default to true for backward compatibility
+  url
 }: PostHeaderProps) {
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
   const [socialImageUrl, setSocialImageUrl] = useState<string | null>(null)
@@ -37,19 +39,19 @@ export function PostHeader({
   useEffect(() => {
     console.log('[PostHeader] useEffect triggered:', {
       useOriginalCoverImage,
-      blockId: block?.id,
-      hasBlock: !!block
+      url,
+      blockId: block?.id
     })
     
-    if (!useOriginalCoverImage && block?.id) {
-      console.log('[PostHeader] Fetching social image for block:', block.id)
+    if (!useOriginalCoverImage && url) {
+      console.log('[PostHeader] Fetching social image for URL:', url)
       setIsLoadingSocialImage(true)
       
-      const fetchPromise = siteMap ? getSocialImageUrl(block.id, siteMap) : getSocialImageUrl(block.id)
+      const fetchPromise = siteMap ? getSocialImageUrl(url) : getSocialImageUrl(url)
       fetchPromise
-        .then(url => {
-          console.log('[PostHeader] Social image URL received:', url)
-          setSocialImageUrl(url)
+        .then(imageUrl => {
+          console.log('[PostHeader] Social image URL received:', imageUrl)
+          setSocialImageUrl(imageUrl)
         })
         .catch(err => {
           console.error('[PostHeader] Failed to fetch social image:', err)
@@ -58,13 +60,32 @@ export function PostHeader({
         .finally(() => {
           setIsLoadingSocialImage(false)
         })
+    } else if (!useOriginalCoverImage && !url && block?.id) {
+      // Fallback to old behavior if URL is not provided
+      console.log('[PostHeader] URL not provided, falling back to block.id:', block.id)
+      setIsLoadingSocialImage(true)
+      
+      const fetchPromise = siteMap ? getSocialImageUrl(block.id) : getSocialImageUrl(block.id)
+      fetchPromise
+        .then(imageUrl => {
+          console.log('[PostHeader] Social image URL received (fallback):', imageUrl)
+          setSocialImageUrl(imageUrl)
+        })
+        .catch(err => {
+          console.error('[PostHeader] Failed to fetch social image (fallback):', err)
+          setSocialImageUrl(null)
+        })
+        .finally(() => {
+          setIsLoadingSocialImage(false)
+        })
     } else {
       console.log('[PostHeader] Skipping social image fetch:', {
         useOriginalCoverImage,
+        url,
         blockId: block?.id
       })
     }
-  }, [useOriginalCoverImage, block?.id, siteMap, block])
+  }, [useOriginalCoverImage, url, block?.id, siteMap, block])
 
   // For 'full' variant, we require it to be a blog post from a collection
   if (variant === 'full' && (!isBlogPost || !block || block.parent_table !== 'collection')) {

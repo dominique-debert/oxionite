@@ -1,63 +1,64 @@
-import { getCachedSiteMap } from './context/site-cache';
-import type { SiteMap, PageInfo } from './context/types';
+import { parseUrlPathname } from './context/url-parser';
+import siteLocale from '../site.locale.json';
 
 export async function getSocialImageUrl(
-  pageId: string,
-  siteMap?: SiteMap
+  url: string,
 ): Promise<string | null> {
   try {
-    console.log('[getSocialImageUrl] Starting with pageId:', pageId)
-    const currentSiteMap = siteMap || await getCachedSiteMap();
+    console.log('[getSocialImageUrl] Starting with url:', url)
     
-    // Normalize pageId by removing dashes for comparison
-    const normalizedPageId = pageId.replace(/-/g, '');
-    
-    const page = Object.values(currentSiteMap.pageInfoMap).find((p: PageInfo) => {
-      const normalizedMapPageId = p.pageId.replace(/-/g, '');
-      return normalizedMapPageId === normalizedPageId;
+    // Parse URL to extract routing information
+    const parsedUrl = parseUrlPathname(url);
+    console.log('[getSocialImageUrl] Parsed URL:', parsedUrl);
+
+    const locale = parsedUrl.locale || siteLocale.defaultLocale;
+    console.log('[getSocialImageUrl] Determined locale:', { 
+      urlLocale: parsedUrl.locale, 
+      finalLocale: locale,
+      fullUrl: url,
+      pathname: parsedUrl.fullPath 
     });
-
-    if (!page || !page.slug) {
-      console.log('[getSocialImageUrl] Page not found or no slug:', { pageId, normalizedPageId, hasPage: !!page, hasSlug: !!page?.slug })
-      return null;
-    }
-
-    console.log('[getSocialImageUrl] Found page:', {
-      pageId,
-      type: page.type,
-      slug: page.slug,
-      language: page.language
-    })
-
-    // Determine the folder based on page type and slug
     let folder: string;
-    
-    // Map page types to folder structure based on routing
-    if (page.type === 'Post' || page.type === 'Home') {
+    let targetSlug: string;
+
+    // Determine folder and target slug based on parsed URL
+    if (parsedUrl.isRoot) {
+      folder = 'root';
+      targetSlug = 'root';
+    } else if (parsedUrl.isPost) {
       folder = 'post';
-    } else if (page.type === 'Category') {
+      targetSlug = parsedUrl.isSubpage ? parsedUrl.subpage : parsedUrl.slug;
+    } else if (parsedUrl.isCategory) {
       folder = 'category';
-    } else if (page.slug === 'all-tags') {
+      targetSlug = parsedUrl.slug;
+    } else if (parsedUrl.isAllTags) {
       folder = 'all-tags';
-    } else if (page.type === 'Unknown' && page.slug?.startsWith('tag-')) {
+      targetSlug = 'all-tags';
+    } else if (parsedUrl.isTag) {
       folder = 'tag';
+      targetSlug = parsedUrl.slug;
     } else {
       folder = 'root';
+      targetSlug = 'root';
     }
 
-    const locale = page.language || 'en';
-    const imagePath = `/social-images/${locale}/${folder}/${page.slug}.jpg`;
+    // Construct the specific image path
+    const specificImagePath = `/social-images/${locale}/${folder}/${targetSlug}.jpg`;
     
-    console.log('[getSocialImageUrl] Generated image path:', {
-      pageId,
-      folder,
-      locale,
-      imagePath
-    })
+    // For root pages, use the correct path format
+    if (folder === 'root') {
+      const rootImagePath = `/social-images/${locale}/root.jpg`;
+      console.log('[getSocialImageUrl] Using root image path:', rootImagePath);
+      return rootImagePath;
+    }
     
-    return imagePath;
+    // Return the specific image path - Next.js will handle 404s gracefully
+    console.log('[getSocialImageUrl] Returning specific image path:', specificImagePath);
+    return specificImagePath;
   } catch (err) {
     console.error('[getSocialImageUrl] Error:', err);
-    return null;
+    // Return root as fallback using configured default locale
+    return `/social-images/${siteLocale.defaultLocale}/root.jpg`;
   }
 }
+

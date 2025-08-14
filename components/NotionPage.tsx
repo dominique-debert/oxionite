@@ -265,6 +265,9 @@ export function NotionPageContent({
                 isMobile={isMobile}
                 variant={isBlogPost ? 'full' : 'simple'}
                 useOriginalCoverImage={pageInfo?.useOriginalCoverImage ?? false}
+                url={router.locale && router.locale !== localeConfig.defaultLocale 
+                  ? `/${router.locale}${router.asPath}` 
+                  : router.asPath}
               />
             )}
             

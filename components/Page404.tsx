@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import styles from 'styles/components/common.module.css'
 
 import type * as types from '@/lib/context/types'
@@ -6,11 +7,12 @@ import type * as types from '@/lib/context/types'
 import { PageHead } from './PageHead'
 
 export function Page404({ site, pageId, error }: Partial<types.PageProps>) {
+  const router = useRouter()
   const title = site?.name || 'Notion Page Not Found'
 
   return (
     <>
-      <PageHead site={site} title={title} />
+      <PageHead site={site} title={title} url={router.asPath} />
 
       <div className={styles.container}>
         <main className={styles.main}>

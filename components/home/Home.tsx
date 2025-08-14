@@ -84,6 +84,7 @@ export function Home({
         site={site}
         title={site.name}
         description={site.description}
+        url={router.asPath}
       />
 
       <div className={styles.homeContainer}>

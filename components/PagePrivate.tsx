@@ -1,11 +1,13 @@
 import * as React from 'react'
+import { useRouter } from 'next/router'
 
 import { PageHead } from '@/components/PageHead'
 
 export function PagePrivate() {
+  const router = useRouter()
   return (
     <>
-      <PageHead title='Private Page' />
+      <PageHead title='Private Page' url={router.asPath} />
       <div
         style={{
           display: 'flex',
@@ -22,4 +24,4 @@ export function PagePrivate() {
       </div>
     </>
   )
-} 
+}

@@ -9,7 +9,6 @@ export function PageHead({
   site,
   title,
   description,
-  pageId,
   image,
   url
 }: Partial<types.PageProps> & {
@@ -22,14 +21,14 @@ export function PageHead({
 
   useEffect(() => {
     async function fetchSocialImageUrl() {
-      if (pageId) {
-        const url = await getSocialImageUrl(pageId)
-        setSocialImageUrl(url || image)
+      if (url) {
+        const imageUrl = await getSocialImageUrl(url)
+        setSocialImageUrl(imageUrl || image)
       }
     }
 
     void fetchSocialImageUrl()
-  }, [pageId, image])
+  }, [url, image])
 
   const rssFeedUrl = `${config.host}/feed`
 
