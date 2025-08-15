@@ -38,17 +38,16 @@
     "@keyvhq/core": "^1.6.9",
     "@keyvhq/redis": "^1.6.10",
     "@react-icons/all-files": "^4.1.0",
-    "@react-sigma/core": "^5.0.4",
-    "@react-sigma/layout-forceatlas2": "^5.0.4",
-    "@sigma/node-image": "^3.0.0",
+
     "@sparticuz/chromium": "^123.0.1",
     "@types/react-transition-group": "^4.4.12",
     "chrome-aws-lambda": "^10.1.0",
+    
     "classnames": "^2.5.1",
     "expiry-map": "^2.0.0",
     "fathom-client": "^3.4.1",
     "framer-motion": "^12.23.9",
-    "graphology": "^0.26.0",
+
     "i18next": "^25.3.2",
     "ky": "^1.8.1",
     "lqip-modern": "^2.2.1",
