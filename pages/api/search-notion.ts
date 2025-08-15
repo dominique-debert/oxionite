@@ -40,7 +40,7 @@ export default async function searchNotion(
 
   const searchParams: types.SearchParams = req.body
 
-  console.log('<<< lambda search-notion', searchParams)
+
 
   // Fetch site map and search results
   const siteMap = await getSiteMap()
@@ -81,7 +81,7 @@ export default async function searchNotion(
     .filter(Boolean)
     .filter((result) => result && (result.type === 'Post' || result.type === 'Category'))
 
-  console.log(`>>> lambda search-notion (${augmentedResults.length} results)`)
+
 
   res.setHeader(
     'Cache-Control',

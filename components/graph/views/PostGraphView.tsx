@@ -294,7 +294,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     const resizeObserver = new ResizeObserver(entries => {
       if (entries[0]) {
         const { width: w, height: h } = entries[0].contentRect;
-        console.log('[PostGraphView] Dimensions updated:', { width: w, height: h });
+
         setDimensions({ width: w, height: h });
         setIsDimensionsReady(true);
       }
@@ -328,15 +328,10 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
           onNodeClick={handleNodeClick as any}
           onZoomEnd={handleZoomEnd}
           onEngineStop={() => {
-            console.log('[PostGraphView] onEngineStop triggered:', {
-              dimensions,
-              isDimensionsReady,
-              graphWidth,
-              graphHeight
-            });
+
             actions.setIsGraphLoaded(true);
             if (isDimensionsReady) {
-              console.log('[PostGraphView] Applying zoom with dimensions:', { width: graphWidth, height: graphHeight });
+
             }
             // Process pending fitToHome operations
             const instanceType = state.displayType === 'home' ? 'home' : 'sidenav';

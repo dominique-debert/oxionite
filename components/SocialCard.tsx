@@ -19,21 +19,10 @@ const Background: React.FC<{ imageUrl?: string; children?: React.ReactNode; base
     finalImageUrl = `${baseUrl}${finalImageUrl}`;
   }
   
-  console.log('[Background Component] image processing:', {
-    originalImageUrl: imageUrl,
-    baseUrl,
-    finalImageUrl,
-    isRelative: imageUrl?.startsWith('/'),
-    hasBaseUrl: !!baseUrl,
-    defaultBackground: !imageUrl
-  });
-  
   const backgroundStyle = {
     ...COMMON_STYLES.container,
     backgroundImage: `url(${finalImageUrl})`,
   };
-
-  console.log('[Background Component] backgroundStyle:', backgroundStyle);
   return <div style={backgroundStyle}>{children}</div>;
 };
 
@@ -176,13 +165,7 @@ const TitleBrand: React.FC<{ iconUrl: string; baseUrl?: string }> = ({ iconUrl, 
     finalIconUrl = iconUrl;
   }
   
-  console.log('[TitleBrand] icon processing:', {
-    originalIconUrl: iconUrl,
-    baseUrl,
-    finalIconUrl,
-    isRelative: iconUrl?.startsWith('/'),
-    hasBaseUrl: !!baseUrl
-  });
+
   
   return (
     <div style={{
@@ -408,7 +391,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
           
           if (pageIdMatch) {
             const pageId = pageIdMatch[1];
-            console.log('[SocialCard] Subpage case - extracted page ID:', pageId)
+
             
             // For subpages, look up the page info using the page ID
             // The API now provides actual page data for subpages

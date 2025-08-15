@@ -12,12 +12,7 @@ export async function getSocialImageUrl(
     console.log('[getSocialImageUrl] Parsed URL:', parsedUrl);
 
     const locale = parsedUrl.locale || siteLocale.defaultLocale;
-    console.log('[getSocialImageUrl] Determined locale:', { 
-      urlLocale: parsedUrl.locale, 
-      finalLocale: locale,
-      fullUrl: url,
-      pathname: parsedUrl.fullPath 
-    });
+
     let folder: string;
     let targetSlug: string;
 

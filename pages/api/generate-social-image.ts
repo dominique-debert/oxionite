@@ -18,7 +18,6 @@ async function handler(
     const parsedUrl = parseUrlPathname(urlPath)
 
     // Support all URL types, not just root
-    console.log('[SocialImage API] Parsed URL:', parsedUrl)
 
     // Determine base URL based on environment
     const host = _req.headers.host || 'localhost:3000'
@@ -28,7 +27,7 @@ async function handler(
     const urlParam = typeof _req.query.url === 'string' ? _req.query.url : 
                      typeof _req.query.path === 'string' ? _req.query.path : '/'
     
-    console.log('[SocialImage API] Final URL parameter:', urlParam)
+
     
     const siteMap = await getCachedSiteMap()
 
@@ -41,7 +40,7 @@ async function handler(
     
     if (pageIdMatch && parsedUrl.isSubpage) {
       const pageId = pageIdMatch[1];
-      console.log('[SocialImage API] Subpage detected, fetching page:', pageId)
+
       
       try {
         // Import notion API client and utilities
@@ -59,7 +58,7 @@ async function handler(
           const pageCover = block.format?.page_cover
           const coverImageUrl = pageCover ? mapImageUrl(pageCover, block) : null
           
-          console.log('[SocialImage API] Fetched subpage data:', { title, coverImage: coverImageUrl })
+
           
           // Create enhanced page info for the subpage
           const subpageInfo = {
@@ -122,14 +121,6 @@ async function handler(
     // Only provide imageUrl if explicitly requested via query parameter
     const explicitImageUrl = typeof _req.query.imageUrl === 'string' ? _req.query.imageUrl : undefined
 
-    console.log('[SocialImage API] Debug Info (On-demand):', {
-      explicitImageUrl,
-      baseUrl,
-      requestUrl: _req.url,
-      query: _req.query,
-      hasSubpageData: !!subpageData
-    })
-
     const browser = await getBrowser()
     const imageBuffer = await renderSocialImage(browser, {
       url: urlParam,
@@ -138,7 +129,7 @@ async function handler(
       siteMap: enhancedSiteMap
     })
 
-    console.log('[SocialImage API] Generated image buffer length:', imageBuffer.length)
+
     res.setHeader('Content-Type', 'image/jpeg')
     res.setHeader('Cache-Control', 's-maxage=0, stale-while-revalidate')
     res.status(200).end(imageBuffer)

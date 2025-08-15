@@ -12,16 +12,10 @@ export const useGraphInstance = () => {
     padding = 50,
     nodeFilter?: (node: any) => boolean
   ) => {
-    console.log('[useGraphInstance] zoomToFit called:', { 
-      hasGraphRef: !!graphRef.current, 
-      hasZoomToFit: !!(graphRef.current && typeof graphRef.current.zoomToFit === 'function'),
-      duration, 
-      padding 
-    });
     
     if (graphRef.current && typeof graphRef.current.zoomToFit === 'function') {
       try {
-        console.log('[useGraphInstance] Executing zoomToFit');
+
         graphRef.current.zoomToFit(duration, padding, nodeFilter);
       } catch (err) {
         console.error('Error zooming to fit:', err);

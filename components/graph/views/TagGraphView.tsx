@@ -227,7 +227,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     const resizeObserver = new ResizeObserver(entries => {
       if (entries[0]) {
         const { width: w, height: h } = entries[0].contentRect;
-        console.log('[TagGraphView] Dimensions updated:', { width: w, height: h });
+    
         setDimensions({ width: w, height: h });
         setIsDimensionsReady(true);
       }

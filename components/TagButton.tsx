@@ -37,7 +37,6 @@ export function TagButton({ tag }: TagButtonProps) {
   }
 
   const handleMouseEnter = () => {
-    console.log('Hover Tag:', tag);
     graphControl.changeViewAndFocusNode('tag_view', tag, 'sidenav');
   };
 

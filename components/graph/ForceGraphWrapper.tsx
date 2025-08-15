@@ -19,18 +19,11 @@ const ForceGraphWrapper = React.forwardRef<GraphMethods, ForceGraphProps>(
     // Expose only necessary methods when ref is set
     useImperativeHandle(ref, () => ({
       zoomToFit: (ms?: number, padding?: number, nodeFilter?: (node: any) => boolean) => {
-        console.log('[ForceGraphWrapper] zoomToFit called:', {
-          internalRef: internalRef.current,
-          canvasWidth: internalRef.current?.width?.(),
-          canvasHeight: internalRef.current?.height?.(),
-          ms,
-          padding,
-          nodeFilter
-        });
+
         if (internalRef.current && typeof internalRef.current.zoomToFit === 'function') {
           internalRef.current.zoomToFit(ms, padding, nodeFilter);
         } else {
-          console.error('[ForceGraphWrapper] zoomToFit failed: internalRef not available', { internalRef });
+  
         }
       },
       width: () => {
@@ -43,7 +36,6 @@ const ForceGraphWrapper = React.forwardRef<GraphMethods, ForceGraphProps>(
     
     useEffect(() => {
       if (internalRef.current && onReady) {
-        console.log('[ForceGraphWrapper] Graph ready, calling onReady');
         onReady(internalRef.current);
       }
     }, [onReady]);

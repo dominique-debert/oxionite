@@ -12,7 +12,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   const locale = context.locale!
 
   try {
-    console.log(`DEBUG: Fetching home page for locale: ${locale}`)
+  
     
     // Get the site map with all pages and navigation tree
     const siteMap = await getCachedSiteMap()

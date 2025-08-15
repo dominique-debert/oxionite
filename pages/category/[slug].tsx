@@ -63,7 +63,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       }
     })
 
-    console.log(`Generated ${paths.length} category paths`)
+  
 
     return {
       paths,
@@ -99,7 +99,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
     }
 
     if (!categoryPageId || !categoryPageInfo) {
-      console.log(`Category not found: locale=${locale}, slug=${slug}`)
+    
       return {
         notFound: true,
         revalidate: site.isr?.revalidate ?? 60,

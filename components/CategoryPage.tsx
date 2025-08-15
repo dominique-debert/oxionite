@@ -94,14 +94,10 @@ export function CategoryPage({ pageProps, isMobile }: CategoryPageProps) {
   const allPosts = React.useMemo(() => {
     if (!currentPageInfo) return []
     
-    console.log('CategoryPage - Current page info:', currentPageInfo.title, 'Children count:', currentPageInfo.children?.length || 0)
-    
     const posts = getAllPostsFromCategory(currentPageInfo)
-    console.log('CategoryPage - Collected posts count:', posts.length)
-    
+
     // Filter posts by current locale
     const filteredPosts = posts.filter(post => post.language === locale)
-    console.log('CategoryPage - Filtered posts count:', filteredPosts.length)
     
     // Sort by published date (newest first)
     return filteredPosts.sort((a, b) => {

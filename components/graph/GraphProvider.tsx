@@ -305,7 +305,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
                 if (targetNodes.length === 1) {
                   if (operation.continuous) {
-                    console.log(`[GraphProvider ${currentInstanceType}] Starting continuous focus for single node:`, targetNodes[0].id);
+                
                     setContinuousFocus({
                       type: 'node',
                       target: targetNodes[0].id,
@@ -391,7 +391,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 continuous: message.payload?.continuous
               });
             } else {
-              console.log(`[GraphProvider ${currentInstanceType}] Executing focusNode:`, message.payload?.nodeId);
+          
               const nodeId = message.payload.nodeId;
               const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
               const node = currentGraphData?.nodes?.find((n: any) => n.id === nodeId);
@@ -504,7 +504,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 } else if (targetNodes.length > 0) {
                   // Single execution - perform focus immediately only if nodes found and no continuous retry
                   const actualNodeIds = targetNodes.map(node => node.id);
-                  console.log(`[GraphProvider ${currentInstanceType}] Performing Single focusNodes:`, actualNodeIds);
+              
                   performFocus(actualNodeIds, message.payload?.options);
                 }
               }
@@ -690,7 +690,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
           if (currentContinuousFocus.type === 'slug') {
             const slugToIdMapping = currentCreateSlugToIdMapping();
             nodeId = slugToIdMapping.get(currentContinuousFocus.target);
-            console.log(`[GraphProvider] Slug mapping for ${currentContinuousFocus.target}:`, nodeId);
+    
           } else if (currentContinuousFocus.type === 'node') {
             nodeId = currentContinuousFocus.target;
           }

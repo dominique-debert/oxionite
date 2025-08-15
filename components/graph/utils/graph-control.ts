@@ -75,12 +75,7 @@ class GraphControlAPI {
       return [];
     }
 
-    // Debug: log siteMap structure
-    console.log('[GraphControl] Debug - siteMap structure:', {
-      hasPageInfoMap: !!this.siteMap.pageInfoMap,
-      pageInfoKeys: this.siteMap.pageInfoMap ? Object.keys(this.siteMap.pageInfoMap).slice(0, 5) : [],
-      samplePage: this.siteMap.pageInfoMap ? this.siteMap.pageInfoMap[Object.keys(this.siteMap.pageInfoMap)[0]] : null
-    });
+  
 
     // Find page by slug
     const pageInfo = Object.values(this.siteMap.pageInfoMap).find(
@@ -90,21 +85,12 @@ class GraphControlAPI {
     if (!pageInfo) {
       console.warn(`[GraphControl] No page found for slug: ${slug}`);
       
-      // Debug: show all available slugs
-      const allSlugs = Object.values(this.siteMap.pageInfoMap).map(p => ({ slug: p.slug, title: p.title }));
-      console.log('[GraphControl] Debug - All available slugs:', allSlugs);
+
       
       return [];
     }
 
-    console.log(`[GraphControl] Debug - PageInfo for slug '${slug}':`, {
-      pageId: pageInfo.pageId,
-      title: pageInfo.title,
-      tags: pageInfo.tags,
-      hasRecordMap: !!this.recordMap,
-      recordMapKeys: this.recordMap ? Object.keys(this.recordMap).slice(0, 10) : [],
-      hasPageInRecordMap: this.recordMap ? !!this.recordMap[pageInfo.pageId] : false
-    });
+
 
     // If we have recordMap, use it to get tags like PostHeader.tsx does
     if (this.recordMap && this.recordMap[pageInfo.pageId]) {
@@ -284,22 +270,22 @@ class GraphControlAPI {
    * Process initial focus request when graph is ready
    */
   processInitialFocusWhenReady(instanceType: 'sidenav' | 'home', graphReady: boolean) {
-    console.log(`[GraphControl] Checking initial focus conditions: graphReady=${graphReady}, window=${typeof window}`);
+
     
     if (!graphReady || typeof window === 'undefined') {
-      console.log(`[GraphControl] Skipping initial focus - conditions not met`);
+
       return;
     }
 
     const request = (window as any).__graphInitialFocus?.[instanceType];
-    console.log(`[GraphControl] Checking for stored request in ${instanceType}:`, request);
+
     
     if (!request) {
-      console.log(`[GraphControl] No initial focus request found for ${instanceType}`);
+  
       return;
     }
 
-    console.log(`[GraphControl] Processing initial focus request for ${instanceType}:`, request);
+
     
     // Remove the request to prevent duplicate processing
     delete (window as any).__graphInitialFocus[instanceType];
@@ -307,13 +293,13 @@ class GraphControlAPI {
     // Handle based on segment only (view type independent)
     switch (request.segment) {
       case 'post':  
-        console.log(`[GraphControl] Processing initial focus request for post: ${request.slug}`);
+  
         this.changeViewAndFocusBySlug('post_view', request.slug, instanceType);
         this.highlightBySlug([request.slug], instanceType);
         break;
         
       case 'category':
-        console.log(`[GraphControl] Processing initial focus request for category: ${request.slug}`);
+  
         this.changeViewAndFocusBySlug('post_view', request.slug, instanceType);
         this.highlightBySlug([request.slug], instanceType);
         break;
@@ -356,19 +342,19 @@ class GraphControlAPI {
    * Handle URL-based routing
    */
   handleUrlCurrentFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav', currentView?: GraphViewType, continuousFocus = false) {
-    console.log(`[GraphControl] handleUrlCurrentFocus: ${pathname} for ${instanceType}, currentView: ${currentView}, continuousFocus: ${continuousFocus}`);
+  
     
     const { segment, slug } = parseUrlPathname(pathname);
     
     if (!segment) {
-      console.log(`[GraphControl] Root path - no focus`);
+  
       return;
     }
 
     // Use provided currentView or fallback to instance state
     const effectiveCurrentView = currentView || this.instanceStates.get(instanceType)?.currentView || 'post_view';
     
-    console.log(`[GraphControl] Segment: ${segment}, Slug: ${slug}, CurrentView: ${effectiveCurrentView}`);
+
 
     // Handle based on segment and view type
     switch (segment) {
@@ -381,7 +367,7 @@ class GraphControlAPI {
           // Post segment with tag_view: extract tags and focus on them
           const tags = this.getTagsBySlug(slug);
           if (tags.length > 0) {
-            console.log(`[GraphControl] Found tags for post ${slug}:`, tags);
+      
             this.changeViewAndFocusNode('tag_view', tags, instanceType, undefined, continuousFocus);
             this.highlightByTag(tags, instanceType);
           } else {
@@ -642,64 +628,43 @@ export function calculateZoomLevel(
   const width = maxX - minX;
   const height = maxY - minY;
 
-  console.log('[calculateZoomLevel] Debug info:', {
-    bounds: { minX, maxX, minY, maxY },
-    width,
-    height,
-    canvasWidth,
-    canvasHeight,
-    paddingInPixels
-  });
+
 
   // When all nodes are at a single point (width/height is 0)
   if (width === 0 && height === 0) {
-    console.log('[calculateZoomLevel] Zero bounds, returning zoom=5');
+
     return 5; // Return appropriate default zoom level
   }
 
   const targetCanvasWidth = canvasWidth * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO;
   const targetCanvasHeight = canvasHeight * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO;
 
-  console.log('[calculateZoomLevel] Target canvas dimensions:', {
-    targetCanvasWidth,
-    targetCanvasHeight,
-    MULTIPLE_ZOOM_RATIO: GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO
-  });
+
 
   // 1. Assuming no padding, calculate the 'base zoom level' to fit node bounding box to target canvas area
   // This zoom level becomes the conversion ratio between 'graph coordinate units' and 'pixels'
   const zoomXWithoutPadding = targetCanvasWidth / (width || 1);
   const zoomYWithoutPadding = targetCanvasHeight / (height || 1);
 
-  console.log('[calculateZoomLevel] Zoom without padding:', {
-    zoomXWithoutPadding,
-    zoomYWithoutPadding
-  });
+
 
   // Choose the smaller zoom level since both axes must fit within the screen
   const baseZoom = Math.min(zoomXWithoutPadding, zoomYWithoutPadding);
 
-  console.log('[calculateZoomLevel] Base zoom:', baseZoom);
+
 
   // 2. Convert desired padding in 'pixel' units to 'graph coordinate' units
   // For example, if baseZoom is 5, then 1 graph unit = 5 pixels
   // Therefore, 20px padding becomes 20/5 = 4 graph units
   const paddingInGraphUnits = paddingInPixels / baseZoom;
 
-  console.log('[calculateZoomLevel] Padding conversion:', {
-    paddingInPixels,
-    baseZoom,
-    paddingInGraphUnits
-  });
+
 
   // 3. Apply converted graph unit padding to calculate effective width/height
   const effectiveWidth = width + (paddingInGraphUnits * 2);
   const effectiveHeight = height + (paddingInGraphUnits * 2);
 
-  console.log('[calculateZoomLevel] Effective dimensions:', {
-    effectiveWidth,
-    effectiveHeight
-  });
+
 
   // 4. Recalculate the final zoom level 
   const finalZoomX = targetCanvasWidth / effectiveWidth;

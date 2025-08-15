@@ -9,7 +9,7 @@ export function GraphController() {
   const handleSlugFocus = () => {
     if (slugInput.trim()) {
       const slugs = slugInput.split(',').map(s => s.trim()).filter(Boolean);
-      console.log(`[Debug] Focusing on slugs:`, slugs);
+
       graphControl.changeViewAndFocusBySlug('post_view', slugs, 'sidenav');
     }
   };
@@ -17,7 +17,7 @@ export function GraphController() {
   const handleTagFocus = () => {
     if (tagInput.trim()) {
       const tags = tagInput.split(',').map(s => s.trim()).filter(Boolean);
-      console.log(`[Debug] Focusing on tags:`, tags);
+
       graphControl.changeViewAndFocusNode('tag_view', tags, 'sidenav');
     }
   };
@@ -25,7 +25,7 @@ export function GraphController() {
   const handleSlugHighlight = () => {
     if (slugInput.trim()) {
       const slugs = slugInput.split(',').map(s => s.trim()).filter(Boolean);
-      console.log(`[Debug] Highlighting slugs:`, slugs);
+
       graphControl.highlightBySlug(slugs, 'sidenav');
     }
   };
@@ -33,7 +33,7 @@ export function GraphController() {
   const handleTagHighlight = () => {
     if (tagInput.trim()) {
       const tags = tagInput.split(',').map(s => s.trim()).filter(Boolean);
-      console.log(`[Debug] Highlighting tags:`, tags);
+
       graphControl.highlightByTag(tags, 'sidenav');
     }
   };
@@ -147,7 +147,7 @@ export function GraphController() {
         <button 
           onClick={() => {
             const path = window.location.pathname;
-            console.log(`[Debug] Current URL: ${path}`);
+
             graphControl.handleUrlCurrentFocus(path, 'sidenav');
           }}
           style={{ margin: '2px', padding: '2px 4px', fontSize: '10px' }}

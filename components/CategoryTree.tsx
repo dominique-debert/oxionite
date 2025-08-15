@@ -55,7 +55,6 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' || item.type === 'Home' ? styles.postItem : ''}`
 
   const handleMouseEnter = () => {
-    console.log('Hover:', item.slug);
     graphControl.changeViewAndFocusBySlug('post_view', item.slug, 'sidenav');
   };
 

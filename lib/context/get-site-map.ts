@@ -163,7 +163,7 @@ async function getAllPagesFromDatabase(
     }
 
     const pageIds = blockIds
-    console.log(`Fetching ${pageIds.length} pages from Notion...`)
+  
 
     const pageInfoMap: Record<string, PageInfo> = {}
     const collectionRecordMap = collectionData.recordMap as ExtendedRecordMap

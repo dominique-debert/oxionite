@@ -61,7 +61,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
       // Skip non-public pages
       if (pageInfo.public === false) {
-        console.log(`[BUILD] Skipping private page: ${pageInfo.title}`)
+
         return
       }
 
@@ -72,7 +72,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
       // Only generate paths for root pages (Post/Home type)
       if (page.type === 'Post' || page.type === 'Home') {
-        console.log(`[BUILD] Generating path for root page: ${pageInfo.title} (${pageInfo.slug})`)
+
         siteConfig.locale.localeList.forEach((locale) => {
           if (page.language === locale) {
             paths.push({
@@ -82,11 +82,11 @@ export const getStaticPaths: GetStaticPaths = async () => {
           }
         })
       } else {
-        console.log(`[BUILD] Skipping non-Post/Home page: ${pageInfo.type}`)
+
       }
     })
 
-    console.log(`[BUILD] Generated ${paths.length} post and home page paths`)
+
 
     return {
       paths,
@@ -107,13 +107,9 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
 
   try {
     const siteMap = await getCachedSiteMap()
-    console.log(`[SSR] getStaticProps called with slug: ${slug.join('/')}`)
-    console.log(`[SSR] Expected actual Notion page ID: 230f2d475c3180fa82b0f4de70b10b85`)
-
     // The slug array should be [parent-post-slug, ...subpage-title-ids]
     const parentPostSlug = slug[0]
     const subpageTitleIds = slug.slice(1)
-    console.log(`[SSR] parentPostSlug: ${parentPostSlug}, subpageTitleIds: ${subpageTitleIds}`)
 
     // For root pages, find the parent post; for subpages, we'll extract page ID directly
     let parentPostPageId: string | null = null
@@ -138,7 +134,7 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
     if (slug.length === 1) {
       // Root page: /post/{slug} - must exist in sitemap
       if (!parentPostPageId || !parentPostPageInfo) {
-        console.log(`Parent post not found: locale=${locale}, slug=${slug[0]}`)
+
         return {
           notFound: true,
           revalidate: site.isr?.revalidate ?? 60,
@@ -158,11 +154,10 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
       } else {
         currentPageId = lastSegment || ''
       } 
-      console.log(`[SSR] Using page ID directly: ${currentPageId}`)
+
     }
 
     // Fetch the page content
-    console.log(`[SSR] Fetching page with pageId: ${currentPageId}`)
     const recordMap = await getPage(currentPageId)
 
     // Check if the page is private (if we have page info)
