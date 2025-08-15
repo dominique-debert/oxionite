@@ -399,7 +399,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
             }
           }
         }
-      }
 
         // Handle subpages by using the page ID directly
         if (parsed.isSubpage) {
@@ -466,7 +465,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
                 <TitlePost title={postTitle} />
               </div>
             </Background>
-          );
+          )
         }
 
         // Handle regular posts (non-subpages)
@@ -631,9 +630,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
               )
             }
           }
-          }
         }
-
 
         return (
           <Background imageUrl={coverImage} baseUrl={baseUrl}>
@@ -651,7 +648,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
       }
 
       case 'tag': {
-        
         // Decode URL-encoded tag
         const decodedTag = parsed.tag ? decodeURIComponent(parsed.tag) : 'Tag';
         
@@ -670,7 +666,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
         )
       }
 
-      case 'all-tags': 
+      case 'all-tags': {
         return (
           <Background baseUrl={baseUrl}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -684,6 +680,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
             </div>
           </Background>
         )
+      }
 
       default:
         return (
