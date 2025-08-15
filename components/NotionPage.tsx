@@ -3,10 +3,7 @@ import dynamic from 'next/dynamic'
 import Image, { type ImageProps } from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import {
-  formatDate,
-  getPageProperty
-} from 'notion-utils'
+import { formatDate } from 'notion-utils'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { NotionRenderer } from 'react-notion-x'
 
@@ -18,11 +15,6 @@ import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import localeConfig from '../site.locale.json'
 import styles from 'styles/components/common.module.css'
-
-import { Loading } from './Loading'
-import { NotionComments } from './NotionComments'
-import { Page404 } from './Page404'
-import { PageActions } from './PageActions'
 import { PostHeader } from './PostHeader'
 
 // -----------------------------------------------------------------------------
@@ -174,8 +166,6 @@ const propertyTextValue = (
   return defaultFn()
 }
 
-
-
 export function NotionPageContent({ 
   site,
   recordMap,
@@ -190,16 +180,13 @@ export function NotionPageContent({
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
 
-  const [isShowingComments, setIsShowingComments] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
     setHasMounted(true)
-    setIsShowingComments(false)
   }, [pageId])
 
   // Current path context for hierarchical routing
-  
   const siteMapPageUrl = useCallback(
     (linkedPageId = '') => {
       if (!linkedPageId || !siteMap) {
@@ -221,33 +208,17 @@ export function NotionPageContent({
     [siteMap, router.asPath, router.locale, parentSlug]
   )
 
-  const { block, tweetId } = useMemo(() => {
+  const { block } = useMemo(() => {
     const block = recordMap?.block?.[pageId!]?.value
-
-    if (block && recordMap) {
-      const tweetId = getPageProperty<string>('Tweet', block, recordMap)
-      return { block, tweetId }
-    }
-
-    return { block: undefined, tweetId: undefined }
+    return { block }
   }, [pageId, recordMap])
 
-  const memoizedActions = useMemo(
-    () => (tweetId ? <PageActions tweet={tweetId} /> : null),
-    [tweetId]
-  )
-
-  const memoizedComments = useMemo(
-    () => (recordMap ? <NotionComments recordMap={recordMap} /> : null),
-    [recordMap]
-  )
-
   if (router.isFallback) {
-    return <Loading />
+    return <div className={styles.loading}>Loading...</div>
   }
 
   if (error || !site || !pageId || !recordMap || !block) {
-    return <Page404 />
+    return <div className={styles.page404}>404 - Page Not Found</div>
   }
 
   const pageInfo = siteMap?.pageInfoMap?.[pageId]
@@ -269,7 +240,7 @@ export function NotionPageContent({
                 block={block}
                 recordMap={recordMap}
                 siteMap={siteMap}
-                isBlogPost={isBlogPost} // Still needed for internal logic in PostHeader
+                isBlogPost={isBlogPost}
                 isMobile={isMobile}
                 variant={isBlogPost ? 'full' : 'simple'}
                 useOriginalCoverImage={pageInfo?.useOriginalCoverImage ?? false}
@@ -290,7 +261,7 @@ export function NotionPageContent({
               darkMode={hasMounted ? isDarkMode : false}
               recordMap={recordMap}
               rootPageId={site.rootNotionPageId || undefined}
-              fullPage={true} // Ensure cover, icon, and title are rendered
+              fullPage={true}
               previewImages={!!recordMap.preview_images}
               showCollectionViewDropdown={false}
               showTableOfContents={showTableOfContents}
@@ -311,21 +282,12 @@ export function NotionPageContent({
                 Pdf,
                 Modal: Modal2,
                 Tweet,
-                // Always use an empty header to hide Notion's built-in header
                 Header: EmptyHeader,
                 propertyLastEditedTimeValue,
                 propertyDateValue,
                 propertyTextValue
               }}
             />
-            
-                        {isBlogPost && (
-              <div className={styles.pageActions}>
-                {memoizedActions}
-              </div>
-            )}
-
-            {isShowingComments && memoizedComments}
           </div>
         </div>
       </div>

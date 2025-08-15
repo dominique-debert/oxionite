@@ -4,6 +4,26 @@
   }
 }
 
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: var(--primary-text-color);
+}
+
+.page404 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary-text-color);
+  text-align: center;
+}
+
 .loadingIcon {
   animation: spinner 0.6s linear infinite;
   display: block;
