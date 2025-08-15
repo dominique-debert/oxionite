@@ -1,7 +1,7 @@
 import React, { useRef, useImperativeHandle, useEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 
-// 필요한 메서드만 노출하는 인터페이스 정의
+// Define interface exposing only necessary methods
 export interface GraphMethods {
   zoomToFit: (ms?: number, padding?: number, nodeFilter?: (node: any) => boolean) => void;
   width: () => number;
@@ -16,7 +16,7 @@ const ForceGraphWrapper = React.forwardRef<GraphMethods, ForceGraphProps>(
   ({ onReady, ...restProps }, ref) => {
     const internalRef = useRef<any>(null);
     
-    // ref가 설정될 때 필요한 메서드만 노출
+    // Expose only necessary methods when ref is set
     useImperativeHandle(ref, () => ({
       zoomToFit: (ms?: number, padding?: number, nodeFilter?: (node: any) => boolean) => {
         console.log('[ForceGraphWrapper] zoomToFit called:', {

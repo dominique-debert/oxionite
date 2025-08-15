@@ -679,10 +679,10 @@ export function calculateZoomLevel(
     paddingInPixels
   });
 
-  // 모든 노드가 한 점에 있는 경우 (너비/높이가 0)
+  // When all nodes are at a single point (width/height is 0)
   if (width === 0 && height === 0) {
     console.log('[calculateZoomLevel] Zero bounds, returning zoom=5');
-    return 5; // 적절한 기본 줌 레벨 반환
+    return 5; // Return appropriate default zoom level
   }
 
   const targetCanvasWidth = canvasWidth * GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO;
@@ -694,8 +694,8 @@ export function calculateZoomLevel(
     MULTIPLE_ZOOM_RATIO: GRAPH_CONFIG.zoom.MULTIPLE_ZOOM_RATIO
   });
 
-  // 1. 패딩이 없다고 가정하고, 노드 바운딩 박스를 목표 캔버스 영역에 맞추기 위한 '기본 줌 레벨'을 계산합니다.
-  // 이 줌 레벨이 '그래프 좌표 단위'와 '픽셀' 사이의 변환 비율이 됩니다.
+  // 1. Assuming no padding, calculate the 'base zoom level' to fit node bounding box to target canvas area
+  // This zoom level becomes the conversion ratio between 'graph coordinate units' and 'pixels'
   const zoomXWithoutPadding = targetCanvasWidth / (width || 1);
   const zoomYWithoutPadding = targetCanvasHeight / (height || 1);
 
@@ -704,14 +704,14 @@ export function calculateZoomLevel(
     zoomYWithoutPadding
   });
 
-  // 두 축 모두 화면 안에 들어와야 하므로 더 작은 줌 레벨을 선택합니다.
+  // Choose the smaller zoom level since both axes must fit within the screen
   const baseZoom = Math.min(zoomXWithoutPadding, zoomYWithoutPadding);
 
   console.log('[calculateZoomLevel] Base zoom:', baseZoom);
 
-  // 2. 원하는 '픽셀' 단위의 패딩을 '그래프 좌표' 단위로 변환합니다.
-  // 예를 들어 baseZoom이 5라면, 1 그래프 단위 = 5 픽셀입니다.
-  // 따라서 20px 패딩은 20/5 = 4 그래프 단위가 됩니다.
+  // 2. Convert desired padding in 'pixel' units to 'graph coordinate' units
+  // For example, if baseZoom is 5, then 1 graph unit = 5 pixels
+  // Therefore, 20px padding becomes 20/5 = 4 graph units
   const paddingInGraphUnits = paddingInPixels / baseZoom;
 
   console.log('[calculateZoomLevel] Padding conversion:', {
@@ -720,7 +720,7 @@ export function calculateZoomLevel(
     paddingInGraphUnits
   });
 
-  // 3. 변환된 그래프 단위 패딩을 적용하여 유효 너비/높이를 계산합니다.
+  // 3. Apply converted graph unit padding to calculate effective width/height
   const effectiveWidth = width + (paddingInGraphUnits * 2);
   const effectiveHeight = height + (paddingInGraphUnits * 2);
 
@@ -729,7 +729,7 @@ export function calculateZoomLevel(
     effectiveHeight
   });
 
-  // 4. 최종 줌 레벨을 다시 계산합니다. 
+  // 4. Recalculate the final zoom level 
   const finalZoomX = targetCanvasWidth / effectiveWidth;
   const finalZoomY = targetCanvasHeight / effectiveHeight;
 

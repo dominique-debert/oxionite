@@ -58,9 +58,9 @@
   max-width: 320px;
   overflow-y: auto; /* Enable vertical scrolling when content exceeds max height */
   position: sticky;
-  top: 120px; /* PostHeader 하단에서 고정 - 필요에 따라 조정 가능 */
-  margin-top: -480px; /* PostHeader 높이만큼 위로 올려서 sticky 시작점 조정 */
-  margin-left: 1rem; /* TOC를 오른쪽으로 이동 */
+  top: 120px; /* Fixed below PostHeader - can be adjusted as needed */
+  margin-top: -480px; /* Move up by PostHeader height to adjust sticky start point */
+  margin-left: 1rem; /* Move TOC to the right */
 }
 
 /* Home page TOC positioning - use data attribute selector */
@@ -97,7 +97,7 @@
 }
 
 
-/* TOC 항목들의 줄바꿈 설정 - 클릭 기능 보존 */
+/* Line break settings for TOC items - preserves click functionality */
 .notion-table-of-contents-item {
   white-space: normal !important;
   word-wrap: break-word;
@@ -109,10 +109,10 @@
   white-space: normal !important;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  /* display: block 제거하여 클릭 기능 보존 */
+  /* Remove display: block to preserve click functionality */
 }
 
-/* TOC 제목 "Table of Contents" 숨기기 */
+/* Hide TOC title "Table of Contents" */
 .notion-aside-table-of-contents-header {
   display: none !important;
 }
@@ -344,7 +344,7 @@
   margin-top: 0 !important;
 }
 
-/* 간단하고 안전한 padding 제거 - TOC 기능을 방해하지 않도록 */
+/* Simple and safe padding removal - doesn't interfere with TOC functionality */
 .custom-notion-page .notion-page-content {
   padding-top: 0 !important;
 }

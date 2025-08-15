@@ -33,7 +33,7 @@ export default siteConfig({
     //   content: {
     //     ko: {
     //       title: 'Project A',
-    //       description: 'AI 기반의 추천 시스템을 개발했습니다.'
+    //       description: 'Developed an AI-based recommendation system.'
     //     },
     //     en: {
     //       title: 'Project A',
@@ -48,7 +48,7 @@ export default siteConfig({
     //   content: {
     //     ko: {
     //       title: 'Project A',
-    //       description: 'AI 기반의 추천 시스템을 개발했습니다.'
+    //       description: 'Developed an AI-based recommendation system.'
     //     },
     //     en: {
     //       title: 'Project A',
@@ -63,7 +63,7 @@ export default siteConfig({
     //   content: {
     //     ko: {
     //       title: 'Project C',
-    //       description: 'Next.js 블로그 엔진을 만들었습니다.'
+    //       description: 'Created a Next.js blog engine.'
     //     },
     //     en: {
     //       title: 'Project C',
@@ -77,7 +77,7 @@ export default siteConfig({
     //   content: {
     //     ko: {
     //       title: 'Project E',
-    //       description: 'Next.js 블로그 엔진을 만들었습니다.'
+    //       description: 'Created a Next.js blog engine.'
     //     },
     //     en: {
     //       title: 'Project E',
@@ -92,7 +92,7 @@ export default siteConfig({
       content: {
         ko: {
           title: 'Project D',
-          description: 'Next.js 블로그 엔진을 만들었습니다.'
+          description: 'Created a Next.js blog engine.'
         },
         en: {
           title: 'Project D',
