@@ -109,16 +109,11 @@ class GraphControlAPI {
     // If we have recordMap, use it to get tags like PostHeader.tsx does
     if (this.recordMap && this.recordMap[pageInfo.pageId]) {
       const block = this.recordMap[pageInfo.pageId];
-      console.log(`[GraphControl] Debug - recordMap block structure for page ${pageInfo.pageId}:`, {
-        hasValue: !!block?.value,
-        hasProperties: !!block?.value?.properties,
-        keys: block ? Object.keys(block) : [],
-        valueKeys: block?.value ? Object.keys(block.value) : []
-      });
+
       
       if (block?.value?.properties) {
         const properties = block.value.properties;
-        console.log(`[GraphControl] Debug - all properties for page ${pageInfo.pageId}:`, Object.keys(properties));
+
         
         // Check all possible tag property names
         const possibleTagKeys = ['Tags', 'tags', 'TAGS', 'Tag', 'tag'];
@@ -133,7 +128,7 @@ class GraphControlAPI {
           }
         }
         
-        console.log(`[GraphControl] Debug - found tagsProperty using key '${foundKey}':`, tagsProperty);
+
         
         if (tagsProperty) {
           let tags: string[] = [];
@@ -171,7 +166,7 @@ class GraphControlAPI {
             }
           }
           
-          console.log(`[GraphControl] Found tags via recordMap for slug '${slug}' (page: ${pageInfo.title}):`, tags);
+
           return tags;
         }
       }
@@ -202,7 +197,7 @@ class GraphControlAPI {
       }
     }
 
-    console.log(`[GraphControl] Fallback to pageInfo.tags for slug '${slug}' (page: ${pageInfo.title}):`, tags);
+
     return tags;
   }
 
@@ -210,7 +205,6 @@ class GraphControlAPI {
    * Send control message to specific graph instance
    */
   private sendMessage(message: GraphControlMessage) {
-    console.log(`[GraphControl] Sending to ${message.instanceType}:`, message);
     const listeners = this.listeners.get(message.instanceType) || [];
     listeners.forEach(listener => listener(message));
   }
@@ -261,8 +255,6 @@ class GraphControlAPI {
    * Handle initial URL-based focus when graph first loads
    */
   handleUrlInitialFocus(pathname: string, instanceType: 'sidenav' | 'home' = 'sidenav') {
-    console.log(`[GraphControl] Handling initial URL focus: ${pathname} for ${instanceType}`);
-    
     const { segment, slug } = parseUrlPathname(pathname);
     
     if (!segment) {
@@ -285,7 +277,6 @@ class GraphControlAPI {
         (window as any).__graphInitialFocus = {};
       }
       (window as any).__graphInitialFocus[request.instanceType] = request;
-      console.log(`[GraphControl] Stored initial focus request for ${request.instanceType}:`, request);
     }
   }
 
@@ -328,19 +319,16 @@ class GraphControlAPI {
         break;
         
       case 'tag':
-        console.log(`[GraphControl] Processing initial focus request for tag: ${request.slug}`);
         this.changeViewAndFocusNode('tag_view', request.slug, instanceType);
         this.highlightByTag([request.slug], instanceType);
         break;
         
       case 'all-tags':
-        console.log(`[GraphControl] Switching to tag view for all-tags`);
         this.changeView('tag_view', instanceType);
         this.scheduleFitToHome(instanceType);
         break;
         
       default:
-        console.log(`[GraphControl] Unknown segment for initial focus: ${request.segment}`);
         this.changeView('post_view', instanceType);
         this.scheduleFitToHome(instanceType);
         break;
@@ -351,7 +339,6 @@ class GraphControlAPI {
    * Schedule fitToHome to run after graph is ready
    */
   scheduleFitToHome(instanceType: 'sidenav' | 'home' = 'sidenav') {
-    console.log(`[GraphControl] Scheduling fitToHome for ${instanceType}`);
     this.pendingFitToHome.set(instanceType, true);
   }
 
@@ -360,7 +347,6 @@ class GraphControlAPI {
    */
   processPendingFitToHome(instanceType: 'sidenav' | 'home' = 'sidenav') {
     if (this.pendingFitToHome.get(instanceType)) {
-      console.log(`[GraphControl] Executing pending fitToHome for ${instanceType}`);
       this.pendingFitToHome.set(instanceType, false);
       this.fitToHome(instanceType);
     }
@@ -399,7 +385,6 @@ class GraphControlAPI {
             this.changeViewAndFocusNode('tag_view', tags, instanceType, undefined, continuousFocus);
             this.highlightByTag(tags, instanceType);
           } else {
-            console.log(`[GraphControl] No tags found for post ${slug}`);
             this.changeView('tag_view', instanceType);
           }
         }
@@ -425,7 +410,6 @@ class GraphControlAPI {
         break;
         
       default:
-        console.log(`[GraphControl] Unknown segment: ${segment}`);
         break;
     }
   }
@@ -488,8 +472,6 @@ class GraphControlAPI {
   }
 
   changeView(view: GraphViewType, instanceType: 'sidenav' | 'home' = 'sidenav') {
-    console.log(`[GraphControl] changeView: ${instanceType} switching to ${view}`);
-    
     this.updateInstanceState(instanceType, { 
       currentView: view,
     });
@@ -508,16 +490,13 @@ class GraphControlAPI {
     const needsViewChange = !currentState || currentState.currentView !== view;
     
     if (needsViewChange) {
-      console.log(`[needsViewChange] Changing view to ${view} for ${instanceType}`);
       this.changeView(view, instanceType);
-    } else {
-      console.log(`[needsViewChange] View ${view} already active for ${instanceType}`);
     }
     
     // Normalize slug to array
     const slugs = Array.isArray(slug) ? slug : [slug];
 
-    console.log(`[GraphControl] changeViewAndFocusBySlug: ${instanceType} changing to ${view} and focusing on ${slugs} with options ${options} and continuous ${continuous}`);
+
     
     setTimeout(() => {
       if (slugs.length === 1) {
@@ -551,7 +530,6 @@ class GraphControlAPI {
     const nodeIds = Array.isArray(nodeId) ? nodeId : [nodeId];
     
     if (needsViewChange) {
-      console.log(`[GraphControl] Changing view to ${view} for ${instanceType}`);
       this.changeView(view, instanceType);
     }
     
@@ -595,7 +573,6 @@ class GraphControlAPI {
    * Highlight nodes by slug (for post view)
    */
   highlightBySlug(slugs: string[], instanceType: 'sidenav' | 'home' = 'sidenav') {
-    console.log(`[GraphControl] Highlighting slugs:`, slugs);
     this.sendMessage({
       type: 'highlightNodes',
       instanceType,
@@ -610,7 +587,6 @@ class GraphControlAPI {
    * Highlight nodes by tag (for tag view)
    */
   highlightByTag(tags: string[], instanceType: 'sidenav' | 'home' = 'sidenav') {
-    console.log(`[GraphControl] Highlighting tags:`, tags);
     this.sendMessage({
       type: 'highlightNodes',
       instanceType,
@@ -625,7 +601,6 @@ class GraphControlAPI {
    * Clear all highlights
    */
   clearHighlight(instanceType: 'sidenav' | 'home' = 'sidenav') {
-    console.log(`[GraphControl] Clearing highlights`);
     this.sendMessage({
       type: 'clearHighlight',
       instanceType,
@@ -644,10 +619,7 @@ class GraphControlAPI {
    * Debug helpers for development
    */
   debug() {
-    console.log('[GraphControl] Current state:', {
-      listeners: Array.from(this.listeners.keys()),
-      instanceStates: Array.from(this.instanceStates.entries())
-    });
+    // Debug method kept for potential use
   }
 }
 
@@ -735,12 +707,7 @@ export function calculateZoomLevel(
 
   const finalZoom = Math.min(finalZoomX, finalZoomY);
 
-  console.log('[calculateZoomLevel] Final calculation:', {
-    finalZoomX,
-    finalZoomY,
-    finalZoom,
-    clampedZoom: Math.max(0.1, Math.min(finalZoom, 10))
-  });
+
 
   return Math.max(0.1, Math.min(finalZoom, 10));
 }

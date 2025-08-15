@@ -39,20 +39,12 @@ export function PostHeader({
 
   // Fetch social image when useOriginalCoverImage is false
   useEffect(() => {
-    console.log('[PostHeader] useEffect triggered:', {
-      useOriginalCoverImage,
-      url,
-      blockId: block?.id
-    })
-    
     if (!useOriginalCoverImage && url) {
-      console.log('[PostHeader] Fetching social image for URL:', url)
       setIsLoadingSocialImage(true)
       
       const fetchPromise = siteMap ? getSocialImageUrl(url) : getSocialImageUrl(url)
       fetchPromise
         .then(imageUrl => {
-          console.log('[PostHeader] Social image URL received:', imageUrl)
           setSocialImageUrl(imageUrl)
         })
         .catch(err => {
@@ -64,13 +56,11 @@ export function PostHeader({
         })
     } else if (!useOriginalCoverImage && !url && block?.id) {
       // Fallback to old behavior if URL is not provided
-      console.log('[PostHeader] URL not provided, falling back to block.id:', block.id)
       setIsLoadingSocialImage(true)
       
       const fetchPromise = siteMap ? getSocialImageUrl(block.id) : getSocialImageUrl(block.id)
       fetchPromise
         .then(imageUrl => {
-          console.log('[PostHeader] Social image URL received (fallback):', imageUrl)
           setSocialImageUrl(imageUrl)
         })
         .catch(err => {
@@ -80,12 +70,6 @@ export function PostHeader({
         .finally(() => {
           setIsLoadingSocialImage(false)
         })
-    } else {
-      console.log('[PostHeader] Skipping social image fetch:', {
-        useOriginalCoverImage,
-        url,
-        blockId: block?.id
-      })
     }
   }, [useOriginalCoverImage, url, block?.id, siteMap, block])
 
@@ -138,14 +122,6 @@ export function PostHeader({
   const effectiveCoverImageUrl = useOriginalCoverImage 
     ? coverImageUrl 
     : socialImageUrl || coverImageUrl
-    
-  console.log('[PostHeader] Image selection:', {
-    useOriginalCoverImage,
-    coverImageUrl,
-    socialImageUrl,
-    effectiveCoverImageUrl,
-    isLoadingSocialImage
-  })
 
   return (
     <div className={cs(styles.header, isMobile && styles.mobile)}>

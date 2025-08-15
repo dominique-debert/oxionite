@@ -403,7 +403,6 @@ export class SocialImageManager {
 
   private hasPageChanged(oldPage: PageInfo | undefined, newPage: PageInfo): boolean {
     if (!oldPage) {
-      console.log(`[SocialImageManager] Page ${newPage.pageId} is new, will generate image`);
       return true;
     }
     
@@ -412,23 +411,11 @@ export class SocialImageManager {
       'tags', 'authors', 'breadcrumb', 'coverImage'
     ];
     
-    const changedFields: string[] = [];
-    
     const hasChanged = relevantFields.some(field => {
       const oldValue = (oldPage as any)[field];
       const newValue = (newPage as any)[field];
-      const changed = JSON.stringify(oldValue) !== JSON.stringify(newValue);
-      if (changed) {
-        changedFields.push(`${field}: '${oldValue}' → '${newValue}'`);
-      }
-      return changed;
+      return JSON.stringify(oldValue) !== JSON.stringify(newValue);
     });
-    
-    if (hasChanged) {
-      console.log(`[SocialImageManager] Page ${newPage.pageId} (${newPage.title}) has changes:`, changedFields.join(', '));
-    } else {
-      console.log(`[SocialImageManager] Page ${newPage.pageId} (${newPage.title}) has no changes, skipping`);
-    }
     
     return hasChanged;
   }
@@ -438,7 +425,6 @@ export class SocialImageManager {
     
     try {
       await fs.unlink(imagePath);
-      console.log(`[SocialImageManager] Deleted image: ${imagePath}`);
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
         console.error(`[SocialImageManager] Failed to delete image: ${imagePath}`, err);
@@ -447,16 +433,12 @@ export class SocialImageManager {
   }
 
   private async cleanupOrphanedFiles(siteMap: SiteMap, tagGraph: any): Promise<void> {
-    console.log('[SocialImageManager] Starting proactive cleanup of orphaned files...');
-    
     const { localeList } = localeConfig;
     const baseDir = path.join(process.cwd(), 'public', 'social-images');
     
     for (const locale of localeList) {
       await this.cleanupOrphanedFilesForLocale(siteMap, tagGraph, locale, baseDir);
     }
-    
-    console.log('[SocialImageManager] Proactive cleanup completed');
   }
 
   private async cleanupOrphanedFilesForLocale(siteMap: SiteMap, tagGraph: any, locale: string, baseDir: string): Promise<void> {
@@ -517,7 +499,6 @@ export class SocialImageManager {
       for (const file of files) {
         if (file.endsWith('.jpg') && !validFiles.has(file)) {
           const filePath = path.join(dirPath, file);
-          console.log(`[SocialImageManager] Deleting orphaned file: ${filePath}`);
           await this.deleteImage(filePath);
         }
       }
@@ -568,19 +549,12 @@ export class SocialImageManager {
   }
 
   async syncSocialImages(siteMap: SiteMap, tagGraph: any) {
-    console.log('[SocialImageManager] Starting social image sync...');
-    console.log('[SocialImageManager] Previous site map exists:', !!this.previousSiteMap);
-    
     // Force regeneration for testing - check if we're in development
     const forceRegenerate = process.env.NODE_ENV === 'development';
-    if (forceRegenerate) {
-      console.log('[SocialImageManager] Development mode - forcing regeneration of all images');
-    }
     
     if (!this.previousSiteMap && !forceRegenerate) {
       // First run, skip processing (build-time handles this)
       await this.saveState(siteMap, tagGraph);
-      console.log('[SocialImageManager] First run, skipping incremental update');
       return;
     }
 
@@ -605,22 +579,13 @@ export class SocialImageManager {
     // Compare pages
     const oldPages = this.previousSiteMap?.pageInfoMap || {};
     const newPages = siteMap.pageInfoMap || {};
-    
-    console.log(`[SocialImageManager] Comparing ${Object.keys(oldPages).length} old pages with ${Object.keys(newPages).length} new pages`);
 
     for (const [pageId, newPage] of Object.entries(newPages)) {
       const oldPage = oldPages[pageId];
       
       if (forceRegenerate || !oldPage || this.hasPageChanged(oldPage, newPage)) {
         if (newPage.slug && (newPage.type === 'Post' || newPage.type === 'Home' || newPage.type === 'Category')) {
-          if (forceRegenerate) {
-            console.log(`[SocialImageManager] Force adding page: ${newPage.title} (${pageId})`);
-          } else {
-            console.log(`[SocialImageManager] Adding page to update: ${newPage.title} (${pageId})`);
-          }
           pagesToUpdate.push(newPage);
-        } else {
-          console.log(`[SocialImageManager] Skipping page (no slug or wrong type): ${newPage.title} (${pageId})`);
         }
       }
     }
@@ -628,27 +593,18 @@ export class SocialImageManager {
     // Find removed pages
     for (const [pageId, oldPage] of Object.entries(oldPages)) {
       if (!newPages[pageId]) {
-        console.log(`[SocialImageManager] Page removed: ${oldPage.title} (${pageId})`);
         pagesToDelete.push(oldPage);
       }
     }
 
     // Compare tags
-    console.log('[SocialImageManager] Comparing tags across locales:', localeList);
     for (const locale of localeList) {
       const oldTags = this.previousTagGraph?.locales?.[locale]?.tagCounts || {};
       const newTags = tagGraph?.locales?.[locale]?.tagCounts || {};
-      
-      console.log(`[SocialImageManager] Locale ${locale}: ${Object.keys(oldTags).length} old tags, ${Object.keys(newTags).length} new tags`);
 
       // Find new tags
       for (const tag of Object.keys(newTags)) {
         if (forceRegenerate || !oldTags[tag]) {
-          if (forceRegenerate) {
-            console.log(`[SocialImageManager] Force adding tag: ${tag} in ${locale}`);
-          } else {
-            console.log(`[SocialImageManager] New tag found: ${tag} in ${locale}`);
-          }
           tagsToAdd.push(tag);
         }
       }
@@ -656,19 +612,16 @@ export class SocialImageManager {
       // Find removed tags
       for (const tag of Object.keys(oldTags)) {
         if (!newTags[tag]) {
-          console.log(`[SocialImageManager] Tag removed: ${tag} from ${locale}`);
           tagsToDelete[locale].push(tag);
         }
       }
     }
 
     // Delete existing images for pages being updated
-    console.log(`[SocialImageManager] Deleting existing images for ${pagesToUpdate.length} pages to update`);
     for (const page of pagesToUpdate) {
       const slugStr = page.slug;
       const langStr = page.language;
       if (!slugStr || !langStr) {
-        console.log(`[SocialImageManager] Skipping page ${page.title} - missing slug or language`);
         continue;
       }
 
@@ -688,19 +641,16 @@ export class SocialImageManager {
           continue;
       }
       
-      console.log(`[SocialImageManager] Deleting existing image: ${imagePath}`);
       await this.deleteImage(imagePath).catch(err => {
         console.error(`[SocialImageManager] Failed to delete image: ${imagePath}`, err);
       });
     }
 
     // Generate tasks for updated/new pages
-    console.log(`[SocialImageManager] Generating tasks for ${pagesToUpdate.length} pages to update`);
     for (const page of pagesToUpdate) {
       const slugStr = page.slug;
       const langStr = page.language;
       if (!slugStr || !langStr) {
-        console.log(`[SocialImageManager] Skipping page ${page.title} - missing slug or language`);
         continue;
       }
 
@@ -722,14 +672,8 @@ export class SocialImageManager {
         imagePath = path.join(socialImagesDir, 'category', String(filename));
         publicUrl = '/social-images/' + String(langStr) + '/category/' + String(filename);
       } else {
-        console.log(`[SocialImageManager] Skipping page ${page.title} - unsupported type: ${page.type}`);
         continue;
       }
-
-      console.log(`[SocialImageManager] Adding task: ${page.title}`);
-      console.log(`  - URL: ${url}`);
-      console.log(`  - Image Path: ${imagePath}`);
-      console.log(`  - Public URL: ${publicUrl}`);
 
       tasks.push({
             url,
@@ -744,7 +688,6 @@ export class SocialImageManager {
     }
 
     // Delete existing images for tags being updated
-    console.log(`[SocialImageManager] Deleting existing images for ${tagsToAdd.length} tags to update`);
     for (const locale of localeList) {
       const localeTags = tagGraph?.locales?.[locale]?.tagCounts || {};
       
@@ -753,7 +696,6 @@ export class SocialImageManager {
           const encodedTag = encodeURIComponent(tag);
           const imagePath = path.join(process.cwd(), 'public', 'social-images', locale, 'tag', `${encodedTag}.jpg`);
           
-          console.log(`[SocialImageManager] Deleting existing tag image: ${imagePath}`);
           await this.deleteImage(imagePath).catch(err => {
             console.error(`[SocialImageManager] Failed to delete tag image: ${imagePath}`, err);
           });
@@ -762,7 +704,6 @@ export class SocialImageManager {
     }
 
     // Generate tasks for new tags
-    console.log(`[SocialImageManager] Generating tasks for ${tagsToAdd.length} new tags`);
     for (const locale of localeList) {
       const localeTags = tagGraph?.locales?.[locale]?.tagCounts || {};
       
@@ -772,11 +713,6 @@ export class SocialImageManager {
           const url = `/${locale}/tag/${encodedTag}`;
           const imagePath = path.join(process.cwd(), 'public', 'social-images', locale, 'tag', `${encodedTag}.jpg`);
           const publicUrl = `/social-images/${locale}/tag/${encodedTag}.jpg`;
-
-          console.log(`[SocialImageManager] Adding tag task: ${tag} in ${locale}`);
-          console.log(`  - URL: ${url}`);
-          console.log(`  - Image Path: ${imagePath}`);
-          console.log(`  - Public URL: ${publicUrl}`);
 
           tasks.push({
             url,
@@ -788,8 +724,6 @@ export class SocialImageManager {
               baseUrl: `https://${siteConfig.domain}`
             }
           });
-        } else {
-          console.log(`[SocialImageManager] Skipping tag ${tag} in ${locale} - not found in localeTags`);
         }
       }
     }
@@ -799,7 +733,6 @@ export class SocialImageManager {
       console.error('[SocialImageManager] Failed to delete page images:', err);
     });
     for (const locale of localeList) {
-      console.log(`[SocialImageManager] Deleting ${tagsToDelete[locale].length} removed tags for locale ${locale}`);
       await this.deleteTagImages(tagsToDelete[locale], locale).catch(err => {
         console.error(`[SocialImageManager] Failed to delete tag images for locale ${locale}:`, err);
       });
@@ -807,36 +740,15 @@ export class SocialImageManager {
 
     // Generate new/updated images
     if (tasks.length > 0) {
-      console.log(`[SocialImageManager] Processing ${tasks.length} image updates...`);
-      console.log('[SocialImageManager] Tasks to process:', tasks.map(t => ({
-        url: t.url,
-        imagePath: t.imagePath,
-        type: t.url.includes('/tag/') ? 'tag' : 'page'
-      })));
-      
       const { generateSocialImagesOptimized } = await import('./og-images-batch');
       await generateSocialImagesOptimized(tasks, {
         batchSize: 8,
         baseUrl: process.env.VERCEL ? `https://${siteConfig.domain}` : 'http://localhost:3000'
       });
-    } else {
-      console.log('[SocialImageManager] No tasks to process - all images are up to date');
     }
 
     // Update state
     await this.saveState(siteMap, tagGraph);
-    
-    console.log('[SocialImageManager] Sync completed:', {
-      pagesUpdated: pagesToUpdate.length,
-      pagesUpdatedDetails: pagesToUpdate.map(p => ({id: p.pageId, title: p.title, type: p.type})),
-      pagesDeleted: pagesToDelete.length,
-      pagesDeletedDetails: pagesToDelete.map(p => ({id: p.pageId, title: p.title, type: p.type})),
-      tagsAdded: tagsToAdd.length,
-      tagsAddedDetails: tagsToAdd,
-      tagsDeleted: tagsToDelete.length,
-      tagsDeletedDetails: tagsToDelete,
-      imagesGenerated: tasks.length
-    });
   }
 }
 
@@ -849,19 +761,14 @@ let isSyncing = false;
 
 export async function syncSocialImagesWithSiteMap(siteMap: SiteMap) {
   if (isSyncing) {
-    console.log('[SocialImageSync] Sync already in progress, skipping...');
     return;
   }
 
   isSyncing = true;
   
   try {
-    console.log('[SocialImageSync] Starting social image sync with site map...');
-    
     const tagGraphData = buildTagGraphData(siteMap);
     await socialImageManager.syncSocialImages(siteMap, tagGraphData);
-    
-    console.log('[SocialImageSync] Social image sync completed successfully');
   } catch (err) {
     console.error('[SocialImageSync] Error during social image sync:', err);
   } finally {
@@ -872,5 +779,4 @@ export async function syncSocialImagesWithSiteMap(siteMap: SiteMap) {
 // Hook to integrate with site-cache ISR updates
 export function setupSocialImageSync() {
   // This will be called from site-cache.ts after site map updates
-  console.log('[SocialImageSync] Social image sync system initialized');
 }

@@ -86,11 +86,8 @@ const SocialBreadcrumb: React.FC<{ breadcrumb: string[]; baseUrl?: string }> = (
   const maxItemLength = 20
   const maxVisibleItems = 3
   
-  console.log('[SocialBreadcrumb] baseUrl:', baseUrl, 'breadcrumb:', breadcrumb);
-  
   if (!breadcrumb || breadcrumb.length === 0) {
     const iconUrl = `${baseUrl}/icon.png`;
-    console.log('[SocialBreadcrumb] Home icon URL:', iconUrl);
     
     return (
       <div style={{
@@ -393,7 +390,6 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
           if (pageInfo) {
             postTitle = pageInfo.title
             postCoverImage = pageInfo.coverImage || undefined
-            console.log('[SocialCard] Post case - found page:', {title: postTitle, coverImage: postCoverImage})
             
             // Check if we should use original cover image without overlays
             if (pageInfo.useOriginalCoverImage) {
@@ -401,10 +397,9 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
                 <Background imageUrl={postCoverImage} baseUrl={baseUrl} />
               )
             }
-          } else {
-            console.log('[SocialCard] Post case - no matching page found')
           }
         }
+      }
 
         // Handle subpages by using the page ID directly
         if (parsed.isSubpage) {
@@ -635,8 +630,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
                 <Background imageUrl={coverImage} baseUrl={baseUrl} />
               )
             }
-          } else {
-            console.log('[SocialCard] Category case - no matching category found')
+          }
           }
         }
 
