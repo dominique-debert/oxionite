@@ -28,6 +28,7 @@ export interface PageProps {
   heroStream?: MediaStream | null
   setHeroStream?: (stream: MediaStream | null) => void
   hideCoverImage?: boolean
+  parentSlug?: string
 }
 
 export interface Params extends ParsedUrlQuery {

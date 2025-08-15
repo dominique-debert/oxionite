@@ -176,7 +176,7 @@ const propertyTextValue = (
 
 
 
-export function NotionPageContent({
+export function NotionPageContent({ 
   site,
   recordMap,
   error,
@@ -184,8 +184,9 @@ export function NotionPageContent({
   siteMap,
   isMobile = false,
   showTOC = false,
-  hideCoverImage = false
-}: types.PageProps & { hideCoverImage?: boolean }) {
+  hideCoverImage = false,
+  parentSlug
+}: types.PageProps & { hideCoverImage?: boolean, parentSlug?: string }) {
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
 
@@ -200,19 +201,25 @@ export function NotionPageContent({
   // Current path context for hierarchical routing
   
   const siteMapPageUrl = useCallback(
-    (pageId = '') => {
-      if (pageId && siteMap) {
-        // Extract current path from URL for hierarchical routing
-        const pathSegments = router.asPath.split('/').filter(Boolean)
-        const postIndex = pathSegments.indexOf('post')
-        const currentPath = postIndex !== -1 ? pathSegments.slice(postIndex + 1) : []
-        
-        return buildPageUrl(pageId, siteMap, currentPath, router.locale || localeConfig.defaultLocale)
+    (linkedPageId = '') => {
+      if (!linkedPageId || !siteMap) {
+        return router.asPath
       }
-      return '/'
+
+      const pathSegments = router.asPath.split('/').filter(Boolean)
+      const postIndex = pathSegments.indexOf('post')
+      let currentPath: string[] = []
+
+      if (postIndex !== -1) {
+        currentPath = pathSegments.slice(postIndex + 1)
+      } else if (parentSlug) {
+        currentPath = [parentSlug]
+      }
+
+      return buildPageUrl(linkedPageId, siteMap, currentPath, router.locale || localeConfig.defaultLocale)
     },
-    [siteMap, router.asPath, router.locale]
-  )   
+    [siteMap, router.asPath, router.locale, parentSlug]
+  )
 
   const { block, tweetId } = useMemo(() => {
     const block = recordMap?.block?.[pageId!]?.value

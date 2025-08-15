@@ -124,6 +124,8 @@ export function Home({
 
   const isNotionPageActive =
     activeNotionPageId && homeRecordMaps?.[activeNotionPageId]
+  
+  const activePageInfo = activeNotionPageId && siteMap ? siteMap.pageInfoMap[activeNotionPageId] : null
 
   const renderTabs = () => {
     switch (activeTab) {
@@ -174,10 +176,12 @@ export function Home({
         <div className={styles.homeNotionContainer}>
           <NotionPage
             site={site}
+            siteMap={siteMap}
             recordMap={homeRecordMaps[activeNotionPageId]}
             pageId={activeNotionPageId}
             isMobile={isMobile}
             hideCoverImage={true}
+            parentSlug={activePageInfo?.slug}
           />
         </div>
       )}
