@@ -15,7 +15,7 @@ export default siteConfig({
   // basic site info (required)
   name: 'Noxionite',
   domain: 'noxionite.vercel.app',
-  author: 'Jzahnny',
+  author: 'Jaewan Shin',
 
   // open graph metadata (optional)
   description: 'Effortlessly turn your Notion pages into a stunning blog.',
