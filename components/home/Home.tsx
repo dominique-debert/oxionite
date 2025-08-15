@@ -113,6 +113,7 @@ export function Home({
             recordMap={homeRecordMaps[activeNotionPageId]}
             pageId={activeNotionPageId}
             isMobile={isMobile}
+            hideCoverImage={true}
           />
         </div>
       )}

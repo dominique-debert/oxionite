@@ -183,8 +183,9 @@ export function NotionPageContent({
   pageId,
   siteMap,
   isMobile = false,
-  showTOC = false
-}: types.PageProps) {
+  showTOC = false,
+  hideCoverImage = false
+}: types.PageProps & { hideCoverImage?: boolean }) {
   const router = useRouter()
   const { isDarkMode } = useDarkMode()
 
@@ -268,6 +269,7 @@ export function NotionPageContent({
                 url={router.locale && router.locale !== localeConfig.defaultLocale 
                   ? `/${router.locale}${router.asPath}` 
                   : router.asPath}
+                hideCoverImage={hideCoverImage}
               />
             )}
             

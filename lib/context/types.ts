@@ -27,6 +27,7 @@ export interface PageProps {
   setIsHeroPaused?: (isPaused: boolean) => void
   heroStream?: MediaStream | null
   setHeroStream?: (stream: MediaStream | null) => void
+  hideCoverImage?: boolean
 }
 
 export interface Params extends ParsedUrlQuery {

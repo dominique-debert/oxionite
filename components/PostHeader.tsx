@@ -19,6 +19,7 @@ interface PostHeaderProps {
   variant?: 'full' | 'simple'
   useOriginalCoverImage?: boolean
   url?: string
+  hideCoverImage?: boolean
 }
 
 export function PostHeader({ 
@@ -29,7 +30,8 @@ export function PostHeader({
   isMobile = false,
   variant = 'full', // Default to 'full'
   useOriginalCoverImage = false, // Default to true for backward compatibility
-  url
+  url,
+  hideCoverImage = false
 }: PostHeaderProps) {
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
   const [socialImageUrl, setSocialImageUrl] = useState<string | null>(null)
@@ -187,7 +189,7 @@ export function PostHeader({
       )}
 
       {/* Cover Image */}
-      {effectiveCoverImageUrl && (
+      {!hideCoverImage && effectiveCoverImageUrl && (
         <div 
           className={styles.coverImageContainer}
           style={{
@@ -219,7 +221,7 @@ export function PostHeader({
       )}
       
       {/* Loading state for social image */}
-      {!useOriginalCoverImage && isLoadingSocialImage && (
+      {!hideCoverImage && !useOriginalCoverImage && isLoadingSocialImage && (
         <div className={styles.coverImageContainer} style={{ height: '400px', opacity: 0.5 }}>
           <div className={styles.loadingPlaceholder}>
             Loading social image...
