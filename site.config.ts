@@ -18,68 +18,9 @@ export default siteConfig({
 
   // hero section (optional)
   heroAssets: [
-    // {
-    //   type: 'image',
-    //   src: '/hero-assets/02-1.jpeg',
-    //   url: 'https://bit.ly/alemem64',
-    //   content: {
-    //     ko: {
-    //       title: 'Project A',
-    //       description: 'Developed an AI-based recommendation system.'
-    //     },
-    //     en: {
-    //       title: 'Project A',
-    //       description: 'AI based recommendation system development.'
-    //     }
-    //   }
-    // },
-    // {
-    //   type: 'video',                                   // 'image' or 'video'
-    //   src: '/hero-assets/01-1.mp4',               // Path to the video file in the public folder
-    //   url: 'https://bit.ly/alemem64',
-    //   content: {
-    //     ko: {
-    //       title: 'Project A',
-    //       description: 'Developed an AI-based recommendation system.'
-    //     },
-    //     en: {
-    //       title: 'Project A',
-    //       description: 'AI based recommendation system development.'
-    //     }
-    //   }
-    // },
-    // {
-    //   type: 'video',
-    //   src: '/hero-assets/03-1.mov',
-    //   url: 'https://bit.ly/alemem64',
-    //   content: {
-    //     ko: {
-    //       title: 'Project C',
-    //       description: 'Created a Next.js blog engine.'
-    //     },
-    //     en: {
-    //       title: 'Project C',
-    //       description: 'Next.js blog engine development.'
-    //     }
-    //   }
-    // },
-    // {
-    //   type: 'image',
-    //   src: '/hero-assets/05-1.png',
-    //   content: {
-    //     ko: {
-    //       title: 'Project E',
-    //       description: 'Created a Next.js blog engine.'
-    //     },
-    //     en: {
-    //       title: 'Project E',
-    //       description: 'Next.js blog engine development.'
-    //     }
-    //   }
-    // },
     {
       type: 'video',
-      src: '/hero-assets/04-1.mov',
+      src: '/hero-assets/noxionie-shiny.mov',
       url: 'https://bit.ly/alemem64',
       content: {
         ko: {
@@ -100,17 +41,7 @@ export default siteConfig({
       name: 'Jzahnny',                       // Author name
       avatar_dir: '/authors/Jzahnny.jpeg',   // Author avatar image path in public folder (28px x 28px recommended)
       home_url: 'https://bit.ly/alemem64',   // Author home URL
-    },
-    {
-      name: 'Jzahnny2',                      // Multiple author support
-      avatar_dir: '/authors/Jzahnny2.png',   // When three is no avatar, it will be hidden
-      home_url: 'https://bit.ly/ypjr_n',     
-    },
-    {
-      name: 'Jzahnny3',                      
-      avatar_dir: '',                        // Empty string for no avatar
-      home_url: '',                          // Empty string for no link
-    },
+    }
   ],
 
   // social links, the order is preserved.
