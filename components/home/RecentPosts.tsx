@@ -17,14 +17,14 @@ export default function RecentPosts({ siteMap, isMobile }: RecentPostsProps & { 
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap)
       .filter((page) => page.type === 'Post')
-      .filter((page) => (page.language || 'en') === currentLocale)
+      .filter((page) => (page.language || localeConfig.defaultLocale) === currentLocale)
       .map((page) => ({
         pageId: page.pageId,
         title: page.title,
         description: page.description,
         date: page.date,
         slug: page.slug,
-        language: page.language || 'en',
+        language: page.language || localeConfig.defaultLocale,
         coverImage: page.coverImage || undefined,
         coverImageBlock: page.coverImageBlock,
       }))

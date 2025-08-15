@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'next-i18next'
 import { MdOutlineAccountTree, MdKeyboardArrowRight } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
@@ -358,32 +359,8 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
 
   const parsed = parseUrl(url)
 
-  // Translation function with hardcoded values to avoid Node.js dependencies
-  const t = (key: string, locale?: string): string => {
-    const targetLocale = locale || parsed.locale || localeConfig.defaultLocale;
-    
-    // Check if locale exists in localeList
-    const isValidLocale = localeConfig.localeList.includes(targetLocale);
-    const finalLocale = isValidLocale ? targetLocale : localeConfig.defaultLocale;
-    
-    // Hardcoded translations to avoid Node.js dependencies
-    const translations: Record<string, Record<string, string>> = {
-      'en': {
-        'allTags': 'All Tags',
-        'recentPosts': 'Recent Posts',
-        'categories': 'Categories',
-        'tags': 'Tags'
-      },
-      'ko': {
-        'allTags': '모든 태그',
-        'recentPosts': '최근 게시물',
-        'categories': '카테고리',
-        'tags': '태그'
-      }
-    };
-    
-    return translations[finalLocale]?.[key] || translations.en?.[key] || key;
-  }
+  // Use next-i18next for translations
+  const { t } = useTranslation('common')
 
   const renderContent = () => {
 

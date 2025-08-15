@@ -35,6 +35,7 @@ import { Noto_Sans_KR } from 'next/font/google'
 import { appWithTranslation, useTranslation } from 'next-i18next'
 import { getBlockTitle } from 'notion-utils'
 import { PageHead } from '@/components/PageHead'
+import localeConfig from '../site.locale.json'
 
 const SHOW_DEBUG_CONTROLS = false
 const SHOW_DEBUG_SOCIAL_IMAGE = false
@@ -227,7 +228,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     }
   } else if (pathname === '/category/[slug]') {
     const slug = query.slug as string;
-    const locale = router.locale || 'ko';
+    const locale = router.locale || localeConfig.defaultLocale;
     
     // Find the category page info by slug and locale
     let categoryTitle = slug;
