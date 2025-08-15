@@ -38,7 +38,7 @@ import { PageHead } from '@/components/PageHead'
 
 const SHOW_DEBUG_CONTROLS = false
 const SHOW_DEBUG_SOCIAL_IMAGE = false
-const SHOW_DEBUG_HEAD = true
+const SHOW_DEBUG_HEAD = false
 
 const notoKR = Noto_Sans_KR({
   subsets: ['latin'],

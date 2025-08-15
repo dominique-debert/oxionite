@@ -43,13 +43,7 @@
 
 .footerContent {
   width: 100%;
-  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 8px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
   text-align: center;
 }
 
@@ -122,22 +116,12 @@
 }
 
 @media only screen and (max-width: 566px) {
-  .footerContent {
+  .footerContent > div > div:first-child {
     flex-direction: column;
   }
 
-  .footerContent > div {
+  .footerContent > div > div:first-child > div {
     margin-top: 1em;
-  }
-
-  .footerContent .settings {
-    order: 1;
-  }
-  .footerContent .social {
-    order: 2;
-  }
-  .footerContent .copyright {
-    order: 3;
   }
 }
 
