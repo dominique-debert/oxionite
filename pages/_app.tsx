@@ -157,7 +157,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
   const showTOC = React.useMemo(() => {
     if (!pageInfo || !recordMap) return false
-    const isBlogPost = pageInfo.type === 'Post'
+    const isBlogPost = pageInfo.type === 'Post' || pageInfo.type === 'Home'
     if (!isBlogPost) return false
     let headerCount = 0
     for (const blockWrapper of Object.values(recordMap.block)) {

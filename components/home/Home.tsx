@@ -26,6 +26,8 @@ export function Home({
   const router = useRouter()
   const currentLocale = router.locale || localeConfig.defaultLocale
 
+  const [screenWidth, setScreenWidth] = useState(0)
+
   const homePages = useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap).filter(
@@ -48,6 +50,13 @@ export function Home({
 
   const [activeTab, setActiveTab] = useState<string>(getInitialTab().tab)
   const [activeNotionPageId, setActiveNotionPageId] = useState<string | null>(getInitialTab().pageId)
+
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Handle locale changes and sync active tab with displayed content
   useEffect(() => {
@@ -92,6 +101,29 @@ export function Home({
       }
     }
   }, [activeNotionPageId, siteMap])
+
+  const showTOC = useMemo(() => {
+    if (!activeNotionPageId || !homeRecordMaps?.[activeNotionPageId]) return false
+    
+    const recordMap = homeRecordMaps[activeNotionPageId]
+    const pageInfo = siteMap ? siteMap.pageInfoMap[activeNotionPageId] : null
+    
+    if (!pageInfo || !recordMap) return false
+    
+    const isBlogPost = pageInfo.type === 'Home' || pageInfo.type === 'Post'
+    if (!isBlogPost) return false
+    
+    let headerCount = 0
+    for (const blockWrapper of Object.values(recordMap.block)) {
+      const blockData = (blockWrapper as any)?.value
+      if (blockData?.type === 'header' || blockData?.type === 'sub_header' || blockData?.type === 'sub_sub_header') {
+        headerCount++
+      }
+    }
+    
+    const minTableOfContentsItems = 3
+    return headerCount >= minTableOfContentsItems && !isMobile && screenWidth >= 1200
+  }, [activeNotionPageId, homeRecordMaps, siteMap, isMobile, screenWidth])
 
   const handleNavClick = (tab: string, pageId?: string) => {
     // If clicking the same active item, handle routing
@@ -173,7 +205,7 @@ export function Home({
 
       {/* Render NotionPage outside the main container but with the same padding */}
       {isNotionPageActive && (
-        <div className={styles.homeNotionContainer}>
+        <div className={styles.homeNotionContainer} style={{ paddingRight: showTOC ? '32rem' : '0' }}>
           <NotionPage
             site={site}
             siteMap={siteMap}
@@ -182,6 +214,7 @@ export function Home({
             isMobile={isMobile}
             hideCoverImage={true}
             parentSlug={activePageInfo?.slug}
+            showTOC={showTOC}
           />
         </div>
       )}
