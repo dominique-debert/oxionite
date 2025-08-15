@@ -8,20 +8,22 @@ import http from 'node:http';
 import handler from 'serve-handler';
 
 async function main() {
-  
+  console.log('🚀 Starting social images generation...');
   const startTime = Date.now();
   
   const siteMap = await getCachedSiteMap();
   if (!siteMap) {
-    console.error('[Gen Social Images] Failed to get site map. Aborting.');
+    console.error('❌ [Gen Social Images] Failed to get site map. Aborting.');
     return;
   }
 
   const tagGraphData = buildTagGraphData(siteMap);
   const { localeList, defaultLocale } = localeConfig;
+  
+  console.log(`📊 Found ${Object.keys(siteMap.pageInfoMap || {}).length} pages across ${localeList.length} locales`);
 
   // Create all necessary directories upfront
-
+  console.log('📁 Creating directories...');
   const socialImagesRootDir = path.join(process.cwd(), 'public', 'social-images');
   await fs.mkdir(socialImagesRootDir, { recursive: true });
   
@@ -30,13 +32,17 @@ async function main() {
     await fs.mkdir(path.join(socialImagesDir, 'post'), { recursive: true });
     await fs.mkdir(path.join(socialImagesDir, 'category'), { recursive: true });
     await fs.mkdir(path.join(socialImagesDir, 'tag'), { recursive: true });
+    console.log(`   ✅ Created directories for ${locale}`);
   }
 
   // Collect all image generation tasks for parallel processing
   const imageTasks = [];
+  let taskCount = 0;
 
   for (const locale of localeList) {
+    console.log(`🌍 Processing locale: ${locale}`);
     const socialImagesDir = path.join(process.cwd(), 'public', 'social-images', locale);
+    let localeTaskCount = 0;
 
     // 1. Root page - only generate once for the default locale
     if (locale === defaultLocale) {
@@ -51,6 +57,8 @@ async function main() {
           publicUrl: rootPublicUrl,
           props: { url: rootUrl, siteMap }
         });
+        localeTaskCount++;
+        console.log(`   📄 Root page scheduled: ${rootUrl}`);
       }
     }
 
@@ -66,12 +74,15 @@ async function main() {
         publicUrl: allTagsPublicUrl,
         props: { url: allTagsUrl, siteMap }
       });
+      localeTaskCount++;
+      console.log(`   📄 All-tags page scheduled: ${allTagsUrl}`);
     }
 
     // 3. Post pages
     const posts = Object.values(siteMap.pageInfoMap).filter(
       (p) => (p.type === 'Post' || p.type === 'Home') && p.language === locale
     );
+    console.log(`   📄 Found ${posts.length} post pages for ${locale}`);
     for (const page of posts) {
       if (page.slug) {
         const postUrl = `/${locale}/post/${page.slug}`;
@@ -85,6 +96,7 @@ async function main() {
             publicUrl: postPublicUrl,
             props: { url: postUrl, siteMap }
           });
+          localeTaskCount++;
         }
       }
     }
@@ -93,6 +105,7 @@ async function main() {
     const categories = Object.values(siteMap.pageInfoMap).filter(
       (p) => p.type === 'Category' && p.language === locale
     );
+    console.log(`   📄 Found ${categories.length} category pages for ${locale}`);
     for (const page of categories) {
       if (page.slug) {
         const categoryUrl = `/${locale}/category/${page.slug}`;
@@ -106,6 +119,7 @@ async function main() {
             publicUrl: categoryPublicUrl,
             props: { url: categoryUrl, siteMap }
           });
+          localeTaskCount++;
         }
       }
     }
@@ -114,6 +128,7 @@ async function main() {
     const localeTagData = tagGraphData.locales[locale];
     if (localeTagData && localeTagData.tagCounts) {
       const tags = Object.keys(localeTagData.tagCounts);
+      console.log(`   🏷️  Found ${tags.length} tags for ${locale}`);
       for (const tag of tags) {
         const encodedTag = encodeURIComponent(tag);
         const tagUrl = `/${locale}/tag/${encodedTag}`;
@@ -127,17 +142,23 @@ async function main() {
             publicUrl: tagPublicUrl,
             props: { url: tagUrl, siteMap }
           });
+          localeTaskCount++;
         }
       }
     }
+    
+    taskCount += localeTaskCount;
+    console.log(`   ✅ ${locale}: ${localeTaskCount} images scheduled`);
   }
 
 
   
   if (imageTasks.length === 0) {
-
+    console.log('✅ All social images are up to date!');
     return;
   }
+  
+  console.log(`🎯 Total images to generate: ${imageTasks.length}`);
 
   // Use the optimized batch processing
   const batchTasks = imageTasks.map(task => ({
@@ -145,7 +166,6 @@ async function main() {
     imagePath: task.imagePath,
     publicUrl: task.publicUrl
   }));
-
 
   
   // Start local server for serving public assets during build
@@ -155,23 +175,28 @@ async function main() {
   if (process.env.VERCEL) {
     // For Vercel deployment, use the actual domain
     baseUrl = 'https://noxionite.vercel.app';
+    console.log(`🌐 Using Vercel domain: ${baseUrl}`);
   } else {
     const buildServer = await createBuildServer();
     server = buildServer.server;
     baseUrl = buildServer.baseUrl;
+    console.log(`🖥️  Using local server: ${baseUrl}`);
   }
 
   try {
+    console.log('🚀 Starting batch image generation...');
     await generateSocialImagesOptimized(batchTasks, {
       batchSize: 8, // Increased batch size for better throughput
       baseUrl: baseUrl
     });
 
     const totalTime = Date.now() - startTime;
+    console.log(`✅ Generation completed in ${Math.round(totalTime/1000)}s`);
   
   } finally {
     // Clean up server
     if (server) {
+      console.log('🔌 Closing local server...');
       server.close();
     
     }

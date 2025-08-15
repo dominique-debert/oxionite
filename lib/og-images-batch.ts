@@ -108,21 +108,39 @@ export async function generateSocialImagesOptimized(
     baseUrl?: string;
   } = {}
 ): Promise<void> {
+  console.log(`🎯 Starting batch generation of ${tasks.length} images`);
+  
+  const startTime = Date.now();
+  let lastProgress = 0;
+  
   const result = await generateSocialImagesBatch(tasks, {
     ...options,
     onProgress: (completed, total) => {
-      if (completed % 20 === 0 || completed === total) {
-        console.log(`[Batch Generation] Progress: ${completed}/${total} images completed`);
+      const progress = Math.round((completed / total) * 100);
+      const barLength = 20;
+      const filledLength = Math.round((completed / total) * barLength);
+      const bar = '█'.repeat(filledLength) + '░'.repeat(barLength - filledLength);
+      
+      if (progress !== lastProgress || completed === total) {
+        console.log(`   📊 [${bar}] ${completed}/${total} (${progress}%) images completed`);
+        lastProgress = progress;
+      }
+      
+      if (completed === total) {
+        const duration = Date.now() - startTime;
+        console.log(`   ⏱️  Total time: ${duration}ms`);
       }
     }
   });
 
+  const duration = Date.now() - startTime;
+  
   if (result.errors.length > 0) {
-    console.warn(`[Batch Generation] ${result.errors.length} images failed to generate:`);
-    result.errors.forEach(error => {
-      console.warn(`  - ${error.url}: ${error.error}`);
+    console.warn(`\n⚠️  ${result.errors.length} images failed to generate:`);
+    result.errors.forEach((error, index) => {
+      console.warn(`   ${index + 1}. ${error.url}: ${error.error}`);
     });
   }
 
-  console.log(`[Batch Generation] Successfully generated ${result.success} images, ${result.failed} failed`);
+  console.log(`\n🎉 Generation complete: ${result.success}/${tasks.length} images generated successfully, ${result.failed} failed (${duration}ms)`);
 }
