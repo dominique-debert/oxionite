@@ -1,4 +1,4 @@
-import React, { useMemo,useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
 import styles from 'styles/components/home.module.css'
@@ -49,12 +49,76 @@ export function Home({
   const [activeTab, setActiveTab] = useState<string>(getInitialTab().tab)
   const [activeNotionPageId, setActiveNotionPageId] = useState<string | null>(getInitialTab().pageId)
 
+  // Handle locale changes and sync active tab with displayed content
+  useEffect(() => {
+    if (activeNotionPageId && siteMap) {
+      // Find current page info
+      const currentPageInfo = siteMap.pageInfoMap[activeNotionPageId]
+      if (currentPageInfo && currentPageInfo.type === 'Home') {
+        // Look for equivalent page in new locale with same slug
+        const equivalentPage = Object.values(siteMap.pageInfoMap).find(
+          (page: PageInfo) => 
+            page.type === 'Home' && 
+            page.language === currentLocale && 
+            page.slug === currentPageInfo.slug
+        )
+        
+        if (equivalentPage) {
+          // Found equivalent page, switch to it
+          setActiveTab(equivalentPage.pageId)
+          setActiveNotionPageId(equivalentPage.pageId)
+        } else {
+          // No equivalent page found, switch to first home page in new locale
+          const firstHomePage = homePages[0]
+          if (firstHomePage) {
+            setActiveTab(firstHomePage.pageId)
+            setActiveNotionPageId(firstHomePage.pageId)
+          } else {
+            // Fallback to recentPosts if no home pages available
+            setActiveTab('recentPosts')
+            setActiveNotionPageId(null)
+          }
+        }
+      }
+    }
+  }, [currentLocale, siteMap, activeNotionPageId, homePages])
+
+  // Sync active tab with displayed Notion page
+  useEffect(() => {
+    if (activeNotionPageId && siteMap) {
+      const currentPageInfo = siteMap.pageInfoMap[activeNotionPageId]
+      if (currentPageInfo && currentPageInfo.type === 'Home') {
+        setActiveTab(activeNotionPageId)
+      }
+    }
+  }, [activeNotionPageId, siteMap])
+
   const handleNavClick = (tab: string, pageId?: string) => {
-    setActiveTab(tab)
-    if (pageId) {
-      setActiveNotionPageId(pageId)
+    // If clicking the same active item, handle routing
+    if (tab === activeTab) {
+      if (pageId && siteMap) {
+        // Notion page case - route to /{locale}/post/{slug}
+        const pageInfo = siteMap.pageInfoMap[pageId]
+        if (pageInfo) {
+          const locale = currentLocale
+          const slug = pageInfo.slug
+          const url = `/${locale}/post/${slug}`
+          router.push(url)
+        }
+      } else if (tab === 'allTags') {
+        // All tags case - route to /{locale}/all-tags
+        const locale = currentLocale
+        const url = `/${locale}/all-tags`
+        router.push(url)
+      }
     } else {
-      setActiveNotionPageId(null)
+      // Normal navigation - just set active state
+      setActiveTab(tab)
+      if (pageId) {
+        setActiveNotionPageId(pageId)
+      } else {
+        setActiveNotionPageId(null)
+      }
     }
   }
 
