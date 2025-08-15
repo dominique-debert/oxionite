@@ -63,6 +63,12 @@
   margin-left: 1rem; /* TOC를 오른쪽으로 이동 */
 }
 
+/* Home page TOC positioning - use data attribute selector */
+[data-is-home="true"] .notion-aside {
+  top: 200px;
+  margin-top: -180px;
+}
+
 /* Custom scrollbar for Table of Contents */
 .notion-aside::-webkit-scrollbar {
   width: 6px;

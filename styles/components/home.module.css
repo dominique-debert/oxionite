@@ -170,9 +170,7 @@
 }
 
 .homeNotionContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  position: relative;
   padding-right: 32rem;
 }
 

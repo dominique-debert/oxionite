@@ -205,7 +205,7 @@ export function Home({
 
       {/* Render NotionPage outside the main container but with the same padding */}
       {isNotionPageActive && (
-        <div className={styles.homeNotionContainer} style={{ paddingRight: showTOC ? '32rem' : '0' }}>
+        <div className={styles.homeNotionContainer} style={{ paddingRight: showTOC ? '32rem' : '5rem' }} data-is-home="true">
           <NotionPage
             site={site}
             siteMap={siteMap}

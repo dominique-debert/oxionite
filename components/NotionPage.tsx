@@ -286,6 +286,7 @@ export function NotionPageContent({
                 pageId === site.rootNotionPageId && 'index-page',
                 'custom-notion-page'
               )}
+              data-is-home={pageId === site.rootNotionPageId ? 'true' : 'false'}
               darkMode={hasMounted ? isDarkMode : false}
               recordMap={recordMap}
               rootPageId={site.rootNotionPageId || undefined}
