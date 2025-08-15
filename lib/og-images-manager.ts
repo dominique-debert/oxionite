@@ -65,16 +65,16 @@ let browserPromise: Promise<any> | null = null
 // Get or create browser instance
 export async function getBrowser(): Promise<any> {
   if (cachedBrowser && cachedBrowser.isConnected()) {
-    console.log('[getBrowser] Reusing cached browser')
+    
     return cachedBrowser
   }
 
   if (browserPromise) {
-    console.log('[getBrowser] Awaiting existing browser promise')
+    
     return browserPromise
   }
 
-  console.log('[getBrowser] Creating new browser instance')
+  
   
   const _launchOptions = {
     headless: true,
@@ -101,7 +101,7 @@ export async function getBrowser(): Promise<any> {
                                   process.env.NODE_ENV === 'production';
     
     if (isProductionServerless && chromium) {
-      console.log('[getBrowser] Using Chromium for serverless production')
+
       const executablePath = await chromium.executablePath()
       browserPromise = puppeteer.launch({
         headless: true,
@@ -123,7 +123,7 @@ export async function getBrowser(): Promise<any> {
         executablePath,
       })
     } else {
-      console.log('[getBrowser] Using local Puppeteer - bundled browser')
+
       // For local development, use the browser bundled with the puppeteer package.
       browserPromise = puppeteer.launch({
         headless: true,
@@ -151,7 +151,7 @@ export async function getBrowser(): Promise<any> {
       throw new Error('Failed to launch browser')
     }
     cachedBrowser = browser
-    console.log('[getBrowser] Browser launched successfully')
+    
     return browser
   } catch (err) {
     console.error('[getBrowser] Failed to launch browser:', err)
@@ -343,13 +343,13 @@ export class SocialImageManager {
     
     try {
       const statePath = path.join(process.cwd(), '.next', 'social-images-state.json');
-      console.log(`[SocialImageManager] Loading previous state from: ${statePath}`);
+  
       
       try {
         await fs.access(statePath);
-        console.log('[SocialImageManager] State file exists');
+  
       } catch {
-        console.log('[SocialImageManager] State file does not exist (first run)');
+  
         this.previousSiteMap = null;
         this.previousTagGraph = null;
         return;
@@ -359,11 +359,6 @@ export class SocialImageManager {
       const state = JSON.parse(stateData);
       this.previousSiteMap = state.siteMap;
       this.previousTagGraph = state.tagGraph;
-      console.log('[SocialImageManager] Previous state loaded:', {
-        pages: Object.keys(this.previousSiteMap?.pageInfoMap || {}).length,
-        tags: Object.keys(this.previousTagGraph?.locales || {}).length,
-        lastUpdated: new Date(state.lastUpdated).toISOString()
-      });
     } catch (err) {
       console.error('[SocialImageManager] Failed to load previous state:', err);
       this.previousSiteMap = null;
@@ -376,7 +371,7 @@ export class SocialImageManager {
     
     try {
       const statePath = path.join(process.cwd(), '.next', 'social-images-state.json');
-      console.log(`[SocialImageManager] Saving state to: ${statePath}`);
+  
       const stateDir = path.dirname(statePath);
       await fs.mkdir(stateDir, { recursive: true });
       
@@ -387,11 +382,6 @@ export class SocialImageManager {
       };
       
       await fs.writeFile(statePath, JSON.stringify(stateData, null, 2));
-      console.log('[SocialImageManager] State saved successfully:', {
-        pages: Object.keys(siteMap?.pageInfoMap || {}).length,
-        tags: Object.keys(tagGraph?.locales || {}).length,
-        lastUpdated: new Date(stateData.lastUpdated).toISOString()
-      });
     } catch (err) {
       console.error('[SocialImageManager] Failed to save state:', err);
     }

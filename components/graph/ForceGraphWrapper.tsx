@@ -22,9 +22,8 @@ const ForceGraphWrapper = React.forwardRef<GraphMethods, ForceGraphProps>(
 
         if (internalRef.current && typeof internalRef.current.zoomToFit === 'function') {
           internalRef.current.zoomToFit(ms, padding, nodeFilter);
-        } else {
-  
         }
+        
       },
       width: () => {
         return internalRef.current?.width?.() || 0;

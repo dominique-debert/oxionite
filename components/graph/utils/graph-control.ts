@@ -104,12 +104,10 @@ class GraphControlAPI {
         // Check all possible tag property names
         const possibleTagKeys = ['Tags', 'tags', 'TAGS', 'Tag', 'tag'];
         let tagsProperty = null;
-        let foundKey = null;
         
         for (const key of possibleTagKeys) {
           if (properties[key]) {
             tagsProperty = properties[key];
-            foundKey = key;
             break;
           }
         }

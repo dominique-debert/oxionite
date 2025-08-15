@@ -33,7 +33,6 @@ async function handler(
 
     // Handle subpages by fetching actual Notion page data
     let enhancedSiteMap = siteMap;
-    let subpageData = null;
     
     // Check if this is a subpage and extract page ID
     const pageIdMatch = urlParam.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i);
@@ -77,8 +76,7 @@ async function handler(
             children: []
           }
           
-          // Also store subpage data for direct access
-          subpageData = { title, coverImage: coverImageUrl }
+
           
           // Update enhanced siteMap with the actual subpage data
           enhancedSiteMap = {

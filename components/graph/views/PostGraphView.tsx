@@ -330,9 +330,6 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
           onEngineStop={() => {
 
             actions.setIsGraphLoaded(true);
-            if (isDimensionsReady) {
-
-            }
             // Process pending fitToHome operations
             const instanceType = state.displayType === 'home' ? 'home' : 'sidenav';
             graphControl.processPendingFitToHome(instanceType);

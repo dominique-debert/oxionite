@@ -81,8 +81,6 @@ export const getStaticPaths: GetStaticPaths = async () => {
             })
           }
         })
-      } else {
-
       }
     })
 
@@ -107,9 +105,6 @@ export const getStaticProps: GetStaticProps<NestedPostPageProps, { slug: string[
 
   try {
     const siteMap = await getCachedSiteMap()
-    // The slug array should be [parent-post-slug, ...subpage-title-ids]
-    const parentPostSlug = slug[0]
-    const subpageTitleIds = slug.slice(1)
 
     // For root pages, find the parent post; for subpages, we'll extract page ID directly
     let parentPostPageId: string | null = null

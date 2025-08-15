@@ -118,7 +118,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
   // Helper function to perform the actual focus operation
   const performFocus = useCallback((nodeIds: string[], options?: any) => {
-    const currentInstanceType = instanceType || 'main';
+    const _currentInstanceType = instanceType || 'main';
     
     if (nodeIds.length === 1) {
       // Single node: use zoomToNode
@@ -196,7 +196,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
   // Graph control API listener
   useEffect(() => {
-    const currentInstanceType = instanceType || 'sidenav';
+    const _currentInstanceType = instanceType || 'sidenav';
     
     // Queue for pending focus operations
     const pendingFocusQueue: Array<{
@@ -305,7 +305,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
                 if (targetNodes.length === 1) {
                   if (operation.continuous) {
-                
                     setContinuousFocus({
                       type: 'node',
                       target: targetNodes[0].id,
@@ -371,7 +370,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     
     const handleControlMessage = (message: any) => {
       
-      if (message.instanceType === currentInstanceType) {
+      if (message.instanceType === _currentInstanceType) {
         switch (message.type) {
           
           case 'fitToHome':
@@ -399,7 +398,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               if (node) {
                 // Use performFocus for consistent behavior
                 performFocus([nodeId], message.payload?.options);
-              } else {
               }
               
               // Handle continuous retry if enabled
@@ -414,7 +412,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                 const intervalId = setInterval(() => {
                   try {
                     retryCount++;
-                    const elapsed = Date.now() - startTime;
+                    const _elapsed = Date.now() - startTime;
 
                     
                     const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
@@ -424,15 +422,15 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                       performFocus([nodeId], message.payload?.options);
                       
                       if (retryCount >= maxRetries) {
-                        const totalElapsed = Date.now() - startTime;
+                        const _totalElapsed = Date.now() - startTime;
                         clearInterval(intervalId);
                       }
                     } else if (retryCount >= maxRetries) {
-                      const totalElapsed = Date.now() - startTime;
+                      const _totalElapsed = Date.now() - startTime;
                       clearInterval(intervalId);
                     }
                   } catch (err) {
-                    console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, err);
+                    console.warn(`[GraphProvider ${_currentInstanceType}] Error in local continuous retry:`, err);
                     clearInterval(intervalId);
                   }
                 }, retryInterval);
@@ -462,7 +460,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   // Use performFocus for consistent behavior
                   const actualNodeIds = targetNodes.map(node => node.id);
                   performFocus(actualNodeIds, message.payload?.options);
-                } else {
                 }
                 
                 // Handle continuous retry if enabled
@@ -477,8 +474,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   const intervalId = setInterval(() => {
                     try {
                       retryCount++;
-                      const elapsed = Date.now() - startTime;
-
                       
                       const currentGraphData = state.currentView === 'post_view' ? graphData.data.postGraph : graphData.data.tagGraph;
                       const currentTargetNodes = currentGraphData?.nodes?.filter((node: any) => nodeIds.includes(node.id)) || [];
@@ -489,15 +484,15 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                         performFocus(actualNodeIds, message.payload?.options);
                         
                         if (retryCount >= maxRetries) {
-                          const totalElapsed = Date.now() - startTime;
+                          const _totalElapsed = Date.now() - startTime;
                           clearInterval(intervalId);
                         }
                       } else if (retryCount >= maxRetries) {
-                        const totalElapsed = Date.now() - startTime;
+                        const _totalElapsed = Date.now() - startTime;
                         clearInterval(intervalId);
                       }
                     } catch (err) {
-                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, err);
+                      console.warn(`[GraphProvider ${_currentInstanceType}] Error in local continuous retry:`, err);
                       clearInterval(intervalId);
                     }
                   }, retryInterval);
@@ -534,7 +529,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   .filter((id: string | undefined): id is string => id !== undefined);
                 
                 if (nodeIds.length === 0) {
-                  console.warn(`[GraphProvider ${currentInstanceType}] No nodes found for slugs:`, slugs);
+                  console.warn(`[GraphProvider ${_currentInstanceType}] No nodes found for slugs:`, slugs);
                 }
                 
                 // Handle continuous retry if enabled
@@ -550,7 +545,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                   const intervalId = setInterval(() => {
                     try {
                       retryCount++;
-                      const elapsed = Date.now() - startTime;
+                      const _elapsed = Date.now() - startTime;
 
                       
                       const currentSlugToIdMapping = createSlugToIdMapping();
@@ -563,15 +558,15 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
                         performFocus(currentNodeIds, message.payload?.options);
                         
                         if (retryCount >= maxRetries) {
-                          const totalElapsed = Date.now() - startTime;
+                          const _totalElapsed = Date.now() - startTime;
                           clearInterval(intervalId);
                         }
                       } else if (retryCount >= maxRetries) {
-                        const totalElapsed = Date.now() - startTime;
+                        const _totalElapsed = Date.now() - startTime;
                         clearInterval(intervalId);
                       }
                     } catch (err) {
-                      console.warn(`[GraphProvider ${currentInstanceType}] Error in local continuous retry:`, err);
+                      console.warn(`[GraphProvider ${_currentInstanceType}] Error in local continuous retry:`, err);
                       clearInterval(intervalId);
                     }
                   }, retryInterval);
@@ -603,7 +598,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
               
               // Process any pending fitToHome operations immediately for the new view
               setTimeout(() => {
-                graphControl.processPendingFitToHome(currentInstanceType);
+                graphControl.processPendingFitToHome(_currentInstanceType);
               }, 100);
             }
             break;
@@ -614,10 +609,10 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     // Process pending operations when data is loaded
     processPendingFocus();
     
-    graphControl.addListener(currentInstanceType, handleControlMessage);
+    graphControl.addListener(_currentInstanceType, handleControlMessage);
     
     return () => {
-      graphControl.removeListener(currentInstanceType, handleControlMessage);
+      graphControl.removeListener(_currentInstanceType, handleControlMessage);
     };
   }, [instanceActions, stateActions, graphData.data.postGraph, graphData.isLoading, state.currentView]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -682,7 +677,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       const intervalId = setInterval(() => {
         try {
           retryCount++;
-          const elapsed = Date.now() - startTime;
+          const _elapsed = Date.now() - startTime;
 
           
           let nodeId: string | undefined;
@@ -697,8 +692,6 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
           
           if (nodeId) {
             currentInstanceActions.zoomToNode(nodeId, currentContinuousFocus.options?.duration, currentContinuousFocus.options?.padding);
-          } else {
-
           }
           
           // Continue retrying until max retries reached

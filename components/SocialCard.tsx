@@ -649,7 +649,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
         )
       }
 
-      case 'all-tags': {
+      case 'all-tags': 
         return (
           <Background baseUrl={baseUrl}>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -663,7 +663,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
             </div>
           </Background>
         )
-      }
+      
 
       default:
         return (

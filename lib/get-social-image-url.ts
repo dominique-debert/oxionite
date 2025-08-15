@@ -5,11 +5,11 @@ export async function getSocialImageUrl(
   url: string,
 ): Promise<string | null> {
   try {
-    console.log('[getSocialImageUrl] Starting with url:', url)
+  
     
     // Parse URL to extract routing information
     const parsedUrl = parseUrlPathname(url);
-    console.log('[getSocialImageUrl] Parsed URL:', parsedUrl);
+  
 
     const locale = parsedUrl.locale || siteLocale.defaultLocale;
 
@@ -40,7 +40,7 @@ export async function getSocialImageUrl(
     // For subpages, always use on-demand generation via API
     if (parsedUrl.isSubpage) {
       const apiUrl = `/api/generate-social-image?path=${encodeURIComponent(url)}`;
-      console.log('[getSocialImageUrl] Subpage detected, using on-demand generation:', apiUrl);
+  
       return apiUrl;
     }
 
@@ -53,12 +53,12 @@ export async function getSocialImageUrl(
     // For root pages, use the locale-independent path
     if (folder === 'root') {
       const rootImagePath = `/social-images/root.jpg`;
-      console.log('[getSocialImageUrl] Using root image path:', rootImagePath);
+    
       return rootImagePath;
     }
     
     // Return the specific image path for regular pages
-    console.log('[getSocialImageUrl] Returning specific image path:', specificImagePath);
+  
     return specificImagePath;
   } catch (err) {
     console.error('[getSocialImageUrl] Error:', err);

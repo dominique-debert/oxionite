@@ -5,7 +5,7 @@ const CWD = process.cwd();
 
 async function generateLanguageFiles() {
   try {
-    console.log('🚀 Generating language files...');
+    
 
     // 1. Read the central language endonyms file
     const endonymsPath = path.join(CWD, 'language-endonyms.json');
@@ -16,7 +16,7 @@ async function generateLanguageFiles() {
     const siteLocaleContent = await fs.readFile(siteLocalePath, 'utf-8');
     const activeLocales = JSON.parse(siteLocaleContent).localeList;
 
-    console.log(`Active locales: ${activeLocales.join(', ')}`);
+  
 
     // 3. Write the endonyms to each active locale's languages.json
     for (const locale of activeLocales) {
@@ -28,10 +28,10 @@ async function generateLanguageFiles() {
 
       // Write the file
       await fs.writeFile(outputFilePath, endonymsContent);
-      console.log(`✅ Wrote languages.json for [${locale}]`);
+  
     }
 
-    console.log('🎉 Language file generation complete!');
+  
   } catch (error) {
     console.error('❌ Error generating language files:', error);
     process.exit(1);

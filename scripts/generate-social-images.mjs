@@ -8,7 +8,7 @@ import http from 'node:http';
 import handler from 'serve-handler';
 
 async function main() {
-  console.log('[Gen Social Images] Starting optimized build-time social image generation...');
+  
   const startTime = Date.now();
   
   const siteMap = await getCachedSiteMap();
@@ -21,7 +21,7 @@ async function main() {
   const { localeList, defaultLocale } = localeConfig;
 
   // Create all necessary directories upfront
-  console.log('[Gen Social Images] Pre-creating directories...');
+
   const socialImagesRootDir = path.join(process.cwd(), 'public', 'social-images');
   await fs.mkdir(socialImagesRootDir, { recursive: true });
   
@@ -132,10 +132,10 @@ async function main() {
     }
   }
 
-  console.log(`[Gen Social Images] Found ${imageTasks.length} images to generate (skipping existing ones)`);
+
   
   if (imageTasks.length === 0) {
-    console.log('[Gen Social Images] All images already exist. Skipping generation.');
+
     return;
   }
 
@@ -146,7 +146,7 @@ async function main() {
     publicUrl: task.publicUrl
   }));
 
-  console.log(`[Gen Social Images] Processing ${batchTasks.length} images with optimized batch processing`);
+
   
   // Start local server for serving public assets during build
   let baseUrl;
@@ -168,12 +168,12 @@ async function main() {
     });
 
     const totalTime = Date.now() - startTime;
-    console.log(`[Gen Social Images] Finished generating all social images in ${totalTime}ms`);
+  
   } finally {
     // Clean up server
     if (server) {
       server.close();
-      console.log('[Build Server] Stopped');
+    
     }
   }
 }
@@ -201,7 +201,7 @@ async function createBuildServer() {
     server.listen(0, () => {
       const port = server.address().port;
       const baseUrl = `http://localhost:${port}`;
-      console.log(`[Build Server] Started on ${baseUrl}`);
+    
       resolve({ server, baseUrl });
     });
   });
