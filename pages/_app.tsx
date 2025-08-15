@@ -233,7 +233,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
     // Find the category page info by slug and locale
     let categoryTitle = slug;
     if (pageProps.siteMap?.pageInfoMap) {
-      for (const [pageId, pageInfo] of Object.entries(pageProps.siteMap.pageInfoMap)) {
+      for (const [pageInfo] of Object.entries(pageProps.siteMap.pageInfoMap)) {
         const page = pageInfo as any;
         if (page.language === locale && page.slug === slug && page.type === 'Category') {
           categoryTitle = page.title || slug;

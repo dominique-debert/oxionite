@@ -135,13 +135,13 @@ export function Home({
           const locale = currentLocale
           const slug = pageInfo.slug
           const url = `/${locale}/post/${slug}`
-          router.push(url)
+          void router.push(url)
         }
       } else if (tab === 'allTags') {
         // All tags case - route to /{locale}/all-tags
         const locale = currentLocale
         const url = `/${locale}/all-tags`
-        router.push(url)
+        void router.push(url)
       }
     } else {
       // Normal navigation - just set active state

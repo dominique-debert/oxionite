@@ -1,4 +1,5 @@
 import cs from 'classnames'
+import Image from 'next/image'
 import * as React from 'react'
 import styles from 'styles/components/common.module.css'
 
@@ -58,12 +59,12 @@ export function FooterImpl({ isMobile }: { isMobile: boolean }) {
               }}
             >
               <span>Powered by</span>
-              <img 
+              <Image 
                 src="/Noxionite-icon.png" 
                 alt="Noxionite" 
+                width={16}
+                height={16}
                 style={{ 
-                  width: '16px', 
-                  height: '16px',
                   margin: '0 4px 0 8px'
                 }} 
               />
