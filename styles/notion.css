@@ -673,8 +673,9 @@ span.notion-default_background {
   color: var(--primary-text-color);
 }
 
-.notion-file-icon {
-  color: var(--primary-text-color);
+
+.notion-file-icon path {
+  fill: var(--primary-text-color);
 }
 
 .notion-simple-table {
