@@ -15,6 +15,7 @@ let chromium: any
 let React: any
 let ReactDOMServer: any
 let fs: any
+let fsSync: any
 let path: any
 let SocialCard: any
 let siteConfig: any
@@ -41,6 +42,9 @@ async function loadServerModules() {
   }
   if (!fs) {
     fs = await import('node:fs/promises')
+  }
+  if (!fsSync) {
+    fsSync = await import('node:fs')
   }
   if (!path) {
     // eslint-disable-next-line unicorn/import-style
@@ -179,112 +183,59 @@ export async function getBrowser(): Promise<any> {
 // Internal core rendering function
 export async function renderSocialImage(
   browser: any,
-  props: any
+  props: SocialCardProps
 ): Promise<Buffer> {
   if (!browser.isConnected()) {
     throw new Error('Browser is not connected.')
   }
 
+  await loadServerModules()
+
   const page = await browser.newPage()
 
-  // Optimize: Disable unnecessary features for faster rendering
-  await page.setRequestInterception(true).catch(() => {
-    // Ignore if interception fails
-  });
-  
-  
-  page.on('request', (request: any) => {
-    const resourceType = request.resourceType();
-    const url = request.url();
-    
-    // Allow documents and images (including external domains)
-    if (resourceType === 'document' || resourceType === 'image') {
-      request.continue().catch(() => {
-        // Ignore continue errors
-      });
-    } else {
-      // Allow fonts and stylesheets for better rendering
-      const allowedExtensions = ['.css', '.woff', '.woff2', '.ttf', '.otf'];
-      const hasAllowedExtension = allowedExtensions.some(ext => url.toLowerCase().includes(ext));
-      if (hasAllowedExtension) {
-        request.continue().catch(() => {
-          // Ignore continue errors
-        });
-      } else {
-        request.abort().catch(() => {
-          // Ignore abort errors
-        });
-      }
-    }
-  });
-
   try {
+    // Optimize: Disable unnecessary features for faster rendering
+    await page.setRequestInterception(true)
+    
+    page.on('request', (request: any) => {
+      const resourceType = request.resourceType();
+      
+      // Allow documents, images, stylesheets, and fonts
+      if (['document', 'image', 'stylesheet', 'font'].includes(resourceType)) {
+        request.continue().catch(() => {});
+      } else {
+        // Block other requests like scripts for performance
+        request.abort().catch(() => {});
+      }
+    });
+
     await page.setViewport({ width: 1200, height: 630 })
     
-    const baseUrl = props.baseUrl || `https://${siteConfig.domain}`;
-    
-    // Generate HTML once and reuse
     const element = React.createElement(SocialCard, props)
     const html = ReactDOMServer.renderToStaticMarkup(element)
     
-    // Optimized HTML with base URL injected directly
     const fullHtml = `
       <!DOCTYPE html>
       <html>
         <head>
-          <base href="${baseUrl}">
           <meta charset="utf-8">
-          <style>
-            body { margin: 0; padding: 0; }
-          </style>
+          <base href="${props.baseUrl || `https://${siteConfig.domain}`}/">
         </head>
         <body>
           ${html}
         </body>
       </html>
     `;
-
-    await page.setContent(fullHtml, {
-      waitUntil: 'networkidle0', // Wait for network to be idle for external images
-      timeout: 10_000 // Increased timeout for external image loading
-    })
-
-    // Wait for all images to load
-    await page.evaluate(() => {
-      return Promise.all(
-        Array.from(document.images).map(img => {
-          if (img.complete) return Promise.resolve();
-          return new Promise((resolve, _reject) => {
-            img.addEventListener('load', resolve);
-            img.addEventListener('error', resolve); // Resolve on error to prevent hanging
-            setTimeout(resolve, 3000); // Timeout after 3 seconds
-          });
-        })
-      );
-    });
-
-    // Minimal wait for fonts only if needed
-    try {
-      await page.evaluateHandle('document.fonts.ready').catch(() => {
-        // Continue if fonts fail to load
-      });
-    } catch {
-      // Continue if fonts fail to load
-    }
     
-    // Brief wait for any remaining rendering
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await page.setContent(fullHtml, { waitUntil: 'networkidle0' })
 
-    const screenshotData = await page.screenshot({ 
+    const imageBuffer = await page.screenshot({
       type: 'jpeg',
-      quality: 70,
-      omitBackground: false
+      quality: 90,
+      clip: { x: 0, y: 0, width: 1200, height: 630 }
     })
-    
-    if (!screenshotData) {
-      throw new Error('Failed to create screenshot')
-    }
-    return Buffer.from(screenshotData)
+
+    return imageBuffer
   } finally {
     await page.close()
   }

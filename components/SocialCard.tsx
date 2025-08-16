@@ -1,5 +1,4 @@
 import React from 'react'
-import { useTranslation } from 'next-i18next'
 import { MdOutlineAccountTree, MdKeyboardArrowRight } from 'react-icons/md'
 import { FaTag, FaTags } from 'react-icons/fa'
 import { getDefaultBackgroundUrl } from '../lib/get-default-background'
@@ -287,12 +286,11 @@ const COMMON_STYLES = {
   }
 } as const
 
-// URL Parser and Social Card Component
 export interface SocialCardProps {
-  url: string
-  siteMap?: SiteMap
-  imageUrl?: string
-  baseUrl?: string
+  url: string;
+  siteMap?: SiteMap;
+  imageUrl?: string;
+  baseUrl?: string;
 }
 
 export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl }) => {
@@ -339,8 +337,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
 
   const parsed = parseUrl(url)
 
-  // Use next-i18next for translations
-  const { t } = useTranslation('common')
+
 
   const renderContent = () => {
 
@@ -655,7 +652,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <TitleIcon
                 icon={<FaTags />}
-                text={t('allTags')}
+                text={'All Tags'}
               />
               <div style={{ position: 'absolute', bottom: '-150px' }}>
                 <PillText iconUrl={iconUrl} text={siteConfig.name} baseUrl={baseUrl} />
