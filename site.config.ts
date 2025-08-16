@@ -20,16 +20,16 @@ export default siteConfig({
   heroAssets: [
     {
       type: 'video',
-      src: '/hero-assets/noxionie-shiny.mov',
+      src: '/hero-assets/noxionite-shiny.mov',
       url: 'https://bit.ly/alemem64',
       content: {
         ko: {
-          title: 'Project D',
-          description: 'Created a Next.js blog engine.'
+          title: 'Noxionite',
+          description: 'Notion으로 만드는 가장 아름다운 블로그'
         },
         en: {
-          title: 'Project D',
-          description: 'Next.js blog engine development.'
+          title: 'Noxionite',
+          description: 'Your Notion pages, reborn as a stunning blog.'
         }
       }
     },
