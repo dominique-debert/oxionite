@@ -63,6 +63,20 @@
   margin-left: 1rem; /* Move TOC to the right */
 }
 
+.notion-table-of-contents {
+  padding: 1rem;
+  border: 0.5px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--default-bg-color);
+  backdrop-filter: blur(var(--blur-size));
+  -webkit-backdrop-filter: blur(var(--blur-size));
+}
+
+.notion-table-of-contents-item {
+  padding: 0.5rem;
+  border-radius: 16px !important;
+}
+
 /* Home page TOC positioning - use data attribute selector */
 [data-is-home="true"] .notion-aside {
   top: 200px;
