@@ -16,7 +16,7 @@ export default function RecentPosts({ siteMap, isMobile }: RecentPostsProps & { 
   const recentPosts = React.useMemo(() => {
     if (!siteMap) return []
     return Object.values(siteMap.pageInfoMap)
-      .filter((page) => page.type === 'Post')
+      .filter((page) => page.type === 'Post' || page.type === 'Home')
       .filter((page) => (page.language || localeConfig.defaultLocale) === currentLocale)
       .map((page) => ({
         pageId: page.pageId,

@@ -31,7 +31,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
   
   const collectPosts = (pageInfo: types.PageInfo) => {
     // If this is a post, add it to the list
-    if (pageInfo.type === 'Post') {
+    if (pageInfo.type === 'Post' || pageInfo.type === 'Home') {
       posts.push({
         pageId: pageInfo.pageId,
         title: pageInfo.title,

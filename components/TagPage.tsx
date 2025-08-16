@@ -23,7 +23,7 @@ export function TagPage({ pageProps, tag, isMobile }: TagPageProps) {
     if (!siteMap?.pageInfoMap) return []
 
     const allPosts = Object.values(siteMap.pageInfoMap).filter(
-      (page) => page.type === 'Post' && page.public === true
+      (page) => page.type === 'Post' || page.type === 'Home' && page.public === true
     )
 
     // Filter posts by tag and current locale

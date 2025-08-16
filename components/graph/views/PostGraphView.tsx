@@ -46,7 +46,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     }
 
     let path = '';
-    if (node.type === 'Post') {
+    if (node.type === 'Post' || node.type === 'Home') {
       path = `/post/${node.slug}`;
     } else if (node.type === 'Category') {
       path = `/category/${node.slug}`;

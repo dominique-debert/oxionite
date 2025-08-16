@@ -57,7 +57,7 @@ function findPagePath(
 ): BreadcrumbItem[] | null {
   for (const item of tree) {
     const href =
-      item.type === 'Post'
+      item.type === 'Post' || item.type === 'Home'
         ? `/post/${item.slug}`
         : item.type === 'Category'
         ? `/category/${item.slug}`

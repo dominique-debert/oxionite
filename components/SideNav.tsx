@@ -85,7 +85,7 @@ export function SideNav({
     const setInitialExpansion = (currentItems: types.PageInfo[]) => {
       for (const item of currentItems) {
         const hasChildren = item.children && item.children.length > 0
-        if (item.type === 'Category' && hasChildren && !item.children.some(child => child.type === 'Post')) {
+        if (item.type === 'Category' && hasChildren && !item.children.some(child => child.type === 'Post' || child.type === 'Home')) {
           newExpandedState[item.pageId] = true
           if (item.children) {
             setInitialExpansion(item.children)

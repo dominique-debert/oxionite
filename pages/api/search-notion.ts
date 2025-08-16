@@ -79,7 +79,7 @@ export default async function searchNotion(
       }
     })
     .filter(Boolean)
-    .filter((result) => result && (result.type === 'Post' || result.type === 'Category'))
+    .filter((result) => result && (result.type === 'Post' || result.type === 'Category' || result.type === 'Home'))
 
 
 

@@ -12,9 +12,6 @@
 .categoryItemContainer {
   display: flex;
   align-items: center;
-  padding-top: 0px;
-  padding-bottom: 6px;
-  padding-right: 8px;
   border-radius: 4px;
   transition: background-color 0.2s ease;
   position: relative;

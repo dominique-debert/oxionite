@@ -33,7 +33,7 @@ export const getStaticPaths: GetStaticPaths = async (): Promise<any> => {
     const tags = new Set<string>()
     Object.values(siteMap.pageInfoMap).forEach((pageInfo) => {
       const page = pageInfo as types.PageInfo
-      if (page.type === 'Post' && page.tags) {
+      if ((page.type === 'Post' || page.type === 'Home') && page.tags) {
         page.tags.forEach((tag: string) => {
           if (tag && tag.trim()) {
             tags.add(tag.trim())
