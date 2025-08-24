@@ -1,3 +1,5 @@
+# Noxionite
+
 > The most beautiful blog made with Notion
 
 ![SCR-20250824-kvxf](https://github.com/user-attachments/assets/9237e080-a604-468e-b2e1-e7ec40e64b14)
