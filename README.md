@@ -1,6 +1,8 @@
+# Noxionite
+
 > The most beautiful blog made with Notion
 
-![image.png](attachment:598ad21e-5d66-4d36-bb0d-6691ceb9b74a:image.png)
+![SCR-20250824-kvxf](https://github.com/user-attachments/assets/9237e080-a604-468e-b2e1-e7ec40e64b14)
 
 # 1. Overview
 
@@ -10,11 +12,11 @@ Noxionite is a powerful blog engine that turns your Notion posts into a personal
 
 ## 2.1. Compatibility with all Notion editing features
 
-![image.png](attachment:63bc5dd7-52c2-449d-93a7-8c514a9f8c8f:image.png)
+<img width="849" height="559" alt="SCR-20250824-kwfj" src="https://github.com/user-attachments/assets/b418a3a3-ad58-482d-8d1b-68978fb3870c" />
 
-![image.png](attachment:67d30f6d-f826-4e26-9b0c-94948aea4973:image.png)
+<img width="812" height="502" alt="SCR-20250824-kwid" src="https://github.com/user-attachments/assets/dc743697-11ed-47aa-9843-428850ca27f6" />
 
-![image.png](attachment:60489506-6126-4bb1-816b-c65aa5384326:image.png)
+<img width="874" height="834" alt="SCR-20250824-kwmh" src="https://github.com/user-attachments/assets/7cd31b95-486d-4f79-ae5c-80ed6dfbc890" />
 
 Based on [react-notion-x](https://github.com/NotionX/react-notion-x), you can use all of Notion's blocks.
 
@@ -22,27 +24,27 @@ Learn more: https://noxionite.vercel.app/en/post/features-notion
 
 ## 2.2. Extremely fast routing with ISR
 
-![](attachment:adacb53e-606f-46de-9e3e-b194e9d6c38f:Project_2025-08-24_at_07.26.30.gif)
+![Project 2025-08-24 at 07 26 30](https://github.com/user-attachments/assets/31c2fe65-4fae-4208-9c24-c35d0906ebac)
 
 Pages are pre-rendered at build time and Notion pages are updated every 60 seconds, so page navigation takes less than 0.2 seconds.
 
 ## 2.3. Organize your posts with infinite folder-style categories
 
-![image.png](attachment:78af614a-b150-41e6-bc24-7770e1835aa9:image.png)
+<img width="310" height="525" alt="SCR-20250824-kwtw" src="https://github.com/user-attachments/assets/9a5d0d00-7a2d-4f81-a967-3ce7c8e47314" />
 
 You can organize your blog in a folder-like structure with endless categories.
 
-Learn more: [https://noxionite.vercel.app/en/post/features-notion](https://noxionite.vercel.app/post/fefetures-folder-category)
+Learn more: https://noxionite.vercel.app/en/post/features-notion
 
 ## 2.4. Automatic table of contents management
 
-![image.png](attachment:ce0e078b-4f9f-46d7-9c48-25f286d88fbf:image.png)
+<img width="2032" height="1191" alt="SCR-20250824-kwzo" src="https://github.com/user-attachments/assets/c011c569-8736-4348-8f1b-54e1fb6eb332" />
 
 You can automatically manage the table of contents with Notion's headings.
 
 ## 2.5. Graph View
 
-![](attachment:833e9eaa-a096-4d4c-b6e7-d19706416079:Project_2025-08-24_at_08.13.44.gif)
+![Project 2025-08-24 at 08 13 44](https://github.com/user-attachments/assets/b5beecdf-d6b6-42cd-916d-4b59ae36d599)
 
 In 'Post View', you can see the entire hierarchical structure of categories and posts at a glance.
 
@@ -50,17 +52,17 @@ In 'Tag View', you can see the structure of tags at a glance by gathering tags t
 
 ## 2.6. Glassmorphism Design
 
-![](attachment:bee5acf2-e2fe-471d-b294-7d48b5b67130:Project_2025-08-24_at_07.32.34.gif)
+https://github.com/user-attachments/assets/f56586a6-f34d-4f6c-9fe5-41c4a52da2cb
 
 Beautiful glassmorphism design is applied to all pages, and it also supports dark/white mode.
 
-![](attachment:11a3b68b-ada9-45ff-8376-23fcb965337d:image.png)
+<img width="643" height="1192" alt="SCR-20250824-hiig" src="https://github.com/user-attachments/assets/de5712e7-3e19-44a8-b829-206c7ad12642" />
 
 It is also responsive and works perfectly on mobile.
 
 ## 2.7. Automatic social image generation
 
-![](attachment:6a18a0fe-08ec-4418-9723-e85710ea533e:setup.jpg)
+![setup](https://github.com/user-attachments/assets/6a0f7a79-e91d-43bd-b5a6-c02860d1f07e)
 
 Automatically creates and manages social images and og meta tags that are created when sharing on SNS.
 
@@ -68,7 +70,7 @@ Automatically creates and manages social images and og meta tags that are create
 
 It supports translation for 23 languages and you can build your blog in many more languages.
 
-![](attachment:70a7ad08-8f76-465c-a56f-281c80234e52:Flags.png)
+<img width="5654" height="3605" alt="Flags (1)" src="https://github.com/user-attachments/assets/9f84df13-98a5-4c61-b6f0-6a00a1dd21a8" />
 
 ## 2.9. Simultaneous work by multiple editors
 
