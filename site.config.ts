@@ -124,7 +124,7 @@ export default siteConfig({
     },
     {
       type: 'video',
-      src: '/hero-assets/noxionite-shiny-reverse.mp4',
+      src: '/hero-assets/noxionite-shiny-reverse.mov',
       content: {
         en: {
           title: '7. Fully Open Source',

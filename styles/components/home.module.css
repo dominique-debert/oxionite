@@ -136,8 +136,8 @@
 .heroDescription {
   position: relative;
   font-size: clamp(1rem, 2.5vw, 2rem);
-  max-width: 550px;
   margin: 0;
+  margin-left: auto;
   text-shadow: 1px 1px 3px var(--shadow-color);
   z-index: 2;
   font-family: var(--font-noto-sans-kr), sans-serif;
