@@ -1,55 +1,89 @@
-# Next Notion Engine
+> The most beautiful blog made with Notion
 
----
+![image.png](attachment:598ad21e-5d66-4d36-bb0d-6691ceb9b74a:image.png)
 
-## Developer Handover Document: Build Error Resolution and Routing Bug Analysis
+# 1. Overview
 
-**Objective:** Resolve all build errors from the initial state while preserving the critical client-side routing functionality.
+Noxionite is a powerful blog engine that turns your Notion posts into a personal blog site. It is built based on [react-notion-x](https://github.com/NotionX/react-notion-x)!
 
-### 1. Initial Problem State
+# 2. Features
 
-The project build currently fails with a series of ESLint errors and warnings. The complete list of initial errors can be found in the user's prompt. At this stage, despite the build errors, the application's client-side routing (using Next.js `<Link>`) functions correctly.
+## 2.1. Compatibility with all Notion editing features
 
-### 2. The Routing Bug Incident
+![image.png](attachment:63bc5dd7-52c2-449d-93a7-8c514a9f8c8f:image.png)
 
-During previous attempts to fix the build errors, a critical regression bug was introduced: client-side routing broke. When a user clicked a `<Link>`, the URL in the browser would update, but the page content would not re-render until a manual refresh.
+![image.png](attachment:67d30f6d-f826-4e26-9b0c-94948aea4973:image.png)
 
-### 3. Root Cause Analysis
+![image.png](attachment:60489506-6126-4bb1-816b-c65aa5384326:image.png)
 
-The routing bug was caused by incorrect modifications made to fix `react-hooks/exhaustive-deps` warnings, which led to **Stale Closures** in React components responsible for managing and reacting to route changes.
+Based on [react-notion-x](https://github.com/NotionX/react-notion-x), you can use all of Notion's blocks.
 
-- **The Core Issue:** The logic to handle URL changes is distributed across `GraphProvider.tsx` and `UnifiedGraphView.tsx`. Several `useEffect` and `useCallback` hooks in these components depend on the `router` object. The initial, correct implementation relied on values like `router.asPath` being in the dependency arrays of these hooks. This ensured that whenever the URL changed, any functions inside these hooks were re-created with the new, current URL and state.
+Learn more: https://noxionite.vercel.app/en/post/features-notion
 
-- **The Mistake:** In an attempt to satisfy the `exhaustive-deps` lint rule, `router.asPath` was removed from some of these dependency arrays. This caused the functions (`handleRouteChange`, `handleFocusCurrent`, etc.) to be created only once, capturing the initial URL and state. When the route changed, these old functions were still being called, but they were operating with stale data, thus failing to trigger a re-render.
+## 2.2. Extremely fast routing with ISR
 
-- **The Flawed Correction:** Subsequent attempts to fix this by re-adding `router.asPath` to some, but not all, of the necessary dependency arrays, or by creating conflicting `useEffect` hooks in both `GraphProvider` and `UnifiedGraphView`, only exacerbated the problem by creating race conditions and unpredictable behavior.
+![](attachment:adacb53e-606f-46de-9e3e-b194e9d6c38f:Project_2025-08-24_at_07.26.30.gif)
 
-### 4. Recommended Strategy for Resolution
+Pages are pre-rendered at build time and Notion pages are updated every 60 seconds, so page navigation takes less than 0.2 seconds.
 
-To fix the build errors without re-introducing the routing bug, the following methodical approach is required. The key is to respect the `exhaustive-deps` rule while strategically disabling it where functionally necessary.
+## 2.3. Organize your posts with infinite folder-style categories
 
-**Step-by-step plan:**
+![image.png](attachment:78af614a-b150-41e6-bc24-7770e1835aa9:image.png)
 
-1.  **`no-case-declarations` (`GraphProvider.tsx`):** For each `case` block in the `switch` statement that contains a lexical declaration (`let`, `const`), wrap the block's content in curly braces `{}`. For cases without declarations, do not add braces.
+You can organize your blog in a folder-like structure with endless categories.
 
-2.  **`unicorn/prefer-set-has` & `unicorn/no-for-loop` (`UnifiedGraphView.tsx`, `graph-control.ts`):**
-    -   Convert arrays like `['post', 'category', 'tag']` that are used for inclusion checks into a `new Set(['post', 'category', 'tag'])`.
-    -   Replace the corresponding `.includes()` checks with `.has()`.
-    -   Refactor standard `for (let i = 0; ...)` loops into `for...of` loops where appropriate.
+Learn more: [https://noxionite.vercel.app/en/post/features-notion](https://noxionite.vercel.app/post/fefetures-folder-category)
 
-3.  **`react-hooks/exhaustive-deps` (The Critical Part):**
-    -   **Analyze each warning individually.** Add the suggested dependencies to the array.
-    -   **CRITICAL EXCEPTION:** In `GraphProvider.tsx` and `UnifiedGraphView.tsx`, for any `useEffect` or `useCallback` hook that directly or indirectly handles route changes, **you must include `router.asPath` in the dependency array.**
-    -   If adding `router.asPath` (or other dependencies like `instance.graphRef`) re-introduces the `exhaustive-deps` warning, it is a signal that this is a necessary dependency for correct functionality. In this specific case, **disable the lint rule for that line only** using the comment:
-        ```javascript
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        ```
-    -   This approach correctly informs ESLint that you are intentionally breaking the rule for a valid reason, preventing future developers from accidentally "fixing" it and re-introducing the bug.
+## 2.4. Automatic table of contents management
 
-4.  **Other Minor Errors:**
-    -   **`object-shorthand`:** Change `key: key` to `key`.
-    -   **`simple-import-sort/exports`:** Manually reorder the `export` statements as suggested by the error.
-    -   **`unicorn/prefer-math-min-max`:** Replace `a > b ? a : b` with `Math.max(a, b)`.
-    -   **`@typescript-eslint/consistent-generic-constructors`:** Change `new Map<K, V>()` to `new Map<K, V>()`.
+![image.png](attachment:ce0e078b-4f9f-46d7-9c48-25f286d88fbf:image.png)
 
-By following this strategy, all build errors will be resolved, and the critical client-side routing functionality will be preserved. The key is understanding *why* the `exhaustive-deps` rule exists but also knowing when its violation is necessary for the correct runtime behavior of the application.
+You can automatically manage the table of contents with Notion's headings.
+
+## 2.5. Graph View
+
+![](attachment:833e9eaa-a096-4d4c-b6e7-d19706416079:Project_2025-08-24_at_08.13.44.gif)
+
+In 'Post View', you can see the entire hierarchical structure of categories and posts at a glance.
+
+In 'Tag View', you can see the structure of tags at a glance by gathering tags that appear together in a post.
+
+## 2.6. Glassmorphism Design
+
+![](attachment:bee5acf2-e2fe-471d-b294-7d48b5b67130:Project_2025-08-24_at_07.32.34.gif)
+
+Beautiful glassmorphism design is applied to all pages, and it also supports dark/white mode.
+
+![](attachment:11a3b68b-ada9-45ff-8376-23fcb965337d:image.png)
+
+It is also responsive and works perfectly on mobile.
+
+## 2.7. Automatic social image generation
+
+![](attachment:6a18a0fe-08ec-4418-9723-e85710ea533e:setup.jpg)
+
+Automatically creates and manages social images and og meta tags that are created when sharing on SNS.
+
+## 2.8. Support for 23 languages
+
+It supports translation for 23 languages and you can build your blog in many more languages.
+
+![](attachment:70a7ad08-8f76-465c-a56f-281c80234e52:Flags.png)
+
+## 2.9. Simultaneous work by multiple editors
+
+Multiple people can work on a single blog at the same time and set them as co-authors.
+
+## 2.10. Completely open source, free
+
+It is completely open source and free to use under the MIT license.
+
+# 3. Installation
+
+Please check the link below for installation instructions.
+
+[https://noxionite.vercel.app/en/post/setup](https://noxionite.vercel.app/post/setup)
+
+# 4. License
+
+MIT © Jaewan Shin
