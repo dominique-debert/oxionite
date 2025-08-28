@@ -3,18 +3,18 @@ import locale from './site.locale.json'
 
 export default siteConfig({
   // the site's root Notion page (required)
-  rootNotionPageId: '251f2d475c3180d28fb1c28911fbbe75',
+  rootNotionPageId: '25bf2d475c318004b7a6f73f381fce22',
 
   // The database id for the blog (required)
-  rootNotionDatabaseId: '251f2d475c3181c3a9f2ff6f477bbf25',
+  rootNotionDatabaseId: '25bf2d475c31811ca2b6c73fc83f40c7',
 
   // basic site info (required)
-  name: 'Noxionite',
-  domain: 'noxionite.vercel.app',
+  name: "Jzahnny's Blog",
+  domain: 'jzahnny.vercel.app',
   author: 'Jaewan Shin',
 
   // open graph metadata (optional)
-  description: 'Your Notion pages, reborn as a stunning blog',
+  description: "Jzahnny's Offical Blog",
 
   // hero section (optional)
   heroAssets: [
