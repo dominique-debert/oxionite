@@ -1,7 +1,7 @@
 import type * as types from './context/types'
 
 export interface SiteConfig {
-  rootNotionPageId: string
+  rootNotionPageId?: string | null
   rootNotionSpaceId?: string | null
   rootNotionDatabaseId?: string
 

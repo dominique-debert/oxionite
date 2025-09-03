@@ -22,7 +22,7 @@ import {
 } from './context/types'
 
 export const rootNotionPageId: string | null =
-  parsePageId(getSiteConfig('rootNotionPageId'), { uuid: false }) ?? null
+  parsePageId(getSiteConfig('rootNotionPageId', ''), { uuid: false }) || null
 
 export const rootNotionDatabaseId: string = parsePageId(
   getSiteConfig('rootNotionDatabaseId'),

@@ -4,9 +4,8 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'next-i18next'
 
-import { isSearchEnabled } from '@/lib/config'
+import { isSearchEnabled, rootNotionPageId } from '@/lib/config'
 import styles from '@/styles/components/SearchModal.module.css'
-import siteConfig from '../site.config'
 
 interface SearchResult {
   id: string
@@ -54,7 +53,7 @@ export function SearchModal() {
       const response = await fetch('/api/search-notion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: searchQuery, ancestorId: siteConfig.rootNotionPageId })
+        body: JSON.stringify({ query: searchQuery, ancestorId: rootNotionPageId })
       })
       if (response.ok) {
         const data = (await response.json()) as NotionSearchResponse

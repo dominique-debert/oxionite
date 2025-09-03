@@ -93,7 +93,7 @@ export async function resolveNotionPage(
       return {
         site,
         error: {
-          message: 'No root page ID configured for this site',
+          message: 'No root page ID configured. Please use Home type pages in your Notion database for the landing page.',
           statusCode: 404
         }
       }

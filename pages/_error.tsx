@@ -1,7 +1,7 @@
 import type { NextPageContext } from 'next'
 import { ErrorPage } from '@/components/ErrorPage'
 import * as React from 'react'
-import site from 'site.config'
+import { site } from 'lib/config'
 
 function CustomErrorPage({ statusCode }: { statusCode: number }) {
   return <ErrorPage site={site} statusCode={statusCode} />
