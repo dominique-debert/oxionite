@@ -106,12 +106,21 @@ export interface TagGraphData {
 /**
  * The main data structure holding all site information after being processed.
  */
+export interface DatabaseInfo {
+  id: string
+  name: string
+  slug: string
+  coverImage?: string | null
+  description?: string | null
+}
+
 export interface SiteMap {
   site: Site
   pageInfoMap: Record<string, PageInfo>
   navigationTree: PageInfo[]
   canonicalPageMap: CanonicalPageMap
   tagGraphData?: TagGraphData
+  databaseInfoMap?: Record<string, DatabaseInfo>
   lastUpdated: number
 }
 

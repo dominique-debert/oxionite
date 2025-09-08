@@ -1,5 +1,6 @@
 import type { SiteMap, PageInfo } from './context/types'
 import { buildTagGraphData } from './context/tag-graph';
+import localeConfig from '../site.locale.json';
 
 // Interface for SocialCard props - matches SocialCard component
 interface SocialCardProps {
@@ -19,7 +20,6 @@ let fsSync: any
 let path: any
 let SocialCard: any
 let siteConfig: any
-let localeConfig: any
 
 // Lazy load server-side modules
 async function loadServerModules() {
@@ -56,9 +56,6 @@ async function loadServerModules() {
   }
   if (!siteConfig) {
     siteConfig = (await import('../site.config.ts')).default
-  }
-  if (!localeConfig) {
-    localeConfig = (await import('../site.locale.json')).default
   }
 }
 

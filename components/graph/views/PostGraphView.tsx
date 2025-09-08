@@ -226,6 +226,21 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
       ctx.beginPath();
       ctx.roundRect(fillX, fillY, fillSize, fillSize, Math.max(fillRadius, 0));
       ctx.fill();
+
+      if (node.imageUrl && node.img && node.img.complete) {
+        ctx.save();
+        const imageAreaOffset = W_OUTER + W_INNER;
+        const imageAreaSize = nodeSize - 2 * imageAreaOffset;
+        if (imageAreaSize > 0) {
+          const imageCornerRadius = radius - imageAreaOffset;
+          ctx.beginPath();
+          ctx.roundRect(node.x! - imageAreaSize / 2, node.y! - imageAreaSize / 2, imageAreaSize, imageAreaSize, Math.max(imageCornerRadius, 0));
+          ctx.clip();
+          const { drawWidth, drawHeight, offsetX, offsetY } = drawImageFillShape(node.img, node.x! - imageAreaSize / 2, node.y! - imageAreaSize / 2, imageAreaSize, imageAreaSize);
+          ctx.drawImage(node.img, node.x! + offsetX - imageAreaSize / 2, node.y! + offsetY - imageAreaSize / 2, drawWidth, drawHeight);
+          ctx.restore();
+        }
+      }
     } else {
       // Draw borders and background for non-home nodes
       ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;

@@ -62,7 +62,7 @@ export const createPostGraphData = (
   
   nodes.push(homeNode);
 
-  // Create database nodes with proper names and slugs from site.config.ts
+  // Create database nodes with proper names, slugs, and cover images
   const dbConfigs = siteConfig.NotionDbList || [];
   const databaseNodes = new Map<string, GraphNode>();
   
@@ -71,6 +71,10 @@ export const createPostGraphData = (
     if (!databaseNodes.has(dbConfig.id)) {
       const dbName = dbConfig.name?.[locale] || 'Database';
       const dbSlug = dbConfig.slug;
+      
+      // Get database info including cover image
+      const dbInfo = siteMap.databaseInfoMap?.[dbConfig.id];
+      const coverImage = dbInfo?.coverImage;
       
       const dbNode: GraphNode = {
         id: dbConfig.id,
@@ -81,7 +85,18 @@ export const createPostGraphData = (
         color: '#FF6B6B', // Red color for database nodes
         size: GRAPH_CONFIG.visual.DB_NODE_SIZE,
         val: GRAPH_CONFIG.visual.DB_NODE_SIZE,
+        imageUrl: coverImage || undefined,
       };
+      
+      // Preload database cover image if available
+      if (coverImage) {
+        preloadImage(coverImage).then(img => {
+          dbNode.img = img;
+        }).catch(() => {
+          console.warn(`Failed to load database cover image: ${coverImage}`);
+        });
+      }
+      
       databaseNodes.set(dbConfig.id, dbNode);
       nodes.push(dbNode);
       

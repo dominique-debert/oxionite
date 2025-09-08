@@ -1,7 +1,7 @@
 import type { ExtendedRecordMap, PageBlock } from 'notion-types'
 import { getPageProperty } from 'notion-utils'
 
-import type { CanonicalPageMap, PageInfo, SiteMap } from './types'
+import type { CanonicalPageMap, PageInfo, SiteMap, DatabaseInfo } from './types'
 import * as config from '../config'
 import { mapImageUrl } from '../map-image-url'
 import { notion } from '../notion-api'
@@ -75,8 +75,63 @@ function removeCircularDependencies(pages: PageInfo[]): void {
 export const getSiteMap = async (): Promise<SiteMap> => {
   const notionDbList = config.NotionDbList
   let pageInfoMap: Record<string, PageInfo> = {}
+  const databaseInfoMap: Record<string, DatabaseInfo> = {}
 
+  // Fetch database info and pages
   if (notionDbList && notionDbList.length > 0) {
+    // Fetch database info for each database
+    for (const db of notionDbList) {
+      console.log(`[getSiteMap] Processing database with ID: ${db.id}`);
+      try {
+        const dbRecordMap = await notion.getPage(db.id)
+
+        // Find the page block for the database
+        const dbBlock = Object.values(dbRecordMap.block)[0]?.value as PageBlock | undefined;
+        const collection = Object.values(dbRecordMap.collection)[0]?.value as any;
+
+        console.log(`[getSiteMap] Attempting to extract cover from database ${db.id}`);
+
+        let coverImageUrl = null;
+        if (collection?.cover) {
+          coverImageUrl = collection.cover;
+          console.log(`[getSiteMap] Found cover in collection: ${coverImageUrl}`);
+        } else if (dbBlock?.format?.page_cover) {
+          coverImageUrl = dbBlock.format.page_cover;
+          console.log(`[getSiteMap] Found cover in page_cover: ${coverImageUrl}`);
+        } else {
+          console.log(`[getSiteMap] No cover image found in collection or page_cover for ${db.id}`);
+        }
+
+        let processedCoverImage = null;
+        if (coverImageUrl && dbBlock) {
+          processedCoverImage = mapImageUrl(coverImageUrl, dbBlock);
+          if (processedCoverImage) {
+            console.log(`[getSiteMap] Successfully processed cover image: ${processedCoverImage}`);
+          } else {
+            console.log(`[getSiteMap] Failed to process cover image: mapImageUrl returned null`);
+          }
+        } else if (coverImageUrl) {
+          console.log(`[getSiteMap] Failed to process: dbBlock is undefined`);
+        }
+
+        databaseInfoMap[db.id] = {
+          id: db.id,
+          name: db.name?.en || db.name?.ko || 'Database',
+          slug: db.slug,
+          coverImage: processedCoverImage || null,
+          description: (db as any).description?.en || (db as any).description?.ko || null
+        }
+      } catch (error) {
+        console.warn(`Failed to fetch database info for ${db.id}:`, error)
+        databaseInfoMap[db.id] = {
+          id: db.id,
+          name: db.name?.en || db.name?.ko || 'Database',
+          slug: db.slug
+        }
+      }
+    }
+
+    // Fetch all pages from databases
     const allPages = await Promise.all(
       notionDbList.map((db: { id: string }) => getAllPagesFromDatabase(db.id))
     )
@@ -84,8 +139,29 @@ export const getSiteMap = async (): Promise<SiteMap> => {
   } else if (config.rootNotionDatabaseId) {
     // Fallback for single database ID
     pageInfoMap = await getAllPagesFromDatabase(config.rootNotionDatabaseId)
-  }
+    
+    // Try to get info for single database
+    try {
+      const dbRecordMap = await notion.getPage(config.rootNotionDatabaseId)
+      const dbBlock = Object.values(dbRecordMap.block)[0]?.value
+      
+      if (dbBlock) {
+        const coverImageUrl = (dbBlock as PageBlock).format?.page_cover
+        const processedCoverImage = coverImageUrl
+          ? mapImageUrl(coverImageUrl, dbBlock)
+          : null
 
+        databaseInfoMap[config.rootNotionDatabaseId] = {
+          id: config.rootNotionDatabaseId,
+          name: 'Database',
+          slug: 'database',
+          coverImage: processedCoverImage
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch database info for ${config.rootNotionDatabaseId}:`, error)
+    }
+  }
 
   // Generate breadcrumbs for all pages in the pageInfoMap
   for (const pageId of Object.keys(pageInfoMap)) {
@@ -120,6 +196,7 @@ export const getSiteMap = async (): Promise<SiteMap> => {
     navigationTree,
     canonicalPageMap,
     tagGraphData,
+    databaseInfoMap,
     lastUpdated: Date.now()
   }
 }
