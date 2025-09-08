@@ -4,7 +4,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'next-i18next'
 
-import { isSearchEnabled, rootNotionPageId } from '@/lib/config'
+import { isSearchEnabled, NotionDbList } from '@/lib/config'
 import styles from '@/styles/components/SearchModal.module.css'
 
 interface SearchResult {
@@ -50,15 +50,25 @@ export function SearchModal() {
     }
     setIsLoading(true)
     try {
-      const response = await fetch('/api/search-notion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: searchQuery, ancestorId: rootNotionPageId })
-      })
-      if (response.ok) {
-        const data = (await response.json()) as NotionSearchResponse
-        setResults(data.results || [])
-      }
+      // Search across all databases in NotionDbList
+      const searchPromises = NotionDbList.map(db =>
+        fetch('/api/search-notion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: searchQuery, ancestorId: db.id })
+        }).then(response => response.ok ? response.json() as Promise<NotionSearchResponse> : null)
+      )
+      
+      const allResults = await Promise.all(searchPromises)
+      const combinedResults = allResults
+        .filter(result => result !== null)
+        .flatMap(result => result.results || [])
+        // Remove duplicates based on ID
+        .filter((result, index, self) => 
+          index === self.findIndex(r => r.id === result.id)
+        )
+      
+      setResults(combinedResults)
     } catch (err) {
       console.error('Search error:', err)
     } finally {
