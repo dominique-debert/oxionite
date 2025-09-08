@@ -153,8 +153,8 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
       nodeSize = GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE;
       cornerRadius = GRAPH_CONFIG.visual.CATEGORY_CORNER_RADIUS;
     } else if (node.type === 'Database') {
-      nodeSize = GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE;
-      cornerRadius = 0; // Diamond shape will be handled differently
+      nodeSize = GRAPH_CONFIG.visual.DB_NODE_SIZE;
+      cornerRadius = GRAPH_CONFIG.visual.DB_CORNER_RADIUS;
     } else {
       nodeSize = GRAPH_CONFIG.visual.POST_NODE_SIZE;
       cornerRadius = nodeSize / 2;
@@ -196,39 +196,35 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
         ctx.fillRect(node.x! - nodeSize / 2, node.y! - nodeSize / 2, nodeSize, nodeSize);
       }
     } else if (node.type === 'Database') {
-      // Draw diamond shape for database nodes
+      // Draw rounded rectangle (same as category) for database nodes
+      const radius = GRAPH_CONFIG.visual.DB_CORNER_RADIUS;
       ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;
       ctx.lineWidth = W_OUTER;
-      
-      const diamondSize = nodeSize / 2;
+      const outerPathX = node.x! - (nodeSize / 2) + (W_OUTER / 2);
+      const outerPathY = node.y! - (nodeSize / 2) + (W_OUTER / 2);
+      const outerPathSize = nodeSize - W_OUTER;
+      const outerPathRadius = radius - (W_OUTER / 2);
       ctx.beginPath();
-      ctx.moveTo(node.x, node.y - diamondSize);
-      ctx.lineTo(node.x + diamondSize, node.y);
-      ctx.lineTo(node.x, node.y + diamondSize);
-      ctx.lineTo(node.x - diamondSize, node.y);
-      ctx.closePath();
+      ctx.roundRect(outerPathX, outerPathY, outerPathSize, outerPathSize, Math.max(outerPathRadius, 0));
       ctx.stroke();
 
       ctx.strokeStyle = colors.nodeInnerBorder;
       ctx.lineWidth = W_INNER;
-      
-      const innerDiamondSize = diamondSize - W_OUTER - W_INNER / 2;
+      const innerPathX = node.x! - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
+      const innerPathY = node.y! - (nodeSize / 2) + W_OUTER + (W_INNER / 2);
+      const innerPathSize = nodeSize - (2 * W_OUTER) - W_INNER;
+      const innerPathRadius = radius - W_OUTER - (W_INNER / 2);
       ctx.beginPath();
-      ctx.moveTo(node.x, node.y - innerDiamondSize);
-      ctx.lineTo(node.x + innerDiamondSize, node.y);
-      ctx.lineTo(node.x, node.y + innerDiamondSize);
-      ctx.lineTo(node.x - innerDiamondSize, node.y);
-      ctx.closePath();
+      ctx.roundRect(innerPathX, innerPathY, innerPathSize, innerPathSize, Math.max(innerPathRadius, 0));
       ctx.stroke();
 
-      // Fill the diamond
       ctx.fillStyle = colors.node;
+      const fillX = node.x! - (nodeSize / 2) + W_OUTER + W_INNER;
+      const fillY = node.y! - (nodeSize / 2) + W_OUTER + W_INNER;
+      const fillSize = nodeSize - 2 * (W_OUTER + W_INNER);
+      const fillRadius = radius - W_OUTER - W_INNER;
       ctx.beginPath();
-      ctx.moveTo(node.x, node.y - innerDiamondSize);
-      ctx.lineTo(node.x + innerDiamondSize, node.y);
-      ctx.lineTo(node.x, node.y + innerDiamondSize);
-      ctx.lineTo(node.x - innerDiamondSize, node.y);
-      ctx.closePath();
+      ctx.roundRect(fillX, fillY, fillSize, fillSize, Math.max(fillRadius, 0));
       ctx.fill();
     } else {
       // Draw borders and background for non-home nodes
@@ -304,7 +300,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
       }
     }
 
-    const fontSize = node.type === 'Root' ? GRAPH_CONFIG.visual.HOME_NAME_FONT_SIZE : node.type === 'Category' ? GRAPH_CONFIG.visual.CATEGORY_FONT_SIZE : GRAPH_CONFIG.visual.POST_FONT_SIZE;
+    const fontSize = node.type === 'Root' ? GRAPH_CONFIG.visual.HOME_NAME_FONT_SIZE : node.type === 'Category' ? GRAPH_CONFIG.visual.CATEGORY_FONT_SIZE : node.type === 'Database' ? GRAPH_CONFIG.visual.DB_NAME_FONT_SIZE : GRAPH_CONFIG.visual.POST_FONT_SIZE;
     ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

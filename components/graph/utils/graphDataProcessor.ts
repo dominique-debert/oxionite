@@ -77,33 +77,17 @@ export const createPostGraphData = (
     }
   });
   
-  // Create database nodes with proper names
+  // Create database nodes with proper names from site.config.ts
+  const dbConfigs = siteConfig.NotionDbList || [];
+  
   Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
     if (pageInfo.language !== locale) return;
     if (pageInfo.parentDbId && !databaseNodes.has(pageInfo.parentDbId)) {
       const dbSlug = dbSlugs.get(pageInfo.parentDbId);
-      let dbName = 'Database';
       
-      // Try to find a better name for the database
-      if (siteMap.navigationTree) {
-        const findDbInTree = (items: any[]): any => {
-          for (const item of items) {
-            if (item.slug === dbSlug) {
-              return item;
-            }
-            if (item.children) {
-              const found = findDbInTree(item.children);
-              if (found) return found;
-            }
-          }
-          return null;
-        };
-        
-        const dbItem = findDbInTree(siteMap.navigationTree);
-        if (dbItem && dbItem.title) {
-          dbName = dbItem.title;
-        }
-      }
+      // Find the actual database name from site.config.ts
+      const dbConfig = dbConfigs.find(db => db.id === pageInfo.parentDbId);
+      const dbName = dbConfig?.name?.[locale] || 'Database';
       
       const dbNode: GraphNode = {
         id: pageInfo.parentDbId,
@@ -112,8 +96,8 @@ export const createPostGraphData = (
         url: `/category/${dbSlug}`,
         type: 'Database' as any,
         color: '#FF6B6B', // Red color for database nodes
-        size: GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE,
-        val: GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE,
+        size: GRAPH_CONFIG.visual.DB_NODE_SIZE,
+        val: GRAPH_CONFIG.visual.DB_NODE_SIZE,
       };
       databaseNodes.set(pageInfo.parentDbId, dbNode);
       nodes.push(dbNode);
