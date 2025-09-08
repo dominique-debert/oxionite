@@ -62,35 +62,18 @@ export const createPostGraphData = (
   
   nodes.push(homeNode);
 
-  // Create database nodes first
-  const databaseNodes = new Map<string, GraphNode>();
-  const dbSlugs = new Map<string, string>();
-  
-  // Collect database names and slugs from pages
-  Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
-    if (pageInfo.language !== locale) return;
-    if (pageInfo.parentDbId) {
-      const dbSlug = pageInfo.slug?.split('/')[0];
-      if (dbSlug && !dbSlugs.has(pageInfo.parentDbId)) {
-        dbSlugs.set(pageInfo.parentDbId, dbSlug);
-      }
-    }
-  });
-  
-  // Create database nodes with proper names from site.config.ts
+  // Create database nodes with proper names and slugs from site.config.ts
   const dbConfigs = siteConfig.NotionDbList || [];
+  const databaseNodes = new Map<string, GraphNode>();
   
-  Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
-    if (pageInfo.language !== locale) return;
-    if (pageInfo.parentDbId && !databaseNodes.has(pageInfo.parentDbId)) {
-      const dbSlug = dbSlugs.get(pageInfo.parentDbId);
-      
-      // Find the actual database name from site.config.ts
-      const dbConfig = dbConfigs.find(db => db.id === pageInfo.parentDbId);
-      const dbName = dbConfig?.name?.[locale] || 'Database';
+  // Create database nodes for all databases in site.config.ts
+  dbConfigs.forEach(dbConfig => {
+    if (!databaseNodes.has(dbConfig.id)) {
+      const dbName = dbConfig.name?.[locale] || 'Database';
+      const dbSlug = dbConfig.slug;
       
       const dbNode: GraphNode = {
-        id: pageInfo.parentDbId,
+        id: dbConfig.id,
         name: dbName,
         slug: dbSlug,
         url: `/category/${dbSlug}`,
@@ -99,13 +82,13 @@ export const createPostGraphData = (
         size: GRAPH_CONFIG.visual.DB_NODE_SIZE,
         val: GRAPH_CONFIG.visual.DB_NODE_SIZE,
       };
-      databaseNodes.set(pageInfo.parentDbId, dbNode);
+      databaseNodes.set(dbConfig.id, dbNode);
       nodes.push(dbNode);
       
       // Link database to home
       links.push({
         source: HOME_NODE_ID,
-        target: pageInfo.parentDbId,
+        target: dbConfig.id,
         color: '#E5E7EB',
         width: 1.5,
       });
