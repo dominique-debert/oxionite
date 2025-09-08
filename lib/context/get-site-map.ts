@@ -73,9 +73,19 @@ function removeCircularDependencies(pages: PageInfo[]): void {
  * It's memoized to avoid re-fetching data on every call during a single build.
  */
 export const getSiteMap = async (): Promise<SiteMap> => {
-  const pageInfoMap = await getAllPagesFromDatabase(
-    config.rootNotionDatabaseId
-  )
+  const notionDbList = config.NotionDbList
+  let pageInfoMap: Record<string, PageInfo> = {}
+
+  if (notionDbList && notionDbList.length > 0) {
+    const allPages = await Promise.all(
+      notionDbList.map((db: { id: string }) => getAllPagesFromDatabase(db.id))
+    )
+    pageInfoMap = allPages.reduce((acc: Record<string, PageInfo>, currentMap: Record<string, PageInfo>) => ({ ...acc, ...currentMap }), {})
+  } else if (config.rootNotionDatabaseId) {
+    // Fallback for single database ID
+    pageInfoMap = await getAllPagesFromDatabase(config.rootNotionDatabaseId)
+  }
+
 
   // Generate breadcrumbs for all pages in the pageInfoMap
   for (const pageId of Object.keys(pageInfoMap)) {
@@ -124,7 +134,7 @@ async function getAllPagesFromDatabase(
 ): Promise<Record<string, PageInfo>> {
   if (!databaseId) {
     console.warn(
-      'WARN: `rootNotionDatabaseId` is not defined in `site.config.ts`, so no pages will be rendered.'
+      'WARN: `databaseId` is not defined, so no pages will be rendered.'
     )
     return {}
   }
@@ -230,6 +240,7 @@ async function getAllPagesFromDatabase(
         language:
           getPageProperty<string>('Language', block, collectionRecordMap) || null,
         parentPageId,
+        parentDbId: databaseId,
         childrenPageIds,
         description:
           getPageProperty<string>('Description', block, collectionRecordMap) ||

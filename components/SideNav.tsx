@@ -89,6 +89,10 @@ export function SideNav({
                        db?.name?.en || 
                        Object.values(db?.name || {})[0] || 
                        'Untitled'
+
+      const dbChildren = filteredNavigationTree.filter(
+        (rootPage) => rootPage.parentDbId === db.id
+      )
       
       return {
         title: displayName,
@@ -96,7 +100,7 @@ export function SideNav({
         type: 'Category' as const,
         slug: db.slug,
         parentPageId: null,
-        childrenPageIds: filteredNavigationTree.map(child => child.pageId),
+        childrenPageIds: dbChildren.map(child => child.pageId),
         language: locale || null,
         public: true,
         useOriginalCoverImage: false,
@@ -107,7 +111,7 @@ export function SideNav({
         tags: [],
         authors: [],
         breadcrumb: [],
-        children: filteredNavigationTree,
+        children: dbChildren,
         canonicalPageUrl: `/${db.slug}`
       }
     })

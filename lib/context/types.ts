@@ -69,9 +69,10 @@ export interface PageInfo {
   pageId: string
   type: 'Post' | 'Category' | 'Home' | 'Unknown'
   slug: string
-  parentPageId: string | null
-  childrenPageIds: string[]
-  language: string | null
+  parentPageId: string | null;
+  parentDbId?: string | null;
+  childrenPageIds: string[];
+  language: string | null;
   public: boolean | null
   useOriginalCoverImage: boolean | null
   description: string | null
