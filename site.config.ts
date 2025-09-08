@@ -4,6 +4,25 @@ import locale from './site.locale.json'
 export default siteConfig({
   // The database id for the blog (required)
   rootNotionDatabaseId: '251f2d475c3181c3a9f2ff6f477bbf25',
+  
+  NotionDbList: [
+    {
+      id: '251f2d475c3181c3a9f2ff6f477bbf25',
+      slug: 'noxionite',
+      name: {
+        en: 'Noxionite',
+        ko: '녹셔나이트'
+      }
+    },
+    {
+      id: '21df2d475c31812dae49d1b1735e02b4',
+      slug: 'template',
+      name: {
+        en: 'Noxionite Blog Template',
+        ko: 'Noxionite 블로그 템플릿'
+      }
+    }
+  ],
 
   // basic site info (required)
   name: 'Noxionite',

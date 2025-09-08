@@ -8,6 +8,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import type * as types from '@/lib/context/types'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SideNav.module.css'
+import { getSiteConfig } from '@/lib/get-config-value'
 
 import { CategoryTree } from './CategoryTree'
 import { UnifiedGraphView } from './graph/UnifiedGraphView'
@@ -77,8 +78,43 @@ export function SideNav({
     return filterNavigationItems(siteMap.navigationTree, locale)
   }, [siteMap?.navigationTree, locale])
 
+  // Create database items for the category tree
+  const databaseItems = React.useMemo((): types.PageInfo[] => {
+    const notionDbList = getSiteConfig<any[], any[]>('NotionDbList', [])
+    if (!Array.isArray(notionDbList)) return filteredNavigationTree
+    
+    return notionDbList.map((db: any): types.PageInfo => {
+      // Get display name based on current locale
+      const displayName = db?.name?.[locale as string] || 
+                       db?.name?.en || 
+                       Object.values(db?.name || {})[0] || 
+                       'Untitled'
+      
+      return {
+        title: displayName,
+        pageId: db.id || db.pageId,
+        type: 'Category' as const,
+        slug: db.slug,
+        parentPageId: null,
+        childrenPageIds: filteredNavigationTree.map(child => child.pageId),
+        language: locale || null,
+        public: true,
+        useOriginalCoverImage: false,
+        description: null,
+        date: null,
+        coverImage: null,
+        coverImageBlock: undefined,
+        tags: [],
+        authors: [],
+        breadcrumb: [],
+        children: filteredNavigationTree,
+        canonicalPageUrl: `/${db.slug}`
+      }
+    })
+  }, [filteredNavigationTree, locale])
+
   useEffect(() => {
-    if (!filteredNavigationTree) return
+    if (!databaseItems) return
 
     const newExpandedState: Record<string, boolean> = {}
 
@@ -93,9 +129,9 @@ export function SideNav({
         }
       }
     }
-    setInitialExpansion(filteredNavigationTree)
+    setInitialExpansion(databaseItems)
 
-    const activePath = findPathToActiveItem(filteredNavigationTree, asPath)
+    const activePath = findPathToActiveItem(databaseItems, asPath)
     if (activePath) {
       activePath.forEach(id => {
         newExpandedState[id] = true
@@ -103,7 +139,7 @@ export function SideNav({
     }
 
     setExpandedItems(newExpandedState)
-  }, [filteredNavigationTree, asPath])
+  }, [databaseItems, asPath])
 
   const toggleItemExpanded = (id: string) => {
     setExpandedItems(prev => ({
@@ -205,7 +241,7 @@ export function SideNav({
       >
         <div className="sidenav-pill" style={pillStyle} />
         <CategoryTree 
-          items={filteredNavigationTree}
+          items={databaseItems}
           expandedItems={expandedItems}
           toggleItemExpanded={toggleItemExpanded}
         />

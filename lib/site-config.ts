@@ -4,6 +4,11 @@ export interface SiteConfig {
   rootNotionPageId?: string | null
   rootNotionSpaceId?: string | null
   rootNotionDatabaseId?: string
+  NotionDbList?: Array<{
+    id: string
+    slug: string
+    name: Record<string, string>
+  }>
 
   name: string
   domain: string
