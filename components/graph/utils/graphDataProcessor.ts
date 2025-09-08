@@ -63,7 +63,7 @@ export const createPostGraphData = (
   nodes.push(homeNode);
 
   // Create database nodes with proper names, slugs, and cover images
-  const dbConfigs = siteConfig.NotionDbList || [];
+  const dbConfigs = siteConfig.notionDbList || [];
   const databaseNodes = new Map<string, GraphNode>();
   
   // Create database nodes for all databases in site.config.ts

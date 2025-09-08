@@ -4,7 +4,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'next-i18next'
 
-import { isSearchEnabled, NotionDbList } from '@/lib/config'
+import { isSearchEnabled, notionDbList } from '@/lib/config'
 import styles from '@/styles/components/SearchModal.module.css'
 
 interface SearchResult {
@@ -50,8 +50,8 @@ export function SearchModal() {
     }
     setIsLoading(true)
     try {
-      // Search across all databases in NotionDbList
-      const searchPromises = NotionDbList.map(db =>
+      // Search across all databases in notionDbList
+      const searchPromises = notionDbList.map(db =>
         fetch('/api/search-notion', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

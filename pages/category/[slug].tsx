@@ -65,7 +65,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     })
 
     // Generate paths for all database pages
-    const notionDbList = siteConfig.NotionDbList || []
+    const notionDbList = siteConfig.notionDbList || []
     notionDbList.forEach((db) => {
       if (db.slug) {
         siteConfig.locale.localeList.forEach((locale) => {
@@ -99,7 +99,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
 
   try {
     const siteMap = await getCachedSiteMap()
-    const notionDbList = siteConfig.NotionDbList || []
+    const notionDbList = siteConfig.notionDbList || []
 
     // 1. Check if the slug matches a database slug
     const db = notionDbList.find((db) => db.slug === slug)

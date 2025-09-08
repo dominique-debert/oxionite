@@ -73,7 +73,7 @@ function removeCircularDependencies(pages: PageInfo[]): void {
  * It's memoized to avoid re-fetching data on every call during a single build.
  */
 export const getSiteMap = async (): Promise<SiteMap> => {
-  const notionDbList = config.NotionDbList
+  const notionDbList = config.notionDbList
   let pageInfoMap: Record<string, PageInfo> = {}
   const databaseInfoMap: Record<string, DatabaseInfo> = {}
 

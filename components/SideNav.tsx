@@ -80,7 +80,7 @@ export function SideNav({
 
   // Create database items for the category tree
   const databaseItems = React.useMemo((): types.PageInfo[] => {
-    const notionDbList = getSiteConfig<any[], any[]>('NotionDbList', [])
+    const notionDbList = getSiteConfig<any[], any[]>('notionDbList', [])
     if (!Array.isArray(notionDbList)) return filteredNavigationTree
     
     return notionDbList.map((db: any): types.PageInfo => {

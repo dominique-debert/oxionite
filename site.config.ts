@@ -5,13 +5,13 @@ export default siteConfig({
   // The database id for the blog (required)
   rootNotionDatabaseId: '251f2d475c3181c3a9f2ff6f477bbf25',
   
-  NotionDbList: [
+  notionDbList: [
     {
       id: '251f2d475c3181c3a9f2ff6f477bbf25',
       slug: 'noxionite',
       name: {
-        en: 'Noxionite',
-        ko: '녹셔나이트'
+        en: 'Noxionite Docs',
+        ko: '녹셔나이트 문서'
       }
     },
     {

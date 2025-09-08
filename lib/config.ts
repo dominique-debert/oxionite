@@ -98,7 +98,7 @@ export const includeNotionIdInUrls: boolean = getSiteConfig(
   !!isDev
 )
 
-export const NotionDbList: { id: string; slug: string; name: { [key: string]: string } }[] = getSiteConfig('NotionDbList', [])
+export const notionDbList: { id: string; slug: string; name: { [key: string]: string } }[] = getSiteConfig('notionDbList', [])
 
 export const navigationStyle: NavigationStyle = getSiteConfig(
   'navigationStyle',
