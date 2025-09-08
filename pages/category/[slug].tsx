@@ -15,9 +15,11 @@ export interface CategoryPageProps {
   siteMap: types.SiteMap
   pageId: string
   isPrivate?: boolean
+  isDbPage?: boolean
+  dbPageInfo?: types.PageInfo
 }
 
-export default function CategorySlugPage({ site, siteMap, pageId, isPrivate, isMobile }: CategoryPageProps & { isMobile?: boolean }) {
+export default function CategorySlugPage({ site, siteMap, pageId, isPrivate, isDbPage, dbPageInfo, isMobile }: CategoryPageProps & { isMobile?: boolean }) {
   if (isPrivate) {
     return (
       <div style={{ 
@@ -39,7 +41,7 @@ export default function CategorySlugPage({ site, siteMap, pageId, isPrivate, isM
     pageId,
   }
 
-  return <CategoryPage pageProps={pageProps} isMobile={isMobile} />
+  return <CategoryPage pageProps={pageProps} isMobile={isMobile} isDbPage={isDbPage} dbPageInfo={dbPageInfo} />
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -47,23 +49,36 @@ export const getStaticPaths: GetStaticPaths = async () => {
     const siteMap = await getCachedSiteMap()
     const paths: Array<{ params: { slug: string }; locale?: string }> = []
 
+    const allPages = Object.values(siteMap.pageInfoMap) as types.PageInfo[]
+    const categoryPages = allPages.filter((page) => page.type === 'Category')
+
     // Generate paths for all category pages
-    Object.values(siteMap.pageInfoMap).forEach((pageInfo) => {
-      const page = pageInfo as types.PageInfo
-      if (page.type === 'Category') {
-        // Add paths for each locale
+    categoryPages.forEach((page) => {
+      siteConfig.locale.localeList.forEach((locale) => {
+        if (page.language === locale) {
+          paths.push({
+            params: { slug: page.slug },
+            locale
+          })
+        }
+      })
+    })
+
+    // Generate paths for all database pages
+    const notionDbList = siteConfig.NotionDbList || []
+    notionDbList.forEach((db) => {
+      if (db.slug) {
         siteConfig.locale.localeList.forEach((locale) => {
-          if (page.language === locale) {
+          // Avoid duplicates if a category has the same slug as a DB
+          if (!categoryPages.some(p => p.slug === db.slug && p.language === locale)) {
             paths.push({
-              params: { slug: page.slug },
-              locale,
+              params: { slug: db.slug },
+              locale
             })
           }
         })
       }
     })
-
-  
 
     return {
       paths,
@@ -84,8 +99,51 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
 
   try {
     const siteMap = await getCachedSiteMap()
+    const notionDbList = siteConfig.NotionDbList || []
 
-    // Find the category page by slug and locale
+    // 1. Check if the slug matches a database slug
+    const db = notionDbList.find((db) => db.slug === slug)
+
+    if (db) {
+      const dbChildren = Object.values(siteMap.pageInfoMap).filter(
+        (p) => p.parentDbId === db.id && p.language === locale
+      )
+
+      const dbPageInfo: types.PageInfo = {
+        title: db.name?.[locale] || db.name?.en || 'Untitled',
+        pageId: db.id,
+        type: 'Category',
+        slug: db.slug,
+        parentPageId: null,
+        childrenPageIds: dbChildren.map(child => child.pageId),
+        language: locale,
+        public: true,
+        useOriginalCoverImage: false,
+        description: null,
+        date: null,
+        coverImage: null,
+        coverImageBlock: null,
+        tags: [],
+        authors: [],
+        breadcrumb: [],
+        children: dbChildren,
+        canonicalPageUrl: `/category/${db.slug}`
+      };
+
+      return {
+        props: {
+          ...(await serverSideTranslations(locale, ['common', 'languages'], nextI18NextConfig)),
+          site: siteMap.site,
+          siteMap,
+          pageId: db.id, // Use db.id as pageId
+          isDbPage: true, // Flag to indicate this is a DB page
+          dbPageInfo: dbPageInfo,
+        },
+        revalidate: site.isr?.revalidate ?? 60,
+      }
+    }
+
+    // 2. If not a DB slug, find the category page by slug and locale
     let categoryPageId: string | null = null
     let categoryPageInfo: types.PageInfo | null = null
 

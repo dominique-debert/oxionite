@@ -10,6 +10,8 @@ import { useDarkMode } from '@/lib/use-dark-mode'
 interface CategoryPageProps {
   pageProps: types.PageProps
   isMobile?: boolean
+  isDbPage?: boolean
+  dbPageInfo?: types.PageInfo
 }
 
 interface PostItem {
@@ -60,7 +62,7 @@ const getAllPostsFromCategory = (categoryPageInfo: types.PageInfo): PostItem[] =
 
 
 
-export function CategoryPage({ pageProps, isMobile }: CategoryPageProps) {
+export function CategoryPage({ pageProps, isMobile, isDbPage, dbPageInfo }: CategoryPageProps) {
   const { siteMap, pageId } = pageProps
   const router = useRouter()
   const { isDarkMode: _isDarkMode } = useDarkMode()
@@ -71,6 +73,10 @@ export function CategoryPage({ pageProps, isMobile }: CategoryPageProps) {
   
   // Get current page info from navigationTree (same as CategoryTree uses)
   const currentPageInfo = React.useMemo(() => {
+    if (isDbPage && dbPageInfo) {
+      return dbPageInfo;
+    }
+
     if (!siteMap || !pageId || !siteMap.navigationTree) return null
     
     // Find the page in navigationTree (same logic as CategoryTree)
@@ -88,7 +94,7 @@ export function CategoryPage({ pageProps, isMobile }: CategoryPageProps) {
     }
     
     return findInNavigationTree(siteMap.navigationTree, pageId)
-  }, [siteMap, pageId])
+  }, [siteMap, pageId, isDbPage, dbPageInfo])
   
   // Get all posts from this category
   const allPosts = React.useMemo(() => {

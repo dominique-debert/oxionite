@@ -78,7 +78,7 @@ export interface PageInfo {
   description: string | null
   date: string | null
   coverImage?: string | null
-  coverImageBlock?: Block // Add block for mapImageUrl
+  coverImageBlock?: Block | null // Add block for mapImageUrl
   tags?: string[] // Tags from Notion multi-select property
   authors?: string[] // Authors from Notion multi-select property
   breadcrumb?: string[] // Breadcrumb titles from root to current page
