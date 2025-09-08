@@ -8,6 +8,7 @@ export interface SiteConfig {
     slug: string
     name: Record<string, string>
   }>
+  notionDbIds?: string[]
 
   name: string
   domain: string

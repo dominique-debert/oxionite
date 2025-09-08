@@ -8,7 +8,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import type * as types from '@/lib/context/types'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import styles from '@/styles/components/SideNav.module.css'
-import { getSiteConfig } from '@/lib/get-config-value'
+
 
 import { CategoryTree } from './CategoryTree'
 import { UnifiedGraphView } from './graph/UnifiedGraphView'
@@ -78,48 +78,51 @@ export function SideNav({
     return filterNavigationItems(siteMap.navigationTree, locale)
   }, [siteMap?.navigationTree, locale])
 
-  // Create database items for the category tree
+  // Create database items for the category tree using databaseInfoMap
   const databaseItems = React.useMemo((): types.PageInfo[] => {
-    const notionDbList = getSiteConfig<any[], any[]>('notionDbList', [])
-    if (!Array.isArray(notionDbList)) return filteredNavigationTree
+    console.log('DEBUG: SideNav - siteMap?.databaseInfoMap =', siteMap?.databaseInfoMap)
+    console.log('DEBUG: SideNav - Object.keys(siteMap?.databaseInfoMap || {}) =', Object.keys(siteMap?.databaseInfoMap || {}))
     
-    return notionDbList.map((db: any): types.PageInfo => {
-      // Get display name based on current locale
-      const displayName = db?.name?.[locale as string] || 
-                       db?.name?.en || 
-                       Object.values(db?.name || {})[0] || 
-                       'Untitled'
-
+    if (!siteMap?.databaseInfoMap) {
+      console.log('DEBUG: SideNav - No databaseInfoMap found, returning filteredNavigationTree')
+      return filteredNavigationTree
+    }
+    
+    const dbInfoArray = Object.values(siteMap.databaseInfoMap)
+    console.log('DEBUG: SideNav - databaseInfoMap values =', dbInfoArray)
+    
+    const result = dbInfoArray.map((dbInfo: types.DatabaseInfo): types.PageInfo => {
       const dbChildren = filteredNavigationTree.filter(
-        (rootPage) => rootPage.parentDbId === db.id
+        (rootPage) => rootPage.parentDbId === dbInfo.id
       )
       
-      // Get cover image from databaseInfoMap
-      const databaseInfo = siteMap?.databaseInfoMap?.[db.id];
-      const coverImage = databaseInfo?.coverImage || null;
+      console.log('DEBUG: SideNav - Processing dbInfo:', dbInfo, 'with children count:', dbChildren.length)
       
       return {
-        title: displayName,
-        pageId: db.id || db.pageId,
+        title: dbInfo.name,
+        pageId: dbInfo.id,
         type: 'Category' as const,
-        slug: db.slug,
+        slug: dbInfo.slug,
         parentPageId: null,
         childrenPageIds: dbChildren.map(child => child.pageId),
-        language: locale || null,
+        language: dbInfo.language,
         public: true,
         useOriginalCoverImage: false,
-        description: databaseInfo?.description || null,
+        description: null,
         date: null,
-        coverImage,
+        coverImage: dbInfo.coverImage,
         coverImageBlock: undefined,
         tags: [],
         authors: [],
         breadcrumb: [],
         children: dbChildren,
-        canonicalPageUrl: `/${db.slug}`
+        canonicalPageUrl: `/${dbInfo.slug}`
       }
     })
-  }, [filteredNavigationTree, locale, siteMap?.databaseInfoMap])
+    
+    console.log('DEBUG: SideNav - Final databaseItems count =', result.length)
+    return result
+  }, [filteredNavigationTree, siteMap?.databaseInfoMap])
 
   useEffect(() => {
     if (!databaseItems) return

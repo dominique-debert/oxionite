@@ -66,7 +66,7 @@ export interface PageInfo {
   // From Notion DB
   title: string
   pageId: string
-  type: 'Post' | 'Category' | 'Home' | 'Unknown'
+  type: 'Post' | 'Category' | 'Home' | 'Database' | 'Unknown'
   slug: string
   parentPageId: string | null;
   parentDbId?: string | null;
@@ -109,8 +109,8 @@ export interface DatabaseInfo {
   id: string
   name: string
   slug: string
+  language: string | null
   coverImage?: string | null
-  description?: string | null
 }
 
 export interface SiteMap {

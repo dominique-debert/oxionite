@@ -73,58 +73,36 @@ function removeCircularDependencies(pages: PageInfo[]): void {
  * It's memoized to avoid re-fetching data on every call during a single build.
  */
 export const getSiteMap = async (): Promise<SiteMap> => {
-  const notionDbList = config.notionDbList
+  const notionDbIds = config.notionDbIds
   let pageInfoMap: Record<string, PageInfo> = {}
   const databaseInfoMap: Record<string, DatabaseInfo> = {}
 
-  // Fetch database info and pages
-  if (notionDbList && notionDbList.length > 0) {
-    // Fetch database info for each database
-    for (const db of notionDbList) {
-      try {
-        const recordMap = await notion.getPage(db.id)
+  // Fetch all pages from databases using notionDbIds
+  if (notionDbIds && notionDbIds.length > 0) {
+    // Fetch all pages from databases
+    const allPages = await Promise.all(
+      notionDbIds.map((dbId: string) => getAllPagesFromDatabase(dbId))
+    )
+    pageInfoMap = allPages.reduce((acc: Record<string, PageInfo>, currentMap: Record<string, PageInfo>) => ({ ...acc, ...currentMap }), {})
+    
+    // Build databaseInfoMap from Database-type pages
+    for (const [pageId, pageInfo] of Object.entries(pageInfoMap)) {
+      if (pageInfo.type === 'Database' && pageInfo.parentDbId) {
+        const dbId = pageInfo.parentDbId
         
-        // Find the page block for the database
-        const dbBlock = Object.values(recordMap.block)[0]?.value as PageBlock | undefined
-        const collection = Object.values(recordMap.collection)[0]?.value as any
-
-        let coverImageUrl: string | null = null
-        if (collection?.cover) {
-          coverImageUrl = collection.cover
-        } else if (dbBlock?.format?.page_cover) {
-          coverImageUrl = dbBlock.format.page_cover
-        }
-
-        let processedCoverImage = null
-        if (coverImageUrl && dbBlock) {
-          processedCoverImage = mapImageUrl(coverImageUrl, dbBlock)
-        }
-
-        databaseInfoMap[db.id] = {
-          id: db.id,
-          name: db.name?.en || db.name?.ko || 'Database',
-          slug: db.slug,
-          coverImage: processedCoverImage || null,
-          description: (db as any).description?.en || (db as any).description?.ko || null
-        }
-      } catch (err) {
-        console.warn(`Failed to fetch database info for ${db.id}:`, err)
-        databaseInfoMap[db.id] = {
-          id: db.id,
-          name: db.name?.en || db.name?.ko || 'Database',
-          slug: db.slug
+        // Use the Database page's info to build DatabaseInfo
+        databaseInfoMap[dbId] = {
+          id: dbId,
+          name: pageInfo.title,
+          slug: pageInfo.slug,
+          language: pageInfo.language,
+          coverImage: pageInfo.coverImage || null,
         }
       }
     }
-
-    // Fetch all pages from databases
-    const allPages = await Promise.all(
-      notionDbList.map((db: { id: string }) => getAllPagesFromDatabase(db.id))
-    )
-    pageInfoMap = allPages.reduce((acc: Record<string, PageInfo>, currentMap: Record<string, PageInfo>) => ({ ...acc, ...currentMap }), {})
   } else {
     console.warn(
-      'WARN: No notionDbList configured, so no pages will be rendered.'
+      'WARN: No notionDbIds configured, so no pages will be rendered.'
     )
     pageInfoMap = {}
   }
