@@ -121,7 +121,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
         useOriginalCoverImage: false,
         description: null,
         date: null,
-        coverImage: null,
+        coverImage: siteMap.databaseInfoMap?.[db.id]?.coverImage || null,
         coverImageBlock: null,
         tags: [],
         authors: [],

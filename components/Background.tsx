@@ -240,7 +240,7 @@ function Background({ source, scrollProgress = 0 }: BackgroundProps) {
           ref={backgroundRef}
           style={{
             ...blurredStyle,
-            backgroundImage: `url(${source || backgroundImageUrl || '/default_background.webp'})`,
+            backgroundImage: `url(${source || backgroundImageUrl || '/default_background.png'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}

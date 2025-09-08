@@ -295,7 +295,13 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
       <div className={notoKR.variable}>
         <div id="modal-root"></div>
         <Background
-          source={router.pathname === '/' ? backgroundAsset : notionImageUrl || null}
+          source={
+            router.pathname === '/' 
+              ? backgroundAsset 
+              : router.pathname === '/category/[slug]' && (pageProps as any).isDbPage && (pageProps as any).dbPageInfo?.coverImage
+                ? (pageProps as any).dbPageInfo.coverImage
+                : notionImageUrl || null
+          }
           scrollProgress={scrollProgress}
         />
 
