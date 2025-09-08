@@ -52,7 +52,10 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   const isActive = cleanedAsPath === cleanedPageUrl;
 
   const postCount = isCategory ? countPostsRecursively(item) : 0
-  const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' || item.type === 'Home' ? styles.postItem : ''} ${item.coverImage ? styles.databaseItem : ''}`
+  // Only apply databaseItem class at level 0
+  const isDatabaseItem = item.coverImage && level === 0
+  const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' || item.type === 'Home' ? styles.postItem : ''} ${isDatabaseItem ? styles.databaseItem : ''}`
+  const containerClassName = `${styles.categoryItemContainer} ${isDatabaseItem ? styles.databaseItem : ''}`
 
   const handleMouseEnter = () => {
     graphControl.changeViewAndFocusBySlug('post_view', item.slug, 'sidenav');
@@ -60,7 +63,7 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
 
   return (
     <div 
-      className={styles.categoryItemContainer} 
+      className={containerClassName} 
       style={{ paddingLeft: `${level * 16}px` }}
       onMouseEnter={handleMouseEnter}
     >
@@ -72,7 +75,7 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
         <span className={styles.indentPlaceholder} />
       )}
       <Link href={pageUrl} className={linkClassName} data-page-id={item.pageId}>
-        {item.coverImage && (
+        {isDatabaseItem && item.coverImage && (
           <img 
             src={item.coverImage} 
             alt={item.title}
@@ -80,8 +83,10 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
         )}
-        <span className={styles.title}>{item.title}</span>
-        {isCategory && <span className={styles.postCount}>{postCount}</span>}
+        <span className={`${styles.title} ${isCategory ? styles.categoryTitle : ''}`}>
+          {item.title}
+          {isCategory && <span className={styles.postCount}>{postCount}</span>}
+        </span>
       </Link>
     </div>
   )

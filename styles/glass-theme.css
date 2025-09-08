@@ -186,7 +186,7 @@
   position: relative;
   z-index: 1;
   display: block;
-  padding: 0.5rem 0.75rem; /* Reduced padding */
+  padding: 0.5rem 0.5rem; /* Reduced padding */
   border-radius: 16px;
   color: var(--primary-text-color);
   text-decoration: none;
