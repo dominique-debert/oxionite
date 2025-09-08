@@ -52,7 +52,7 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
   const isActive = cleanedAsPath === cleanedPageUrl;
 
   const postCount = isCategory ? countPostsRecursively(item) : 0
-  const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' || item.type === 'Home' ? styles.postItem : ''}`
+  const linkClassName = `sidenav-item ${isActive ? 'active' : ''} ${item.type === 'Post' || item.type === 'Home' ? styles.postItem : ''} ${item.coverImage ? styles.databaseItem : ''}`
 
   const handleMouseEnter = () => {
     graphControl.changeViewAndFocusBySlug('post_view', item.slug, 'sidenav');
@@ -72,6 +72,14 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
         <span className={styles.indentPlaceholder} />
       )}
       <Link href={pageUrl} className={linkClassName} data-page-id={item.pageId}>
+        {item.coverImage && (
+          <img 
+            src={item.coverImage} 
+            alt={item.title}
+            className={styles.coverImage}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+        )}
         <span className={styles.title}>{item.title}</span>
         {isCategory && <span className={styles.postCount}>{postCount}</span>}
       </Link>

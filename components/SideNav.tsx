@@ -94,6 +94,10 @@ export function SideNav({
         (rootPage) => rootPage.parentDbId === db.id
       )
       
+      // Get cover image from databaseInfoMap
+      const databaseInfo = siteMap?.databaseInfoMap?.[db.id];
+      const coverImage = databaseInfo?.coverImage || null;
+      
       return {
         title: displayName,
         pageId: db.id || db.pageId,
@@ -104,9 +108,9 @@ export function SideNav({
         language: locale || null,
         public: true,
         useOriginalCoverImage: false,
-        description: null,
+        description: databaseInfo?.description || null,
         date: null,
-        coverImage: null,
+        coverImage: coverImage,
         coverImageBlock: undefined,
         tags: [],
         authors: [],
@@ -115,7 +119,7 @@ export function SideNav({
         canonicalPageUrl: `/${db.slug}`
       }
     })
-  }, [filteredNavigationTree, locale])
+  }, [filteredNavigationTree, locale, siteMap?.databaseInfoMap])
 
   useEffect(() => {
     if (!databaseItems) return

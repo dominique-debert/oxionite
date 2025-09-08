@@ -86,7 +86,7 @@
 
 
 .postItem .title {
-  font-size: 13px; /* Smaller font size for posts */
+  font-size: 16px; /* Larger font size for posts */
   font-weight: 400;
   color: var(--primary-text-color);
   opacity: 0.8;
@@ -99,6 +99,20 @@
 
 .postItem:hover .title {
   opacity: 1;
+}
+
+.coverImage {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.databaseItem {
+  display: flex;
+  align-items: center;
 }
 
 .indentPlaceholder {
