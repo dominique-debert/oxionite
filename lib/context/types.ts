@@ -41,7 +41,6 @@ export type Site = {
 
   rootNotionPageId: string | null
   rootNotionSpaceId?: string | null
-  rootNotionDatabaseId?: string | null
 
   // settings
   html?: string

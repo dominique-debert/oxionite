@@ -24,11 +24,6 @@ import {
 export const rootNotionPageId: string | null =
   parsePageId(getSiteConfig('rootNotionPageId', ''), { uuid: false }) || null
 
-export const rootNotionDatabaseId: string = parsePageId(
-  getSiteConfig('rootNotionDatabaseId'),
-  { uuid: false }
-)!
-
 // if you want to restrict pages to a single notion workspace (optional)
 export const rootNotionSpaceId: string | null =
   parsePageId(getSiteConfig('rootNotionSpaceId'), { uuid: true }) ?? null

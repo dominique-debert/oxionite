@@ -2,9 +2,7 @@ import { siteConfig } from './lib/site-config.ts'
 import locale from './site.locale.json'
 
 export default siteConfig({
-  // The database id for the blog (required)
-  rootNotionDatabaseId: '251f2d475c3181c3a9f2ff6f477bbf25',
-  
+  // notionDbList is now the primary database configuration
   notionDbList: [
     {
       id: '251f2d475c3181c3a9f2ff6f477bbf25',

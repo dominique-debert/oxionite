@@ -81,37 +81,23 @@ export const getSiteMap = async (): Promise<SiteMap> => {
   if (notionDbList && notionDbList.length > 0) {
     // Fetch database info for each database
     for (const db of notionDbList) {
-      console.log(`[getSiteMap] Processing database with ID: ${db.id}`);
       try {
-        const dbRecordMap = await notion.getPage(db.id)
-
+        const recordMap = await notion.getPage(db.id)
+        
         // Find the page block for the database
-        const dbBlock = Object.values(dbRecordMap.block)[0]?.value as PageBlock | undefined;
-        const collection = Object.values(dbRecordMap.collection)[0]?.value as any;
+        const dbBlock = Object.values(recordMap.block)[0]?.value as PageBlock | undefined
+        const collection = Object.values(recordMap.collection)[0]?.value as any
 
-        console.log(`[getSiteMap] Attempting to extract cover from database ${db.id}`);
-
-        let coverImageUrl = null;
+        let coverImageUrl: string | null = null
         if (collection?.cover) {
-          coverImageUrl = collection.cover;
-          console.log(`[getSiteMap] Found cover in collection: ${coverImageUrl}`);
+          coverImageUrl = collection.cover
         } else if (dbBlock?.format?.page_cover) {
-          coverImageUrl = dbBlock.format.page_cover;
-          console.log(`[getSiteMap] Found cover in page_cover: ${coverImageUrl}`);
-        } else {
-          console.log(`[getSiteMap] No cover image found in collection or page_cover for ${db.id}`);
+          coverImageUrl = dbBlock.format.page_cover
         }
 
-        let processedCoverImage = null;
+        let processedCoverImage = null
         if (coverImageUrl && dbBlock) {
-          processedCoverImage = mapImageUrl(coverImageUrl, dbBlock);
-          if (processedCoverImage) {
-            console.log(`[getSiteMap] Successfully processed cover image: ${processedCoverImage}`);
-          } else {
-            console.log(`[getSiteMap] Failed to process cover image: mapImageUrl returned null`);
-          }
-        } else if (coverImageUrl) {
-          console.log(`[getSiteMap] Failed to process: dbBlock is undefined`);
+          processedCoverImage = mapImageUrl(coverImageUrl, dbBlock)
         }
 
         databaseInfoMap[db.id] = {
@@ -136,31 +122,11 @@ export const getSiteMap = async (): Promise<SiteMap> => {
       notionDbList.map((db: { id: string }) => getAllPagesFromDatabase(db.id))
     )
     pageInfoMap = allPages.reduce((acc: Record<string, PageInfo>, currentMap: Record<string, PageInfo>) => ({ ...acc, ...currentMap }), {})
-  } else if (config.rootNotionDatabaseId) {
-    // Fallback for single database ID
-    pageInfoMap = await getAllPagesFromDatabase(config.rootNotionDatabaseId)
-    
-    // Try to get info for single database
-    try {
-      const dbRecordMap = await notion.getPage(config.rootNotionDatabaseId)
-      const dbBlock = Object.values(dbRecordMap.block)[0]?.value
-      
-      if (dbBlock) {
-        const coverImageUrl = (dbBlock as PageBlock).format?.page_cover
-        const processedCoverImage = coverImageUrl
-          ? mapImageUrl(coverImageUrl, dbBlock)
-          : null
-
-        databaseInfoMap[config.rootNotionDatabaseId] = {
-          id: config.rootNotionDatabaseId,
-          name: 'Database',
-          slug: 'database',
-          coverImage: processedCoverImage
-        }
-      }
-    } catch (err) {
-      console.warn(`Failed to fetch database info for ${config.rootNotionDatabaseId}:`, err)
-    }
+  } else {
+    console.warn(
+      'WARN: No notionDbList configured, so no pages will be rendered.'
+    )
+    pageInfoMap = {}
   }
 
   // Generate breadcrumbs for all pages in the pageInfoMap
