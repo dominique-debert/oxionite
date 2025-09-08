@@ -110,7 +110,7 @@ export function SideNav({
         useOriginalCoverImage: false,
         description: databaseInfo?.description || null,
         date: null,
-        coverImage: coverImage,
+        coverImage,
         coverImageBlock: undefined,
         tags: [],
         authors: [],

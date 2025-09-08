@@ -26,7 +26,7 @@ export default function RecentPosts({ siteMap, isMobile }: RecentPostsProps & { 
         slug: page.slug,
         language: page.language || localeConfig.defaultLocale,
         coverImage: page.coverImage || undefined,
-        coverImageBlock: page.coverImageBlock,
+        coverImageBlock: page.coverImageBlock || undefined,
       }))
   }, [siteMap, currentLocale])
 

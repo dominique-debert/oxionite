@@ -121,8 +121,8 @@ export const getSiteMap = async (): Promise<SiteMap> => {
           coverImage: processedCoverImage || null,
           description: (db as any).description?.en || (db as any).description?.ko || null
         }
-      } catch (error) {
-        console.warn(`Failed to fetch database info for ${db.id}:`, error)
+      } catch (err) {
+        console.warn(`Failed to fetch database info for ${db.id}:`, err)
         databaseInfoMap[db.id] = {
           id: db.id,
           name: db.name?.en || db.name?.ko || 'Database',
@@ -158,8 +158,8 @@ export const getSiteMap = async (): Promise<SiteMap> => {
           coverImage: processedCoverImage
         }
       }
-    } catch (error) {
-      console.warn(`Failed to fetch database info for ${config.rootNotionDatabaseId}:`, error)
+    } catch (err) {
+      console.warn(`Failed to fetch database info for ${config.rootNotionDatabaseId}:`, err)
     }
   }
 

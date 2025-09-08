@@ -51,40 +51,6 @@ interface BreadcrumbItem {
   href?: string
 }
 
-function findPagePath(
-  pageId: string,
-  tree: types.PageInfo[]
-): BreadcrumbItem[] | null {
-  for (const item of tree) {
-    const href =
-      item.type === 'Post' || item.type === 'Home'
-        ? `/post/${item.slug}`
-        : item.type === 'Category'
-        ? `/category/${item.slug}`
-        : `/${item.slug}`
-
-    const currentPath = [
-      {
-        title: item.title || 'Untitled',
-        pageInfo: item,
-        href
-      }
-    ]
-
-    if (item.pageId === pageId) {
-      return currentPath
-    }
-
-    if (item.children) {
-      const subPath = findPagePath(pageId, item.children)
-      if (subPath) {
-        return [...currentPath, ...subPath]
-      }
-    }
-  }
-
-  return null
-}
 
 function buildPagePathFromHierarchy(
   pageId: string,
@@ -141,7 +107,7 @@ function buildBreadcrumbsFromUrl(
   
   // Handle category pages
   if (pathname.startsWith('/category/')) {
-    const categorySlug = pathSegments[pathSegments.length - 1]
+    const categorySlug = pathSegments.at(-1)
     if (categorySlug) {
       // Find database or category page
       const dbEntry = Object.values(siteMap.databaseInfoMap || {}).find(

@@ -9,6 +9,7 @@ import styles from 'styles/components/CategoryTree.module.css'
 import { graphControl } from '@/components/graph/utils/graph-control'
 
 import type { PageInfo } from '@/lib/context/types'
+import Image from 'next/image'
 
 interface CategoryTreeProps {
   items: PageInfo[]
@@ -76,10 +77,13 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
       )}
       <Link href={pageUrl} className={linkClassName} data-page-id={item.pageId}>
         {isDatabaseItem && item.coverImage && (
-          <img 
+          // Replace the img tag with Image component
+          <Image 
             src={item.coverImage} 
             alt={item.title}
             className={styles.coverImage}
+            width={32}
+            height={32}
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
         )}

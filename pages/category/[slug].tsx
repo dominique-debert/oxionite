@@ -137,7 +137,7 @@ export const getStaticProps: GetStaticProps<CategoryPageProps, { slug: string }>
           siteMap,
           pageId: db.id, // Use db.id as pageId
           isDbPage: true, // Flag to indicate this is a DB page
-          dbPageInfo: dbPageInfo,
+          dbPageInfo,
         },
         revalidate: site.isr?.revalidate ?? 60,
       }

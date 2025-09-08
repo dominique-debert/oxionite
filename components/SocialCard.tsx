@@ -412,8 +412,8 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
           }
           
                    
-          // For subpages, create a simple breadcrumb structure
-          const breadcrumb = ['...', postTitle];
+          // For subpages, create breadcrumb with database info
+          const breadcrumb = buildBreadcrumbsWithDb(parsed, siteMap, currentLocale);
           
           return (
             <Background imageUrl={postCoverImage} baseUrl={baseUrl}>
@@ -491,7 +491,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
                 zIndex: 10
               }}>
                 {/* Breadcrumb */}
-                <SocialBreadcrumb breadcrumb={pageInfo?.breadcrumb || []} baseUrl={baseUrl} />
+                <SocialBreadcrumb breadcrumb={buildBreadcrumbsWithDb(parsed, siteMap, currentLocale)} baseUrl={baseUrl} />
               
                 {/* Author */}
                 {authors.length > 0 && (
@@ -678,3 +678,83 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
     </>
   )
 }
+
+// Helper function to build breadcrumbs with database info
+  const buildBreadcrumbsWithDb = (
+    parsedUrl: any,
+    siteMap: SiteMap | undefined,
+    currentLocale: string
+  ): string[] => {
+    const breadcrumbs: string[] = []
+    
+    // Always start with home
+    breadcrumbs.push('home')
+    
+    if (parsedUrl.type === 'post') {
+      const targetSlug = parsedUrl.isSubpage ? parsedUrl.subpage : parsedUrl.slug
+      
+      if (siteMap && siteMap.pageInfoMap) {
+        let pageInfo: PageInfo | undefined
+        
+        if (parsedUrl.isSubpage) {
+          // For subpages, extract page ID from slug
+          const pageIdMatch = targetSlug.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i)
+          if (pageIdMatch) {
+            const pageId = pageIdMatch[1]
+            pageInfo = siteMap.pageInfoMap[pageId]
+          }
+        } else {
+          // For regular posts
+          const allPages = Object.values(siteMap.pageInfoMap)
+          pageInfo = allPages.find(
+            (p: PageInfo) => (p.type === 'Post' || p.type === 'Home') && p.slug === targetSlug && p.language === currentLocale
+          )
+        }
+        
+        if (pageInfo) {
+          // Find the database this post belongs to
+          let databaseName = ''
+          
+          // Look for parent database
+          if (pageInfo.parentPageId && siteMap.pageInfoMap[pageInfo.parentPageId]) {
+            const parent = siteMap.pageInfoMap[pageInfo.parentPageId]
+            if (parent.type === 'Category') {
+              databaseName = parent.title
+            }
+          }
+          
+          // Also check if we can find database from slug patterns
+          if (!databaseName && pageInfo.slug) {
+            const dbEntry = Object.values(siteMap.databaseInfoMap || {}).find(
+              db => pageInfo.slug!.startsWith(db.slug || '')
+            )
+            if (dbEntry) {
+              databaseName = dbEntry.name
+            }
+          }
+          
+          // Add database name if found
+          if (databaseName) {
+            breadcrumbs.push(databaseName)
+          }
+          
+          // Add post title
+          breadcrumbs.push(pageInfo.title)
+        }
+      }
+    } else if (parsedUrl.type === 'category') {
+      if (siteMap && siteMap.pageInfoMap) {
+        const allPages = Object.values(siteMap.pageInfoMap)
+        const pageInfo = allPages.find(
+          (p: PageInfo) => p.type === 'Category' && p.slug === parsedUrl.slug && p.language === currentLocale
+        )
+        
+        if (pageInfo) {
+          // Add category title
+          breadcrumbs.push(pageInfo.title)
+        }
+      }
+    }
+    
+    return breadcrumbs
+  }
