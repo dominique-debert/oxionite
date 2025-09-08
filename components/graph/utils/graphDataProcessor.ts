@@ -62,6 +62,72 @@ export const createPostGraphData = (
   
   nodes.push(homeNode);
 
+  // Create database nodes first
+  const databaseNodes = new Map<string, GraphNode>();
+  const dbSlugs = new Map<string, string>();
+  
+  // Collect database names and slugs from pages
+  Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
+    if (pageInfo.language !== locale) return;
+    if (pageInfo.parentDbId) {
+      const dbSlug = pageInfo.slug?.split('/')[0];
+      if (dbSlug && !dbSlugs.has(pageInfo.parentDbId)) {
+        dbSlugs.set(pageInfo.parentDbId, dbSlug);
+      }
+    }
+  });
+  
+  // Create database nodes with proper names
+  Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
+    if (pageInfo.language !== locale) return;
+    if (pageInfo.parentDbId && !databaseNodes.has(pageInfo.parentDbId)) {
+      const dbSlug = dbSlugs.get(pageInfo.parentDbId);
+      let dbName = 'Database';
+      
+      // Try to find a better name for the database
+      if (siteMap.navigationTree) {
+        const findDbInTree = (items: any[]): any => {
+          for (const item of items) {
+            if (item.slug === dbSlug) {
+              return item;
+            }
+            if (item.children) {
+              const found = findDbInTree(item.children);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        
+        const dbItem = findDbInTree(siteMap.navigationTree);
+        if (dbItem && dbItem.title) {
+          dbName = dbItem.title;
+        }
+      }
+      
+      const dbNode: GraphNode = {
+        id: pageInfo.parentDbId,
+        name: dbName,
+        slug: dbSlug,
+        url: `/category/${dbSlug}`,
+        type: 'Database' as any,
+        color: '#FF6B6B', // Red color for database nodes
+        size: GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE,
+        val: GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE,
+      };
+      databaseNodes.set(pageInfo.parentDbId, dbNode);
+      nodes.push(dbNode);
+      
+      // Link database to home
+      links.push({
+        source: HOME_NODE_ID,
+        target: pageInfo.parentDbId,
+        color: '#E5E7EB',
+        width: 1.5,
+      });
+    }
+  });
+
   // Create nodes for all pages
   Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
     if (processedPages.has(pageId)) return;
@@ -98,16 +164,36 @@ export const createPostGraphData = (
     nodes.push(node);
     processedPages.add(pageId);
 
-    // Create links based on parent relationships
-    if (pageInfo.parentPageId && siteMap.pageInfoMap[pageInfo.parentPageId]) {
+    // Create links based on parent relationships - respecting hierarchy
+    if (pageInfo.parentDbId && databaseNodes.has(pageInfo.parentDbId)) {
+      // For pages with parentDbId, only top-level items connect to database
+      if (!pageInfo.parentPageId) {
+        // Top-level items in database connect to database node
+        links.push({
+          source: pageInfo.parentDbId,
+          target: pageId,
+          color: '#E5E7EB',
+          width: 1,
+        });
+      } else if (siteMap.pageInfoMap[pageInfo.parentPageId]) {
+        // Child items connect to their parent within the hierarchy
+        links.push({
+          source: pageInfo.parentPageId,
+          target: pageId,
+          color: '#E5E7EB',
+          width: 1,
+        });
+      }
+    } else if (pageInfo.parentPageId && siteMap.pageInfoMap[pageInfo.parentPageId]) {
+      // Regular parent-child relationships for non-database items
       links.push({
         source: pageInfo.parentPageId,
         target: pageId,
         color: '#E5E7EB',
         width: 1,
       });
-    } else if (pageId !== HOME_NODE_ID) {
-      // Link to home if no parent
+    } else if (pageId !== HOME_NODE_ID && !pageInfo.parentDbId) {
+      // Link to home for standalone items
       links.push({
         source: HOME_NODE_ID,
         target: pageId,

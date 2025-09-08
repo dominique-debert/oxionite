@@ -48,7 +48,7 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     let path = '';
     if (node.type === 'Post' || node.type === 'Home') {
       path = `/post/${node.slug}`;
-    } else if (node.type === 'Category') {
+    } else if (node.type === 'Category' || node.type === 'Database') {
       path = `/category/${node.slug}`;
     } else if (node.type === 'Root') {
       path = '/';
@@ -152,6 +152,9 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
     } else if (node.type === 'Category') {
       nodeSize = GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE;
       cornerRadius = GRAPH_CONFIG.visual.CATEGORY_CORNER_RADIUS;
+    } else if (node.type === 'Database') {
+      nodeSize = GRAPH_CONFIG.visual.CATEGORY_NODE_SIZE;
+      cornerRadius = 0; // Diamond shape will be handled differently
     } else {
       nodeSize = GRAPH_CONFIG.visual.POST_NODE_SIZE;
       cornerRadius = nodeSize / 2;
@@ -192,6 +195,41 @@ export const PostGraphView: React.FC<PostGraphViewProps> = ({
         ctx.fillStyle = colors.node;
         ctx.fillRect(node.x! - nodeSize / 2, node.y! - nodeSize / 2, nodeSize, nodeSize);
       }
+    } else if (node.type === 'Database') {
+      // Draw diamond shape for database nodes
+      ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;
+      ctx.lineWidth = W_OUTER;
+      
+      const diamondSize = nodeSize / 2;
+      ctx.beginPath();
+      ctx.moveTo(node.x, node.y - diamondSize);
+      ctx.lineTo(node.x + diamondSize, node.y);
+      ctx.lineTo(node.x, node.y + diamondSize);
+      ctx.lineTo(node.x - diamondSize, node.y);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.strokeStyle = colors.nodeInnerBorder;
+      ctx.lineWidth = W_INNER;
+      
+      const innerDiamondSize = diamondSize - W_OUTER - W_INNER / 2;
+      ctx.beginPath();
+      ctx.moveTo(node.x, node.y - innerDiamondSize);
+      ctx.lineTo(node.x + innerDiamondSize, node.y);
+      ctx.lineTo(node.x, node.y + innerDiamondSize);
+      ctx.lineTo(node.x - innerDiamondSize, node.y);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Fill the diamond
+      ctx.fillStyle = colors.node;
+      ctx.beginPath();
+      ctx.moveTo(node.x, node.y - innerDiamondSize);
+      ctx.lineTo(node.x + innerDiamondSize, node.y);
+      ctx.lineTo(node.x, node.y + innerDiamondSize);
+      ctx.lineTo(node.x - innerDiamondSize, node.y);
+      ctx.closePath();
+      ctx.fill();
     } else {
       // Draw borders and background for non-home nodes
       ctx.strokeStyle = isSlugHighlighted ? colors.nodeHighlightOuterBorder : colors.nodeOuterBorder;
