@@ -279,7 +279,7 @@ export const createTagGraphData = (
   const validTagNodeIds = new Set(nodes.map(n => n.id));
 
   // Link each tag to the 'All Tags' node
-  Object.entries(tagCounts).forEach(([tag, count]) => {
+  Object.entries(tagCounts).forEach(([tag]) => {
     if (validTagNodeIds.has(ALL_TAGS_NODE_ID) && validTagNodeIds.has(tag)) {
       links.push({
         source: ALL_TAGS_NODE_ID,

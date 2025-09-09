@@ -325,7 +325,7 @@ export const TopNav: React.FC<TopNavProps> = ({
     const pagePath = buildPagePathFromHierarchy(pageId, siteMap.pageInfoMap)
     completeBreadcrumbs.push(...pagePath)
     return completeBreadcrumbs
-  }, [siteMap, pageId, router, recordMap, t, siteLocaleConfig.defaultLocale])
+  }, [siteMap, pageId, router, recordMap, t])
 
   return (
     <nav className="glass-nav">

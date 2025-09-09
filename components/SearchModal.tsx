@@ -154,7 +154,7 @@ export function SearchModal() {
     } finally {
       setIsLoading(false)
     }
-  }, [siteMap, router.locale, siteLocaleConfig.defaultLocale])
+  }, [siteMap, router.locale])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === 'Escape' && closeModal()
