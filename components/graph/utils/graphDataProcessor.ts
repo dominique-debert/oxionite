@@ -63,57 +63,64 @@ export const createPostGraphData = (
   nodes.push(homeNode);
 
   // Create database nodes with proper names, slugs, and cover images
-  const dbConfigs = siteConfig.notionDbList || [];
+  const dbIds = siteConfig.notionDbIds || [];
   const databaseNodes = new Map<string, GraphNode>();
   
-  // Create database nodes for all databases in site.config.ts
-  dbConfigs.forEach(dbConfig => {
-    if (!databaseNodes.has(dbConfig.id)) {
-      const dbName = dbConfig.name?.[locale] || 'Database';
-      const dbSlug = dbConfig.slug;
-      
-      // Get database info including cover image
-      const dbInfo = siteMap.databaseInfoMap?.[dbConfig.id];
-      const coverImage = dbInfo?.coverImage;
-      
-      const dbNode: GraphNode = {
-        id: dbConfig.id,
-        name: dbName,
-        slug: dbSlug,
-        url: `/category/${dbSlug}`,
-        type: 'Database' as any,
-        color: '#FF6B6B', // Red color for database nodes
-        size: GRAPH_CONFIG.visual.DB_NODE_SIZE,
-        val: GRAPH_CONFIG.visual.DB_NODE_SIZE,
-        imageUrl: coverImage || undefined,
-      };
-      
-      // Preload database cover image if available
-      if (coverImage) {
-        preloadImage(coverImage).then(img => {
-          dbNode.img = img;
-        }).catch(() => {
-          console.warn(`Failed to load database cover image: ${coverImage}`);
-        });
-      }
-      
-      databaseNodes.set(dbConfig.id, dbNode);
-      nodes.push(dbNode);
-      
-      // Link database to home
-      links.push({
-        source: HOME_NODE_ID,
-        target: dbConfig.id,
-        color: '#E5E7EB',
-        width: 1.5,
+  // Create database nodes for all databases using notionDbIds and databaseInfoMap
+  dbIds.forEach(dbId => {
+    // The databaseInfoMap uses keys in format `${dbId}_${locale}` or `${dbId}_default`
+    const dbKey = siteMap.databaseInfoMap?.[`${dbId}_${locale}`] 
+      ? `${dbId}_${locale}` 
+      : `${dbId}_default`;
+    
+    // Get database info from siteMap.databaseInfoMap
+    const dbInfo = siteMap.databaseInfoMap?.[dbKey];
+    if (!dbInfo) return; // Skip if database info not found
+    
+    const dbName = dbInfo.name && typeof dbInfo.name === 'object' 
+      ? (dbInfo.name as Record<string, string>)[locale] || (dbInfo.name as Record<string, string>)['en'] || 'Database'
+      : (typeof dbInfo.name === 'string' ? dbInfo.name : 'Database');
+    const dbSlug = dbInfo.slug || dbId;
+    const coverImage = dbInfo.coverImage;
+    
+    const dbNode: GraphNode = {
+      id: dbId, // Use the actual dbId for node ID to match parentDbId values
+      name: dbName,
+      slug: dbSlug,
+      url: `/category/${dbSlug}`,
+      type: 'Database' as any,
+      color: '#FF6B6B', // Red color for database nodes
+      size: GRAPH_CONFIG.visual.DB_NODE_SIZE,
+      val: GRAPH_CONFIG.visual.DB_NODE_SIZE,
+      imageUrl: coverImage || undefined,
+    };
+    
+    // Preload database cover image if available
+    if (coverImage) {
+      preloadImage(coverImage).then(img => {
+        dbNode.img = img;
+      }).catch(() => {
+        console.warn(`Failed to load database cover image: ${coverImage}`);
       });
     }
+    
+    databaseNodes.set(dbId, dbNode);
+    nodes.push(dbNode);
+    
+    // Link database to home
+    links.push({
+      source: HOME_NODE_ID,
+      target: dbId,
+      color: '#E5E7EB',
+      width: 1.5,
+    });
   });
 
-  // Create nodes for all pages
+  // Create nodes for all pages (excluding Database-type pages)
   Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
     if (processedPages.has(pageId)) return;
     if (pageInfo.language !== locale) return;
+    if (pageInfo.type === 'Database') return; // Skip Database-type pages
 
     const imageUrl = pageInfo.coverImage || undefined;
     
@@ -146,17 +153,28 @@ export const createPostGraphData = (
     nodes.push(node);
     processedPages.add(pageId);
 
-    // Create links based on parent relationships - respecting hierarchy
-    if (pageInfo.parentDbId && databaseNodes.has(pageInfo.parentDbId)) {
-      // For pages with parentDbId, only top-level items connect to database
+    // Create links based on parent relationships - ensuring proper hierarchy
+    if (pageInfo.parentDbId && pageInfo.parentDbId !== pageId) {
+      // For pages within a database - connect to database first
       if (!pageInfo.parentPageId) {
-        // Top-level items in database connect to database node
-        links.push({
-          source: pageInfo.parentDbId,
-          target: pageId,
-          color: '#E5E7EB',
-          width: 1,
-        });
+        // Top-level items in database connect directly to their database
+        // Only create link if database node exists
+        if (databaseNodes.has(pageInfo.parentDbId)) {
+          links.push({
+            source: pageInfo.parentDbId,
+            target: pageId,
+            color: '#E5E7EB',
+            width: 1,
+          });
+        } else {
+          // Fallback to home if database node doesn't exist
+          links.push({
+            source: HOME_NODE_ID,
+            target: pageId,
+            color: '#E5E7EB',
+            width: 1,
+          });
+        }
       } else if (siteMap.pageInfoMap[pageInfo.parentPageId]) {
         // Child items connect to their parent within the hierarchy
         links.push({
@@ -174,8 +192,8 @@ export const createPostGraphData = (
         color: '#E5E7EB',
         width: 1,
       });
-    } else if (pageId !== HOME_NODE_ID && !pageInfo.parentDbId) {
-      // Link to home for standalone items
+    } else if (pageId !== HOME_NODE_ID) {
+      // Standalone items link to home
       links.push({
         source: HOME_NODE_ID,
         target: pageId,
