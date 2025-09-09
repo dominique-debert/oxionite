@@ -3,11 +3,6 @@ import type * as types from './context/types'
 export interface SiteConfig {
   rootNotionPageId?: string | null
   rootNotionSpaceId?: string | null
-  notionDbList?: Array<{
-    id: string
-    slug: string
-    name: Record<string, string>
-  }>
   notionDbIds?: string[]
 
   name: string

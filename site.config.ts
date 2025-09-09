@@ -2,26 +2,6 @@ import { siteConfig } from './lib/site-config.ts'
 import locale from './site.locale.json'
 
 export default siteConfig({
-  // notionDbList is now the primary database configuration
-  notionDbList: [
-    {
-      id: '251f2d475c3181c3a9f2ff6f477bbf25',
-      slug: 'noxionite',
-      name: {
-        en: 'HARDCODED-Noxionite Docs',
-        ko: 'HARDCODED-녹셔나이트 문서'
-      }
-    },
-    {
-      id: '21df2d475c31812dae49d1b1735e02b4',
-      slug: 'template',
-      name: {
-        en: 'HARDCODED-Noxionite Blog Template',
-        ko: 'HARDCODED-Noxionite 블로그 템플릿'
-      }
-    }
-  ],
-
   notionDbIds: [
     '251f2d475c3181c3a9f2ff6f477bbf25',
     '21df2d475c31812dae49d1b1735e02b4'
