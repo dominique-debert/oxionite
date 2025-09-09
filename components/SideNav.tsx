@@ -112,7 +112,7 @@ export function SideNav({
     
     const result = selectedDbInfo.map((dbInfo: types.DatabaseInfo): types.PageInfo => {
       const dbChildren = filteredNavigationTree.filter(
-        (rootPage) => rootPage.parentDbId === dbInfo.id
+        (rootPage) => rootPage.parentDbId === dbInfo.id && rootPage.type !== 'Database'
       )
       
       return {
