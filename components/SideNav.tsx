@@ -34,13 +34,33 @@ function filterNavigationItems(items: types.PageInfo[], currentLocale: string): 
 }
 
 const findPathToActiveItem = (items: types.PageInfo[], activeSlug: string): string[] | null => {
-  const cleanedActiveSlug = activeSlug.split('?')[0].split('#')[0].replace(/\/$/, '');
+  const cleanedActiveSlug = activeSlug.split('?')[0].split('#')[0].replace(/^\//, '').replace(/\/$/, '');
 
   for (const item of items) {
-    const pageUrl = `/${item.slug}`.replace(/\/$/, '');
-    if (pageUrl === cleanedActiveSlug) {
+    // Check exact slug match
+    if (item.slug === cleanedActiveSlug) {
       return [item.pageId];
     }
+    
+    // Handle hierarchical paths (e.g., "features/some-page")
+    const pathParts = cleanedActiveSlug.split('/');
+    if (pathParts.length > 1) {
+      // Check if any part of the path matches this item
+      for (const part of pathParts) {
+        if (item.slug === part) {
+          // Check children for the remaining path
+          if (item.children) {
+            const childPath = findPathToActiveItem(item.children, activeSlug);
+            if (childPath) {
+              return [item.pageId, ...childPath];
+            }
+          }
+          return [item.pageId];
+        }
+      }
+    }
+    
+    // Check children recursively
     if (item.children) {
       const childPath = findPathToActiveItem(item.children, activeSlug);
       if (childPath) {
@@ -141,32 +161,23 @@ export function SideNav({
   }, [filteredNavigationTree, siteMap?.databaseInfoMap, locale])
 
   useEffect(() => {
-    if (!databaseItems) return
+    // Use the actual navigation tree for path finding
+    const itemsToSearch = siteMap?.databaseInfoMap ? databaseItems : filteredNavigationTree;
+    if (!itemsToSearch || itemsToSearch.length === 0) return;
 
     const newExpandedState: Record<string, boolean> = {}
 
-    const setInitialExpansion = (currentItems: types.PageInfo[]) => {
-      for (const item of currentItems) {
-        const hasChildren = item.children && item.children.length > 0
-        if (item.type === 'Category' && hasChildren && !item.children.some(child => child.type === 'Post' || child.type === 'Home')) {
-          newExpandedState[item.pageId] = true
-          if (item.children) {
-            setInitialExpansion(item.children)
-          }
-        }
-      }
-    }
-    setInitialExpansion(databaseItems)
-
-    const activePath = findPathToActiveItem(databaseItems, asPath)
+    // 현재 위치를 찾아서 그 위치의 부모들만 펼친다
+    const activePath = findPathToActiveItem(itemsToSearch, asPath)
+    
     if (activePath) {
-      activePath.forEach(id => {
+      activePath.slice(0, -1).forEach(id => {
         newExpandedState[id] = true
       })
     }
 
     setExpandedItems(newExpandedState)
-  }, [databaseItems, asPath])
+  }, [databaseItems, filteredNavigationTree, asPath, siteMap?.databaseInfoMap])
 
   const toggleItemExpanded = (id: string) => {
     setExpandedItems(prev => ({
