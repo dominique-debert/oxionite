@@ -3,8 +3,10 @@ import Link from 'next/link'
 import React from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'next-i18next'
+import { useRouter } from 'next/router'
 
-import { isSearchEnabled, notionDbList } from '@/lib/config'
+import { isSearchEnabled } from '@/lib/config'
+import { useAppContext } from '@/lib/context/app-context'
 import styles from '@/styles/components/SearchModal.module.css'
 
 interface SearchResult {
@@ -13,10 +15,58 @@ interface SearchResult {
   type: string
   url: string
   breadcrumb: Array<{ title: string }> | null
+  locale?: string
 }
 
 interface NotionSearchResponse {
   results: SearchResult[]
+}
+
+interface BreadcrumbItem {
+  title: string
+}
+
+function buildBreadcrumbForResult(
+  result: SearchResult,
+  siteMap: any,
+  locale: string
+): Array<BreadcrumbItem> {
+  const breadcrumb: Array<BreadcrumbItem> = [{ title: 'Noxionite' }]
+  
+  // Find page info
+  const pageInfo = siteMap.pageInfoMap?.[result.id]
+  if (!pageInfo) {
+    return breadcrumb
+  }
+  
+  // Build hierarchical path from current page up through parent structure
+  const pagePath: Array<BreadcrumbItem> = []
+  let currentPageId = result.id
+  
+  while (currentPageId && siteMap.pageInfoMap?.[currentPageId]) {
+    const currentPage = siteMap.pageInfoMap[currentPageId]
+    if (currentPage.title) {
+      pagePath.unshift({ title: currentPage.title || 'Untitled' })
+    }
+    currentPageId = currentPage.parentPageId || null
+  }
+  
+  // Check if this page belongs to a database and insert it after site name
+  if (pageInfo.parentDbId) {
+    const dbKey = `${pageInfo.parentDbId}_${locale}`
+    const dbInfo = siteMap.databaseInfoMap?.[dbKey]
+    if (dbInfo) {
+      // Insert database after site name, then add the rest of hierarchy
+      breadcrumb.push({ title: dbInfo.name })
+      breadcrumb.push(...pagePath.slice(0, -1)) // Exclude the current page
+    } else {
+      breadcrumb.push(...pagePath.slice(0, -1)) // No database, just hierarchy
+    }
+  } else {
+    breadcrumb.push(...pagePath.slice(0, -1)) // No database, just hierarchy
+  }
+  
+  return breadcrumb
 }
 
 export function SearchModal() {
@@ -27,6 +77,8 @@ export function SearchModal() {
   const [mounted, setMounted] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const { t } = useTranslation('common')
+  const router = useRouter()
+  const { siteMap } = useAppContext()
 
   React.useEffect(() => {
     setMounted(true)
@@ -44,22 +96,32 @@ export function SearchModal() {
   }, [])
 
   const handleSearch = React.useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() || !siteMap?.databaseInfoMap) {
       setResults([])
       return
     }
     setIsLoading(true)
+    
     try {
-      // Search across all databases in notionDbList
-      const searchPromises = notionDbList.map(db =>
-        fetch('/api/search-notion', {
+      // Search across all databases regardless of locale
+      const allDatabases = Object.entries(siteMap.databaseInfoMap)
+      
+      const searchPromises = allDatabases.map(([key, db]) => {
+        const locale = key.split('_').pop() || 'en'
+        return fetch('/api/search-notion', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: searchQuery, ancestorId: db.id })
-        }).then(response => response.ok ? response.json() as Promise<NotionSearchResponse> : null)
-      )
+          body: JSON.stringify({ query: searchQuery, ancestorId: (db as any).id })
+        }).then(response => response.ok ? 
+          response.json().then(data => ({ 
+            ...data, 
+            results: data.results?.map((r: any) => ({ ...r, locale })) || [] 
+          })) : null)
+      })
       
       const allResults = await Promise.all(searchPromises)
+      
+      // Process results and add breadcrumbs
       const combinedResults = allResults
         .filter(result => result !== null)
         .flatMap(result => result.results || [])
@@ -67,14 +129,45 @@ export function SearchModal() {
         .filter((result, index, self) => 
           index === self.findIndex(r => r.id === result.id)
         )
+        .map((result: any) => {
+          // Build breadcrumb for each result with original locale
+          const breadcrumb = buildBreadcrumbForResult(result, siteMap, result.locale || router.locale)
+          return {
+            ...result,
+            breadcrumb,
+            type: result.type === 'Database' ? 'CATEGORY' : result.type,
+            url: result.url
+          }
+        })
       
-      setResults(combinedResults)
+      // Include databases in search results with locale-aware URLs
+      const databaseResults = allDatabases
+        .filter(([key, db]) => {
+          const dbLocale = key.split('_').pop() || 'en'
+          return (db as any).name.toLowerCase().includes(searchQuery.toLowerCase())
+        })
+        .map(([key, db]) => {
+          const dbLocale = key.split('_').pop() || 'en'
+          return {
+            id: (db as any).id,
+            title: (db as any).name,
+            type: 'CATEGORY' as const,
+            url: `/category/${(db as any).slug}`,
+            locale: dbLocale,
+            breadcrumb: [
+              { title: 'Noxionite' },
+              { title: (db as any).name }
+            ]
+          }
+        })
+      
+      setResults([...databaseResults, ...combinedResults])
     } catch (err) {
       console.error('Search error:', err)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [siteMap, router.locale])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === 'Escape' && closeModal()
@@ -125,7 +218,7 @@ export function SearchModal() {
               {results.length > 0 ? (
                 results.map((result) => (
                   <div key={result.id} className={styles.searchResultItem}>
-                    <Link href={result.url} onClick={closeModal} className={styles.searchResultLink}>
+                    <Link href={result.url} locale={result.locale || router.locale} onClick={closeModal} className={styles.searchResultLink}>
                       <div className={styles.pageTypeTag}
                            style={{ backgroundColor: `var(--tag-color-${result.type.toLowerCase()})` }}>
                         {result.type}
