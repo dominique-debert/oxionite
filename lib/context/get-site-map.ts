@@ -86,7 +86,7 @@ export const getSiteMap = async (): Promise<SiteMap> => {
     pageInfoMap = allPages.reduce((acc: Record<string, PageInfo>, currentMap: Record<string, PageInfo>) => ({ ...acc, ...currentMap }), {})
     
     // Build databaseInfoMap from Database-type pages
-    for (const [pageId, pageInfo] of Object.entries(pageInfoMap)) {
+    for (const [_pageId, pageInfo] of Object.entries(pageInfoMap)) {
       if (pageInfo.type === 'Database' && pageInfo.parentDbId) {
         const dbId = pageInfo.parentDbId
         

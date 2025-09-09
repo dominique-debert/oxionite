@@ -12,6 +12,7 @@ import { useDarkMode } from '@/lib/use-dark-mode'
 import { getBlockTitle } from 'notion-utils'
 
 import siteConfig from '../site.config'
+import siteLocaleConfig from '../site.locale.json'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { PageSocial } from './PageSocial'
 import { SearchModal } from './SearchModal'
@@ -102,7 +103,7 @@ function buildBreadcrumbsFromUrl(
   breadcrumbs: BreadcrumbItem[],
   siteMap: types.SiteMap,
   recordMap?: types.ExtendedRecordMap,
-  locale?: string
+  _locale?: string
 ): BreadcrumbItem[] {
   const pathSegments = asPath.split('/').filter(Boolean)
   
@@ -111,7 +112,6 @@ function buildBreadcrumbsFromUrl(
       const categorySlug = pathSegments.at(-1)
       if (categorySlug) {
         // Find database by slug using new databaseInfoMap structure with locale key
-        const currentLocale = locale || 'en'
         const dbEntry = Object.values(siteMap.databaseInfoMap || {}).find(
           db => db.slug === categorySlug
         )
@@ -218,6 +218,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   const router = useRouter()
   const { siteMap, pageId, recordMap } = pageProps
   const { t } = useTranslation('common')
+
   const breadcrumbs = React.useMemo((): BreadcrumbItem[] => {
     const { pathname, query, asPath } = router
 
@@ -302,7 +303,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
     
     // Check if this page belongs to a database
-    const locale = router.locale || 'en'
+    const locale = router.locale || siteLocaleConfig.defaultLocale
     const dbKey = `${pageInfo.parentDbId}_${locale}`
     const dbInfo = pageInfo.parentDbId ? siteMap.databaseInfoMap?.[dbKey] : null
     
@@ -324,7 +325,7 @@ export const TopNav: React.FC<TopNavProps> = ({
     const pagePath = buildPagePathFromHierarchy(pageId, siteMap.pageInfoMap)
     completeBreadcrumbs.push(...pagePath)
     return completeBreadcrumbs
-  }, [siteMap, pageId, router, recordMap, t])
+  }, [siteMap, pageId, router, recordMap, t, siteLocaleConfig.defaultLocale])
 
   return (
     <nav className="glass-nav">

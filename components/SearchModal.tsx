@@ -7,6 +7,7 @@ import { useRouter } from 'next/router'
 
 import { isSearchEnabled } from '@/lib/config'
 import { useAppContext } from '@/lib/context/app-context'
+import siteLocaleConfig from '../site.locale.json'
 import styles from '@/styles/components/SearchModal.module.css'
 
 interface SearchResult {
@@ -15,23 +16,18 @@ interface SearchResult {
   type: string
   url: string
   breadcrumb: Array<{ title: string }> | null
-  locale?: string
 }
 
 interface NotionSearchResponse {
   results: SearchResult[]
 }
 
-interface BreadcrumbItem {
-  title: string
-}
-
 function buildBreadcrumbForResult(
   result: SearchResult,
   siteMap: any,
   locale: string
-): Array<BreadcrumbItem> {
-  const breadcrumb: Array<BreadcrumbItem> = [{ title: 'Noxionite' }]
+): Array<{ title: string }> {
+  const breadcrumb: Array<{ title: string }> = [{ title: 'Noxionite' }]
   
   // Find page info
   const pageInfo = siteMap.pageInfoMap?.[result.id]
@@ -40,7 +36,7 @@ function buildBreadcrumbForResult(
   }
   
   // Build hierarchical path from current page up through parent structure
-  const pagePath: Array<BreadcrumbItem> = []
+  const pagePath = []
   let currentPageId = result.id
   
   while (currentPageId && siteMap.pageInfoMap?.[currentPageId]) {
@@ -80,6 +76,7 @@ export function SearchModal() {
   const router = useRouter()
   const { siteMap } = useAppContext()
 
+
   React.useEffect(() => {
     setMounted(true)
   }, [])
@@ -103,21 +100,19 @@ export function SearchModal() {
     setIsLoading(true)
     
     try {
-      // Search across all databases regardless of locale
-      const allDatabases = Object.entries(siteMap.databaseInfoMap)
+      const locale = router.locale || siteLocaleConfig.defaultLocale
+      const databases = Object.entries(siteMap.databaseInfoMap)
+        .filter(([key]) => key.endsWith(`_${locale}`))
+        .map(([, db]) => db)
       
-      const searchPromises = allDatabases.map(([key, db]) => {
-        const locale = key.split('_').pop() || 'en'
-        return fetch('/api/search-notion', {
+      // Search across all databases
+      const searchPromises = databases.map(db =>
+        fetch('/api/search-notion', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: searchQuery, ancestorId: (db as any).id })
-        }).then(response => response.ok ? 
-          response.json().then(data => ({ 
-            ...data, 
-            results: data.results?.map((r: any) => ({ ...r, locale })) || [] 
-          })) : null)
-      })
+          body: JSON.stringify({ query: searchQuery, ancestorId: db.id })
+        }).then(response => response.ok ? response.json() as Promise<NotionSearchResponse> : null)
+      )
       
       const allResults = await Promise.all(searchPromises)
       
@@ -129,37 +124,29 @@ export function SearchModal() {
         .filter((result, index, self) => 
           index === self.findIndex(r => r.id === result.id)
         )
-        .map((result: any) => {
-          // Build breadcrumb for each result with original locale
-          const breadcrumb = buildBreadcrumbForResult(result, siteMap, result.locale || router.locale)
+        .map(result => {
+          // Build breadcrumb for each result
+          const breadcrumb = buildBreadcrumbForResult(result, siteMap, locale)
           return {
             ...result,
             breadcrumb,
-            type: result.type === 'Database' ? 'CATEGORY' : result.type,
-            url: result.url
+            type: result.type === 'Database' ? 'CATEGORY' : result.type
           }
         })
       
-      // Include databases in search results with locale-aware URLs
-      const databaseResults = allDatabases
-        .filter(([key, db]) => {
-          const dbLocale = key.split('_').pop() || 'en'
-          return (db as any).name.toLowerCase().includes(searchQuery.toLowerCase())
-        })
-        .map(([key, db]) => {
-          const dbLocale = key.split('_').pop() || 'en'
-          return {
-            id: (db as any).id,
-            title: (db as any).name,
-            type: 'CATEGORY' as const,
-            url: `/category/${(db as any).slug}`,
-            locale: dbLocale,
-            breadcrumb: [
-              { title: 'Noxionite' },
-              { title: (db as any).name }
-            ]
-          }
-        })
+      // Include databases in search results
+      const databaseResults = databases
+        .filter(db => db.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        .map(db => ({
+          id: db.id,
+          title: db.name,
+          type: 'CATEGORY' as const,
+          url: `/category/${db.slug}`,
+          breadcrumb: [
+            { title: 'Noxionite' },
+            { title: db.name }
+          ]
+        }))
       
       setResults([...databaseResults, ...combinedResults])
     } catch (err) {
@@ -167,7 +154,7 @@ export function SearchModal() {
     } finally {
       setIsLoading(false)
     }
-  }, [siteMap, router.locale])
+  }, [siteMap, router.locale, siteLocaleConfig.defaultLocale])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === 'Escape' && closeModal()
@@ -218,7 +205,7 @@ export function SearchModal() {
               {results.length > 0 ? (
                 results.map((result) => (
                   <div key={result.id} className={styles.searchResultItem}>
-                    <Link href={result.url} locale={result.locale || router.locale} onClick={closeModal} className={styles.searchResultLink}>
+                    <Link href={result.url} onClick={closeModal} className={styles.searchResultLink}>
                       <div className={styles.pageTypeTag}
                            style={{ backgroundColor: `var(--tag-color-${result.type.toLowerCase()})` }}>
                         {result.type}

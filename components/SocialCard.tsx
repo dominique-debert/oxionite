@@ -687,8 +687,8 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
   ): string[] => {
     const breadcrumbs: string[] = []
     
-    // Always start with home
-    breadcrumbs.push('home')
+    // Always start with site name
+    breadcrumbs.push(siteConfig.name)
     
     if (parsedUrl.type === 'post') {
       const targetSlug = parsedUrl.isSubpage ? parsedUrl.subpage : parsedUrl.slug
@@ -712,24 +712,23 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
         }
         
         if (pageInfo) {
-          // Find the database this post belongs to
+          // Find the database this post belongs to using locale-aware keys
           let databaseName = ''
           
-          // Look for parent database
-          if (pageInfo.parentPageId && siteMap.pageInfoMap[pageInfo.parentPageId]) {
-            const parent = siteMap.pageInfoMap[pageInfo.parentPageId]
-            if (parent.type === 'Category') {
-              databaseName = parent.title
+          // Check if page has parent database using locale-specific keys
+          if (pageInfo.parentDbId && siteMap.databaseInfoMap) {
+            const dbKey = `${pageInfo.parentDbId}_${currentLocale}`
+            const dbInfo = siteMap.databaseInfoMap[dbKey]
+            if (dbInfo) {
+              databaseName = dbInfo.name
             }
           }
           
-          // Also check if we can find database from slug patterns
-          if (!databaseName && pageInfo.slug) {
-            const dbEntry = Object.values(siteMap.databaseInfoMap || {}).find(
-              db => pageInfo.slug!.startsWith(db.slug || '')
-            )
-            if (dbEntry) {
-              databaseName = dbEntry.name
+          // Fallback: check parent page structure
+          if (!databaseName && pageInfo.parentPageId && siteMap.pageInfoMap[pageInfo.parentPageId]) {
+            const parent = siteMap.pageInfoMap[pageInfo.parentPageId]
+            if (parent.type === 'Category') {
+              databaseName = parent.title
             }
           }
           
@@ -750,8 +749,18 @@ export const SocialCard: React.FC<SocialCardProps> = ({ url, siteMap, baseUrl })
         )
         
         if (pageInfo) {
-          // Add category title
-          breadcrumbs.push(pageInfo.title)
+          // For categories, check if it's a database
+          if (pageInfo.pageId && siteMap.databaseInfoMap) {
+            const dbKey = `${pageInfo.pageId}_${currentLocale}`
+            const dbInfo = siteMap.databaseInfoMap[dbKey]
+            if (dbInfo) {
+              breadcrumbs.push(dbInfo.name)
+            } else {
+              breadcrumbs.push(pageInfo.title)
+            }
+          } else {
+            breadcrumbs.push(pageInfo.title)
+          }
         }
       }
     }

@@ -3,6 +3,7 @@ import type { LocaleTagGraphData } from '@/lib/context/tag-graph';
 import type { GraphData, GraphNode, GraphLink } from '../types/graph.types';
 import { HOME_NODE_ID, ALL_TAGS_NODE_ID, GRAPH_CONFIG } from './graphConfig';
 import siteConfig from 'site.config';
+import siteLocaleConfig from '../../../site.locale.json';
 
 // Image cache for better performance
 const imageCache = new Map<string, HTMLImageElement>();
@@ -73,13 +74,15 @@ export const createPostGraphData = (
       ? `${dbId}_${locale}` 
       : `${dbId}_default`;
     
-    // Get database info from siteMap.databaseInfoMap
-    const dbInfo = siteMap.databaseInfoMap?.[dbKey];
-    if (!dbInfo) return; // Skip if database info not found
-    
-    const dbName = dbInfo.name && typeof dbInfo.name === 'object' 
-      ? (dbInfo.name as Record<string, string>)[locale] || (dbInfo.name as Record<string, string>)['en'] || 'Database'
-      : (typeof dbInfo.name === 'string' ? dbInfo.name : 'Database');
+
+  
+  // Get database info from siteMap.databaseInfoMap
+  const dbInfo = siteMap.databaseInfoMap?.[dbKey];
+  if (!dbInfo) return; // Skip if database info not found
+  
+  const dbName = dbInfo.name && typeof dbInfo.name === 'object' 
+    ? (dbInfo.name as Record<string, string>)[locale] || (dbInfo.name as Record<string, string>)[siteLocaleConfig.defaultLocale] || 'Database'
+    : (typeof dbInfo.name === 'string' ? dbInfo.name : 'Database');
     const dbSlug = dbInfo.slug || dbId;
     const coverImage = dbInfo.coverImage;
     

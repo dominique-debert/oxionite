@@ -96,7 +96,7 @@ export function SideNav({
     // Select the appropriate language version for each database
     const selectedDbInfo: types.DatabaseInfo[] = []
     
-    Object.entries(dbInfoById).forEach(([dbId, dbInfos]) => {
+    Object.entries(dbInfoById).forEach(([_dbId, dbInfos]) => {
       // Find the best match for current locale
       let selected = dbInfos.find(info => info.language?.toLowerCase() === locale?.toLowerCase())
       

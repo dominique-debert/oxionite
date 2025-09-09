@@ -74,7 +74,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     Object.keys(databaseInfoMap).forEach((dbKey) => {
       const dbInfo = databaseInfoMap[dbKey]
       console.log(`Processing dbKey: ${dbKey}`, {
-         dbInfo: dbInfo,
+         dbInfo,
          hasSlug: dbInfo?.slug,
          name: dbInfo?.name,
          coverImage: dbInfo?.coverImage
