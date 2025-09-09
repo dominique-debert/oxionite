@@ -110,13 +110,7 @@ export const createPostGraphData = (
     databaseNodes.set(dbId, dbNode);
     nodes.push(dbNode);
     
-    // Link database to home
-    links.push({
-      source: HOME_NODE_ID,
-      target: dbId,
-      color: '#E5E7EB',
-      width: 1.5,
-    });
+    // Database links will be created after all nodes are collected
   });
 
   // Create nodes for all pages (excluding Database-type pages)
@@ -156,20 +150,41 @@ export const createPostGraphData = (
     nodes.push(node);
     processedPages.add(pageId);
 
-    // Create links based on parent relationships - ensuring proper hierarchy
+    });
+
+  // Collect all valid node IDs after all nodes are created
+  const validNodeIds = new Set(nodes.map(n => n.id));
+
+  // Create database links after validation
+  dbIds.forEach(dbId => {
+    if (validNodeIds.has(HOME_NODE_ID) && validNodeIds.has(dbId)) {
+      links.push({
+        source: HOME_NODE_ID,
+        target: dbId,
+        color: '#E5E7EB',
+        width: 1.5,
+      });
+    }
+  });
+
+  // Create links based on parent relationships - ensuring proper hierarchy
+  Object.entries(siteMap.pageInfoMap).forEach(([pageId, pageInfo]) => {
+    if (pageInfo.language !== locale) return;
+    if (pageInfo.type === 'Database') return;
+    
     if (pageInfo.parentDbId && pageInfo.parentDbId !== pageId) {
       // For pages within a database - connect to database first
       if (!pageInfo.parentPageId) {
         // Top-level items in database connect directly to their database
         // Only create link if database node exists
-        if (databaseNodes.has(pageInfo.parentDbId)) {
+        if (databaseNodes.has(pageInfo.parentDbId) && validNodeIds.has(pageInfo.parentDbId) && validNodeIds.has(pageId)) {
           links.push({
             source: pageInfo.parentDbId,
             target: pageId,
             color: '#E5E7EB',
             width: 1,
           });
-        } else {
+        } else if (validNodeIds.has(HOME_NODE_ID) && validNodeIds.has(pageId)) {
           // Fallback to home if database node doesn't exist
           links.push({
             source: HOME_NODE_ID,
@@ -178,7 +193,7 @@ export const createPostGraphData = (
             width: 1,
           });
         }
-      } else if (siteMap.pageInfoMap[pageInfo.parentPageId]) {
+      } else if (siteMap.pageInfoMap[pageInfo.parentPageId] && validNodeIds.has(pageInfo.parentPageId) && validNodeIds.has(pageId)) {
         // Child items connect to their parent within the hierarchy
         links.push({
           source: pageInfo.parentPageId,
@@ -187,7 +202,7 @@ export const createPostGraphData = (
           width: 1,
         });
       }
-    } else if (pageInfo.parentPageId && siteMap.pageInfoMap[pageInfo.parentPageId]) {
+    } else if (pageInfo.parentPageId && siteMap.pageInfoMap[pageInfo.parentPageId] && validNodeIds.has(pageInfo.parentPageId) && validNodeIds.has(pageId)) {
       // Regular parent-child relationships for non-database items
       links.push({
         source: pageInfo.parentPageId,
@@ -195,7 +210,7 @@ export const createPostGraphData = (
         color: '#E5E7EB',
         width: 1,
       });
-    } else if (pageId !== HOME_NODE_ID) {
+    } else if (pageId !== HOME_NODE_ID && validNodeIds.has(HOME_NODE_ID) && validNodeIds.has(pageId)) {
       // Standalone items link to home
       links.push({
         source: HOME_NODE_ID,
@@ -253,21 +268,28 @@ export const createTagGraphData = (
       count: count || 0,
     };
     nodes.push(tagNode);
+  });
 
-    // Link each tag to the 'All Tags' node
-    links.push({
-      source: ALL_TAGS_NODE_ID,
-      target: tag,
-      color: '#D1D5DB',
-      width: 0.5,
-    });
+  // Collect all valid node IDs after all nodes are created
+  const validTagNodeIds = new Set(nodes.map(n => n.id));
+
+  // Link each tag to the 'All Tags' node
+  Object.entries(tagCounts).forEach(([tag, count]) => {
+    if (validTagNodeIds.has(ALL_TAGS_NODE_ID) && validTagNodeIds.has(tag)) {
+      links.push({
+        source: ALL_TAGS_NODE_ID,
+        target: tag,
+        color: '#D1D5DB',
+        width: 0.5,
+      });
+    }
   });
 
   // Create links for tag relationships (co-occurrences)
   Object.entries(tagGraphData.tagRelationships || {}).forEach(([tag, relatedTags]) => {
     relatedTags.forEach(relatedTag => {
       // Ensure both nodes exist before creating a link
-      if (tagCounts[tag] && tagCounts[relatedTag]) {
+      if (validTagNodeIds.has(tag) && validTagNodeIds.has(relatedTag)) {
         links.push({
           source: tag,
           target: relatedTag,
