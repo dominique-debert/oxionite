@@ -224,6 +224,11 @@ export const createPostGraphData = (
   return { nodes, links };
 };
 
+// Helper function to calculate node size based on count using logarithmic scale
+const calculateNodeSize = (count: number): number => {
+  return Math.log(count + 1) * 5 + 5;
+};
+
 export const createTagGraphData = (
   tagGraphData: LocaleTagGraphData | undefined,
   t: (key: string) => string,
@@ -251,7 +256,7 @@ export const createTagGraphData = (
     type: 'Root' as any,
     url: `/${locale}/all-tags`,
     color: '#059669', // A darker shade for the main node
-    val: totalTags, // Size based on the number of unique tags
+    val: calculateNodeSize(totalTags), // Size based on the number of unique tags
     count: totalTags,
   };
   nodes.push(allTagsNode);
@@ -264,7 +269,7 @@ export const createTagGraphData = (
       url: `/${locale}/tag/${encodeURIComponent(tag)}`,
       type: 'Tag' as any,
       color: '#10B981',
-      val: count, // Size based on the number of posts with this tag
+      val: calculateNodeSize(count), // Size based on the number of posts with this tag
       count: count || 0,
     };
     nodes.push(tagNode);

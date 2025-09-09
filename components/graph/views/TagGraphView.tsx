@@ -115,7 +115,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
     const isCurrentTag = currentTag === node.id;
     const isTagHighlighted = state.highlightTags.length > 0 && state.highlightTags.includes(node.id as string);
-    ctx.globalAlpha = !hoveredNode || hoveredNode.id === node.id ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
+    ctx.globalAlpha = !hoveredNode || highlightedNodeIds.has(node.id as string) ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
     const label = node.type === 'Tag' ? `# ${node.name}` : node.name;
 
     const baseSize = 2;
