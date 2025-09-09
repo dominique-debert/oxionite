@@ -101,42 +101,45 @@ function buildBreadcrumbsFromUrl(
   pathname: string,
   breadcrumbs: BreadcrumbItem[],
   siteMap: types.SiteMap,
-  recordMap?: types.ExtendedRecordMap
+  recordMap?: types.ExtendedRecordMap,
+  locale?: string
 ): BreadcrumbItem[] {
   const pathSegments = asPath.split('/').filter(Boolean)
   
   // Handle category pages
-  if (pathname.startsWith('/category/')) {
-    const categorySlug = pathSegments.at(-1)
-    if (categorySlug) {
-      // Find database or category page
-      const dbEntry = Object.values(siteMap.databaseInfoMap || {}).find(
-        db => db.slug === categorySlug
-      )
-      
-      if (dbEntry) {
-        breadcrumbs.push({
-          title: dbEntry.name,
-          pageInfo: {
-            pageId: dbEntry.id,
-            title: dbEntry.name,
-            type: 'Category',
-            slug: dbEntry.slug
-          } as types.PageInfo,
-          href: `/category/${categorySlug}`
-        })
-      } else {
-        // Find category page
-        const categoryPage = Object.values(siteMap.pageInfoMap).find(
-          p => p.slug === categorySlug && p.type === 'Category'
+    if (pathname.startsWith('/category/')) {
+      const categorySlug = pathSegments.at(-1)
+      if (categorySlug) {
+        // Find database by slug using new databaseInfoMap structure with locale key
+        const currentLocale = locale || 'en'
+        const dbEntry = Object.values(siteMap.databaseInfoMap || {}).find(
+          db => db.slug === categorySlug
         )
-        if (categoryPage) {
-          breadcrumbs.push(...buildPagePathFromHierarchy(categoryPage.pageId, siteMap.pageInfoMap))
+        
+        if (dbEntry) {
+          // For database category pages, show: site name → database name
+          breadcrumbs.push({
+            title: dbEntry.name,
+            pageInfo: {
+              pageId: dbEntry.id,
+              title: dbEntry.name,
+              type: 'Category',
+              slug: dbEntry.slug
+            } as types.PageInfo,
+            href: `/category/${categorySlug}`
+          })
+        } else {
+          // Find regular category page
+          const categoryPage = Object.values(siteMap.pageInfoMap).find(
+            p => p.slug === categorySlug && p.type === 'Category'
+          )
+          if (categoryPage) {
+            breadcrumbs.push(...buildPagePathFromHierarchy(categoryPage.pageId, siteMap.pageInfoMap))
+          }
         }
       }
+      return breadcrumbs
     }
-    return breadcrumbs
-  }
   
   // Handle post pages
   const postIndex = pathSegments.indexOf('post')
@@ -225,6 +228,8 @@ export const TopNav: React.FC<TopNavProps> = ({
       }
     ]
 
+
+
     // Handle 404 page
     if (pathname === '/404') {
       return [
@@ -288,15 +293,21 @@ export const TopNav: React.FC<TopNavProps> = ({
     
     if (!pageInfo) {
       // Fallback: Build from URL structure
-      return buildBreadcrumbsFromUrl(asPath, pathname, breadcrumbs, siteMap, recordMap)
+      return buildBreadcrumbsFromUrl(asPath, pathname, breadcrumbs, siteMap, recordMap, router.locale)
     }
 
     // Build complete breadcrumb path including database
     const completeBreadcrumbs = [...breadcrumbs]
     
-    // Add database if this page belongs to one
-    if (pageInfo.parentDbId && siteMap.databaseInfoMap?.[pageInfo.parentDbId]) {
-      const dbInfo = siteMap.databaseInfoMap[pageInfo.parentDbId]
+
+    
+    // Check if this page belongs to a database
+    const locale = router.locale || 'en'
+    const dbKey = `${pageInfo.parentDbId}_${locale}`
+    const dbInfo = pageInfo.parentDbId ? siteMap.databaseInfoMap?.[dbKey] : null
+    
+    if (dbInfo) {
+
       completeBreadcrumbs.push({
         title: dbInfo.name,
         pageInfo: {
@@ -312,7 +323,6 @@ export const TopNav: React.FC<TopNavProps> = ({
     // Build hierarchical path from current page up through parent structure
     const pagePath = buildPagePathFromHierarchy(pageId, siteMap.pageInfoMap)
     completeBreadcrumbs.push(...pagePath)
-
     return completeBreadcrumbs
   }, [siteMap, pageId, router, recordMap, t])
 
