@@ -77,7 +77,7 @@ export const getSiteMap = async (): Promise<SiteMap> => {
   let pageInfoMap: Record<string, PageInfo> = {}
   const databaseInfoMap: Record<string, DatabaseInfo> = {}
 
-  // Fetch all pages from databases using notionDbIds
+  // Build databaseInfoMap from Database-type pages
   if (notionDbIds && notionDbIds.length > 0) {
     // Fetch all pages from databases
     const allPages = await Promise.all(
@@ -90,8 +90,11 @@ export const getSiteMap = async (): Promise<SiteMap> => {
       if (pageInfo.type === 'Database' && pageInfo.parentDbId) {
         const dbId = pageInfo.parentDbId
         
+        // Create a unique key combining dbId and language to support multiple Database pages per dbId
+        const uniqueKey = `${dbId}_${pageInfo.language || 'default'}`
+        
         // Use the Database page's info to build DatabaseInfo
-        databaseInfoMap[dbId] = {
+        databaseInfoMap[uniqueKey] = {
           id: dbId,
           name: pageInfo.title,
           slug: pageInfo.slug,
@@ -154,9 +157,6 @@ async function getAllPagesFromDatabase(
   databaseId?: string
 ): Promise<Record<string, PageInfo>> {
   if (!databaseId) {
-    console.warn(
-      'WARN: `databaseId` is not defined, so no pages will be rendered.'
-    )
     return {}
   }
 
@@ -166,9 +166,6 @@ async function getAllPagesFromDatabase(
     const collectionViewId = Object.keys(recordMap.collection_view)[0]
 
     if (!collectionId || !collectionViewId) {
-      console.error(
-        `ERROR: No collection or collection view found in Notion page ${databaseId}`
-      )
       return {}
     }
 
@@ -189,7 +186,6 @@ async function getAllPagesFromDatabase(
     }
 
     if (!blockIds || blockIds.length === 0) {
-      console.error('ERROR: Collection data is missing blockIds')
       return {}
     }
 

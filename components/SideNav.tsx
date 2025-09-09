@@ -80,23 +80,40 @@ export function SideNav({
 
   // Create database items for the category tree using databaseInfoMap
   const databaseItems = React.useMemo((): types.PageInfo[] => {
-    console.log('DEBUG: SideNav - siteMap?.databaseInfoMap =', siteMap?.databaseInfoMap)
-    console.log('DEBUG: SideNav - Object.keys(siteMap?.databaseInfoMap || {}) =', Object.keys(siteMap?.databaseInfoMap || {}))
-    
     if (!siteMap?.databaseInfoMap) {
-      console.log('DEBUG: SideNav - No databaseInfoMap found, returning filteredNavigationTree')
       return filteredNavigationTree
     }
     
-    const dbInfoArray = Object.values(siteMap.databaseInfoMap)
-    console.log('DEBUG: SideNav - databaseInfoMap values =', dbInfoArray)
+    // Group database info by actual database ID (remove language suffix)
+    const dbInfoById: Record<string, types.DatabaseInfo[]> = {}
+    Object.values(siteMap.databaseInfoMap).forEach(dbInfo => {
+      if (!dbInfoById[dbInfo.id]) {
+        dbInfoById[dbInfo.id] = []
+      }
+      dbInfoById[dbInfo.id].push(dbInfo)
+    })
     
-    const result = dbInfoArray.map((dbInfo: types.DatabaseInfo): types.PageInfo => {
+    // Select the appropriate language version for each database
+    const selectedDbInfo: types.DatabaseInfo[] = []
+    
+    Object.entries(dbInfoById).forEach(([dbId, dbInfos]) => {
+      // Find the best match for current locale
+      let selected = dbInfos.find(info => info.language?.toLowerCase() === locale?.toLowerCase())
+      
+      // Fallback to any available version if no locale match
+      if (!selected && dbInfos.length > 0) {
+        selected = dbInfos[0]
+      }
+      
+      if (selected) {
+        selectedDbInfo.push(selected)
+      }
+    })
+    
+    const result = selectedDbInfo.map((dbInfo: types.DatabaseInfo): types.PageInfo => {
       const dbChildren = filteredNavigationTree.filter(
         (rootPage) => rootPage.parentDbId === dbInfo.id
       )
-      
-      console.log('DEBUG: SideNav - Processing dbInfo:', dbInfo, 'with children count:', dbChildren.length)
       
       return {
         title: dbInfo.name,
@@ -120,9 +137,8 @@ export function SideNav({
       }
     })
     
-    console.log('DEBUG: SideNav - Final databaseItems count =', result.length)
     return result
-  }, [filteredNavigationTree, siteMap?.databaseInfoMap])
+  }, [filteredNavigationTree, siteMap?.databaseInfoMap, locale])
 
   useEffect(() => {
     if (!databaseItems) return
