@@ -3,13 +3,15 @@ import locale from './site.locale.json'
 
 export default siteConfig({
   notionDbIds: [
-    '251f2d475c3181c3a9f2ff6f477bbf25',
+    '276a52e1016180e9945deed9ab211f14',
     '21df2d475c31812dae49d1b1735e02b4'
   ],
+  // https://exclusive-cheque-27c.notion.site/276a52e1016180e9945deed9ab211f14?v=276a52e1016181c095db000cabc57a57&source=copy_link
+  // https://exclusive-cheque-27c.notion.site/21df2d475c31812dae49d1b1735e02b4?v=21df2d475c31812dae49d1b1735e02b4&source=copy_link
 
   // basic site info (required)
-  name: 'Noxionite',
-  domain: 'noxionite.vercel.app',
+  name: 'Dom\'s Blog',
+  domain: 'doms-blog.vercel.app',
   author: 'Jaewan Shin',
 
   // open graph metadata (optional)
